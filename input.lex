@@ -117,7 +117,7 @@ int num_lines = 0, num_chars = 0;
 %}
 
 digit      [0-9]
-identifier ([a-z]|[A-Z])([a-z]|[A-Z]|[0-9])*
+identifier ([a-z]|[A-Z]|\_)([a-z]|[A-Z]|[0-9]|\_)*
 FALSE      false      
 TRUE       true
 

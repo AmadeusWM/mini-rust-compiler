@@ -351,8 +351,8 @@ static void yynoreturn yy_fatal_error ( const char* msg  );
 	(yy_hold_char) = *yy_cp; \
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
-#define YY_NUM_RULES 112
-#define YY_END_OF_BUFFER 113
+#define YY_NUM_RULES 111
+#define YY_END_OF_BUFFER 112
 /* This struct is not used in this scanner,
    but its presence is necessary. */
 struct yy_trans_info
@@ -362,7 +362,7 @@ struct yy_trans_info
 	};
 static const flex_int16_t yy_accept[262] =
     {   0,
-      106,  106,  113,  111,  110,   58,   95,   96,   56,   59,
+      106,  106,  112,  110,  109,   58,   95,   96,   56,   59,
        99,  100,   54,   52,   88,   53,   84,   55,  106,   90,
        89,   79,   75,   78,   97,   82,  105,  105,  103,  104,
        57,   83,  105,  105,  105,  105,  105,  105,  105,  105,
@@ -389,7 +389,7 @@ static const flex_int16_t yy_accept[262] =
       105,  105,  105,  105,   34,   35,   50,  105,   40,  105,
         8,  105,  105,   23,   26,   27,   47,   32,  105,  105,
       105,  105,  105,  105,   48,   49,   39,    4,   45,    0,
-        0,    0,    0,    0,    0,  109,    0,    0,    0,  108,
+        0,    0,    0,    0,    0,  108,    0,    0,    0,  107,
         0
     } ;
 
@@ -429,7 +429,7 @@ static const YY_CHAR yy_meta[59] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    2,    1,    1,    1,
-        1,    1,    1,    1,    2,    2,    1,    1,    1,    1,
+        1,    1,    1,    1,    2,    2,    1,    1,    1,    2,
         2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
         2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
         2,    2,    2,    2,    1,    1,    1,    1
@@ -440,7 +440,7 @@ static const flex_int16_t yy_base[264] =
         0,    0,  296,  297,  297,  274,  297,  297,  273,   51,
       297,  297,  272,  271,  297,   39,  276,  269,  272,  270,
       297,   48,   42,   44,  297,  297,    0,  252,  297,  297,
-      265,  297,   35,   35,   27,   30,   35,   46,   52,   40,
+      265,    0,   35,   35,   27,   30,   35,   46,   52,   40,
        49,  235,   50,  249,   56,   54,   54,  244,  244,  242,
       297,   71,  297,  297,  297,  297,  297,  297,  297,  297,
       297,  297,   87,  297,  263,  297,  297,  258,  297,  297,
@@ -473,7 +473,7 @@ static const flex_int16_t yy_def[264] =
       261,    1,  261,  261,  261,  261,  261,  261,  261,  261,
       261,  261,  261,  261,  261,  261,  261,  261,  261,  261,
       261,  261,  261,  261,  261,  261,  262,  262,  261,  261,
-      261,  261,  262,  262,  262,  262,  262,  262,  262,  262,
+      261,  262,  262,  262,  262,  262,  262,  262,  262,  262,
       262,  262,  262,  262,  262,  262,  262,  262,  262,  262,
       261,  261,  261,  261,  261,  261,  261,  261,  261,  261,
       261,  261,  261,  261,  261,  261,  261,  261,  261,  261,
@@ -713,12 +713,11 @@ char *yytext;
 #define IDENTIFIER 105
 
 #define INTEGER_LITERAL 106
-#define BOOL_LITERAL 107
 
-#define PRINTVAR 108
-#define PRINTSTRING 109
+#define PRINTVAR 107
+#define PRINTSTRING 108
+#line 719 "lex.yy.c"
 #line 720 "lex.yy.c"
-#line 721 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -935,9 +934,9 @@ YY_DECL
 		}
 
 	{
-#line 125 "input.lex"
+#line 124 "input.lex"
 
-#line 940 "lex.yy.c"
+#line 939 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -996,567 +995,562 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 126 "input.lex"
+#line 125 "input.lex"
 { return KW_AS; }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 127 "input.lex"
+#line 126 "input.lex"
 { return KW_BREAK; }
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 128 "input.lex"
+#line 127 "input.lex"
 { return KW_CONST; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 129 "input.lex"
+#line 128 "input.lex"
 { return KW_CONTINUE; }
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 130 "input.lex"
+#line 129 "input.lex"
 { return KW_CRATE; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 131 "input.lex"
+#line 130 "input.lex"
 { return KW_ELSE; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 132 "input.lex"
+#line 131 "input.lex"
 { return KW_ENUM; }
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 133 "input.lex"
+#line 132 "input.lex"
 { return KW_EXTERN; }
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 134 "input.lex"
+#line 133 "input.lex"
 { return KW_FALSE; }
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 135 "input.lex"
+#line 134 "input.lex"
 { return KW_FN; }
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 136 "input.lex"
+#line 135 "input.lex"
 { return KW_FOR; }
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 137 "input.lex"
+#line 136 "input.lex"
 { return KW_IF; }
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 138 "input.lex"
+#line 137 "input.lex"
 { return KW_IMPL; }
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 139 "input.lex"
+#line 138 "input.lex"
 { return KW_IN; }
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 140 "input.lex"
+#line 139 "input.lex"
 { return KW_LET; }
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 141 "input.lex"
+#line 140 "input.lex"
 { return KW_LOOP; }
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 142 "input.lex"
+#line 141 "input.lex"
 { return KW_MATCH; }
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 143 "input.lex"
+#line 142 "input.lex"
 { return KW_MOD; }
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 144 "input.lex"
+#line 143 "input.lex"
 { return KW_MOVE; }
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 145 "input.lex"
+#line 144 "input.lex"
 { return KW_MUT; }
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 146 "input.lex"
+#line 145 "input.lex"
 { return KW_PUB; }
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 147 "input.lex"
+#line 146 "input.lex"
 { return KW_REF; }
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 148 "input.lex"
+#line 147 "input.lex"
 { return KW_RETURN; }
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 149 "input.lex"
+#line 148 "input.lex"
 { return KW_SELFVALUE; }
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 150 "input.lex"
+#line 149 "input.lex"
 { return KW_SELFTYPE; }
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 151 "input.lex"
+#line 150 "input.lex"
 { return KW_STATIC; }
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 152 "input.lex"
+#line 151 "input.lex"
 { return KW_STRUCT; }
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 153 "input.lex"
+#line 152 "input.lex"
 { return KW_SUPER; }
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 154 "input.lex"
+#line 153 "input.lex"
 { return KW_TRAIT; }
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 155 "input.lex"
+#line 154 "input.lex"
 { return KW_TRUE; }
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 156 "input.lex"
+#line 155 "input.lex"
 { return KW_TYPE; }
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 157 "input.lex"
+#line 156 "input.lex"
 { return KW_UNSAFE; }
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 158 "input.lex"
+#line 157 "input.lex"
 { return KW_USE; }
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 159 "input.lex"
+#line 158 "input.lex"
 { return KW_WHERE; }
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 160 "input.lex"
+#line 159 "input.lex"
 { return KW_WHILE; }
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 161 "input.lex"
+#line 160 "input.lex"
 { return KW_ASYNC; }
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 162 "input.lex"
+#line 161 "input.lex"
 { return KW_AWAIT; }
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 163 "input.lex"
+#line 162 "input.lex"
 { return KW_DYN; }
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 164 "input.lex"
+#line 163 "input.lex"
 { return KW_ABSTRACT; }
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 165 "input.lex"
+#line 164 "input.lex"
 { return KW_BECOME; }
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 166 "input.lex"
+#line 165 "input.lex"
 { return KW_BOX; }
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 167 "input.lex"
+#line 166 "input.lex"
 { return KW_DO; }
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 168 "input.lex"
+#line 167 "input.lex"
 { return KW_FINAL; }
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 169 "input.lex"
+#line 168 "input.lex"
 { return KW_MACRO; }
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 170 "input.lex"
+#line 169 "input.lex"
 { return KW_OVERRIDE; }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 171 "input.lex"
+#line 170 "input.lex"
 { return KW_PRIV; }
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 172 "input.lex"
+#line 171 "input.lex"
 { return KW_TYPEOF; }
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 173 "input.lex"
+#line 172 "input.lex"
 { return KW_UNSIZED; }
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 174 "input.lex"
+#line 173 "input.lex"
 { return KW_VIRTUAL; }
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 175 "input.lex"
+#line 174 "input.lex"
 { return KW_YIELD; }
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 176 "input.lex"
+#line 175 "input.lex"
 { return KW_TRY; }
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 178 "input.lex"
+#line 177 "input.lex"
 { return PUNC_PLUS; }
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 179 "input.lex"
+#line 178 "input.lex"
 { return PUNC_MIN; }
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 180 "input.lex"
+#line 179 "input.lex"
 { return PUNC_STAR; }
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 181 "input.lex"
+#line 180 "input.lex"
 { return PUNC_SLASH; }
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 182 "input.lex"
+#line 181 "input.lex"
 { return PUNC_PERCENT; }
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 183 "input.lex"
+#line 182 "input.lex"
 { return PUNC_CARET; }
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 184 "input.lex"
+#line 183 "input.lex"
 { return PUNC_NOT; }
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 185 "input.lex"
+#line 184 "input.lex"
 { return PUNC_AND; }
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 186 "input.lex"
+#line 185 "input.lex"
 { return PUNC_OR; }
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 187 "input.lex"
+#line 186 "input.lex"
 { return PUNC_AND_AND; }
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 188 "input.lex"
+#line 187 "input.lex"
 { return PUNC_OR_OR; }
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 189 "input.lex"
+#line 188 "input.lex"
 { return PUNC_SHL; }
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 190 "input.lex"
+#line 189 "input.lex"
 { return PUNC_SHR; }
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 191 "input.lex"
+#line 190 "input.lex"
 { return PUNC_PLUS_EQ; }
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 192 "input.lex"
+#line 191 "input.lex"
 { return PUNC_MINUS_EQ; }
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 193 "input.lex"
+#line 192 "input.lex"
 { return PUNC_STAR_EQ; }
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 194 "input.lex"
+#line 193 "input.lex"
 { return PUNC_SLASH_EQ; }
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 195 "input.lex"
+#line 194 "input.lex"
 { return PUNC_PERCENT_EQ; }
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 196 "input.lex"
+#line 195 "input.lex"
 { return PUNC_CARET_EQ; }
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 197 "input.lex"
+#line 196 "input.lex"
 { return PUNC_AND_EQ; }
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 198 "input.lex"
+#line 197 "input.lex"
 { return PUNC_OR_EQ; }
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 199 "input.lex"
+#line 198 "input.lex"
 { return PUNC_SHL_EQ; }
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 200 "input.lex"
+#line 199 "input.lex"
 { return PUNC_SHR_EQ; }
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 201 "input.lex"
+#line 200 "input.lex"
 { return PUNC_EQ; }
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 202 "input.lex"
+#line 201 "input.lex"
 { return PUNC_EQ_EQ; }
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 203 "input.lex"
+#line 202 "input.lex"
 { return PUNC_NE; }
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 204 "input.lex"
+#line 203 "input.lex"
 { return PUNC_GT; }
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
-#line 205 "input.lex"
+#line 204 "input.lex"
 { return PUNC_LT; }
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
-#line 206 "input.lex"
+#line 205 "input.lex"
 { return PUNC_GE; }
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
-#line 207 "input.lex"
+#line 206 "input.lex"
 { return PUNC_LE; }
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
-#line 208 "input.lex"
+#line 207 "input.lex"
 { return PUNC_AT; }
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 209 "input.lex"
+#line 208 "input.lex"
 { return PUNC_UNDERSCORE; }
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
-#line 210 "input.lex"
+#line 209 "input.lex"
 { return PUNC_DOT; }
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
-#line 211 "input.lex"
+#line 210 "input.lex"
 { return PUNC_DOT_DOT; }
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 212 "input.lex"
+#line 211 "input.lex"
 { return PUNC_DOT_DOT_DOT; }
 	YY_BREAK
 case 87:
 YY_RULE_SETUP
-#line 213 "input.lex"
+#line 212 "input.lex"
 { return PUNC_DOT_DOT_EQ; }
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
-#line 214 "input.lex"
+#line 213 "input.lex"
 { return PUNC_COMMA; }
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
-#line 215 "input.lex"
+#line 214 "input.lex"
 { return PUNC_SEMI; }
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-#line 216 "input.lex"
+#line 215 "input.lex"
 { return PUNC_COLON; }
 	YY_BREAK
 case 91:
 YY_RULE_SETUP
-#line 217 "input.lex"
+#line 216 "input.lex"
 { return PUNC_PATH_SEP; }
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-#line 218 "input.lex"
+#line 217 "input.lex"
 { return PUNC_R_ARROW; }
 	YY_BREAK
 case 93:
 YY_RULE_SETUP
-#line 219 "input.lex"
+#line 218 "input.lex"
 { return PUNC_FAT_ARROW; }
 	YY_BREAK
 case 94:
 YY_RULE_SETUP
-#line 220 "input.lex"
+#line 219 "input.lex"
 { return PUNC_L_ARROW; }
 	YY_BREAK
 case 95:
 YY_RULE_SETUP
-#line 221 "input.lex"
+#line 220 "input.lex"
 { return PUNC_POUND; }
 	YY_BREAK
 case 96:
 YY_RULE_SETUP
-#line 222 "input.lex"
+#line 221 "input.lex"
 { return PUNC_DOLALR; }
 	YY_BREAK
 case 97:
 YY_RULE_SETUP
-#line 223 "input.lex"
+#line 222 "input.lex"
 { return PUNC_QUESTION; }
 	YY_BREAK
 case 98:
 YY_RULE_SETUP
-#line 224 "input.lex"
+#line 223 "input.lex"
 { return PUNC_TILDE; }
 	YY_BREAK
 case 99:
 YY_RULE_SETUP
-#line 226 "input.lex"
+#line 225 "input.lex"
 { return L_PAREN; }
 	YY_BREAK
 case 100:
 YY_RULE_SETUP
-#line 227 "input.lex"
+#line 226 "input.lex"
 { return R_PAREN; }
 	YY_BREAK
 case 101:
 YY_RULE_SETUP
-#line 228 "input.lex"
+#line 227 "input.lex"
 { return L_BRACE; }
 	YY_BREAK
 case 102:
 YY_RULE_SETUP
-#line 229 "input.lex"
+#line 228 "input.lex"
 { return R_BRACE; }
 	YY_BREAK
 case 103:
 YY_RULE_SETUP
-#line 230 "input.lex"
+#line 229 "input.lex"
 { return L_BRACKET; }
 	YY_BREAK
 case 104:
 YY_RULE_SETUP
-#line 231 "input.lex"
+#line 230 "input.lex"
 { return R_BRACKET; }
 	YY_BREAK
 case 105:
 YY_RULE_SETUP
-#line 233 "input.lex"
+#line 232 "input.lex"
 { return IDENTIFIER; }
 	YY_BREAK
 case 106:
 YY_RULE_SETUP
-#line 234 "input.lex"
+#line 233 "input.lex"
 { return INTEGER_LITERAL; }
 	YY_BREAK
 case 107:
 YY_RULE_SETUP
 #line 235 "input.lex"
-{ return BOOL_LITERAL; }
+{ return PRINTVAR; }
 	YY_BREAK
 case 108:
+/* rule 108 can match eol */
 YY_RULE_SETUP
-#line 237 "input.lex"
-{ return PRINTVAR; }
+#line 236 "input.lex"
+{ return PRINTSTRING; }
 	YY_BREAK
 case 109:
 /* rule 109 can match eol */
 YY_RULE_SETUP
 #line 238 "input.lex"
-{ return PRINTSTRING; }
+++num_lines; ++num_chars;
 	YY_BREAK
 case 110:
-/* rule 110 can match eol */
 YY_RULE_SETUP
-#line 240 "input.lex"
-++num_lines; ++num_chars;
+#line 239 "input.lex"
+++num_chars;
 	YY_BREAK
 case 111:
 YY_RULE_SETUP
 #line 241 "input.lex"
-++num_chars;
-	YY_BREAK
-case 112:
-YY_RULE_SETUP
-#line 243 "input.lex"
 ECHO;
 	YY_BREAK
-#line 1559 "lex.yy.c"
+#line 1553 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2561,7 +2555,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 243 "input.lex"
+#line 241 "input.lex"
 
 main() {
 	yylex();
