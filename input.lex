@@ -1,3 +1,5 @@
+int num_lines = 0, num_chars = 0;
+
 %{
 #define KW_AS 1
 #define KW_BREAK 2
@@ -106,8 +108,18 @@
 #define L_BRACKET 103
 #define R_BRACKET 104
 
-#define ID 105
-}%
+#define IDENTIFIER 105
+
+#define INTEGER_LITERAL 106
+
+#define PRINTVAR 107
+#define PRINTSTRING 108
+%}
+
+digit      [0-9]
+identifier ([a-z]|[A-Z])([a-z]|[A-Z]|[0-9])*
+FALSE      false      
+TRUE       true
 
 %%
 as       { return KW_AS; }
@@ -118,7 +130,7 @@ crate    { return KW_CRATE; }
 else     { return KW_ELSE; }
 enum     { return KW_ENUM; }
 extern   { return KW_EXTERN; }
-false    { return KW_FALSE; }
+{FALSE}  { return KW_FALSE; }
 fn       { return KW_FN; }
 for      { return KW_FOR; }
 if       { return KW_IF; }
@@ -139,7 +151,7 @@ static   { return KW_STATIC; }
 struct   { return KW_STRUCT; }
 super    { return KW_SUPER; }
 trait    { return KW_TRAIT; }
-true     { return KW_TRUE; }
+{TRUE}   { return KW_TRUE; }
 type     { return KW_TYPE; }
 unsafe   { return KW_UNSAFE; }
 use      { return KW_USE; }
@@ -162,57 +174,72 @@ virtual  { return KW_VIRTUAL; }
 yield    { return KW_YIELD; }
 try      { return KW_TRY; }
 
-+        { return PUNC_PLUS; }
--        { return PUNC_MIN; }
-*        { return PUNC_STAR; }
-/        { return PUNC_SLASH; }
-%        { return PUNC_PERCENT; }
-^        { return PUNC_CARET; }
-!        { return PUNC_NOT; }
-&        { return PUNC_AND; }
-|        { return PUNC_OR; }
-&&       { return PUNC_AND_AND; }
-||       { return PUNC_OR_OR; }
-<<       { return PUNC_SHL; }
->>       { return PUNC_SHR; }
-+=       { return PUNC_PLUS_EQ; }
--=       { return PUNC_MINUS_EQ; }
-*=       { return PUNC_STAR_EQ; }
-/=       { return PUNC_SLASH_EQ; }
-%=       { return PUNC_PERCENT_EQ; }
-^=       { return PUNC_CARET_EQ; }
-&=       { return PUNC_AND_EQ; }
-|=       { return PUNC_OR_EQ; }
-<<=      { return PUNC_SHL_EQ; }
->>=      { return PUNC_SHR_EQ; }
-=        { return PUNC_EQ; }
-==       { return PUNC_EQ_EQ; }
-!=       { return PUNC_NE; }
->        { return PUNC_GT; }
-<        { return PUNC_LT; }
->=       { return PUNC_GE; }
-<=       { return PUNC_LE; }
-@        { return PUNC_AT; }
-_        { return PUNC_UNDERSCORE; }
-.        { return PUNC_DOT; }
-..       { return PUNC_DOT_DOT; }
-...      { return PUNC_DOT_DOT_DOT; }
-..=      { return PUNC_DOT_DOT_EQ; }
-,        { return PUNC_COMMA; }
-;        { return PUNC_SEMI; }
-:        { return PUNC_COLON; }
-::       { return PUNC_PATH_SEP; }
-->       { return PUNC_R_ARROW; }
-=>       { return PUNC_FAT_ARROW; }
-<-       { return PUNC_L_ARROW; }
-#        { return PUNC_POUND; }
-$        { return PUNC_DOLALR; }
-?        { return PUNC_QUESTION; }
-~        { return PUNC_TILDE; }
+"+"        { return PUNC_PLUS; }
+"-"        { return PUNC_MIN; }
+"*"        { return PUNC_STAR; }
+"/"        { return PUNC_SLASH; }
+"%"        { return PUNC_PERCENT; }
+"^"        { return PUNC_CARET; }
+"!"        { return PUNC_NOT; }
+"&"        { return PUNC_AND; }
+"|"        { return PUNC_OR; }
+"&&"       { return PUNC_AND_AND; }
+"||"       { return PUNC_OR_OR; }
+"<<"       { return PUNC_SHL; }
+">>"       { return PUNC_SHR; }
+"+="       { return PUNC_PLUS_EQ; }
+"-="       { return PUNC_MINUS_EQ; }
+"*="       { return PUNC_STAR_EQ; }
+"/="       { return PUNC_SLASH_EQ; }
+"%="       { return PUNC_PERCENT_EQ; }
+"^="       { return PUNC_CARET_EQ; }
+"&="       { return PUNC_AND_EQ; }
+"|="       { return PUNC_OR_EQ; }
+"<<="      { return PUNC_SHL_EQ; }
+">>="      { return PUNC_SHR_EQ; }
+"="        { return PUNC_EQ; }
+"=="       { return PUNC_EQ_EQ; }
+"!="       { return PUNC_NE; }
+">"        { return PUNC_GT; }
+"<"        { return PUNC_LT; }
+">="       { return PUNC_GE; }
+"<="       { return PUNC_LE; }
+"@"        { return PUNC_AT; }
+"_"        { return PUNC_UNDERSCORE; }
+"."        { return PUNC_DOT; }
+".."       { return PUNC_DOT_DOT; }
+"..."      { return PUNC_DOT_DOT_DOT; }
+"..="      { return PUNC_DOT_DOT_EQ; }
+","        { return PUNC_COMMA; }
+";"        { return PUNC_SEMI; }
+":"        { return PUNC_COLON; }
+"::"       { return PUNC_PATH_SEP; }
+"->"       { return PUNC_R_ARROW; }
+"=>"       { return PUNC_FAT_ARROW; }
+"<-"       { return PUNC_L_ARROW; }
+"#"        { return PUNC_POUND; }
+"$"        { return PUNC_DOLALR; }
+"?"        { return PUNC_QUESTION; }
+"~"        { return PUNC_TILDE; }
 
-(        { return L_PAREN; }
-)        { return R_PAREN; }
-{        { return L_BRACE; }
-}        { return R_BRACE; }
-[        { return L_BRACKET; }
-]        { return R_BRACKET; }
+"("        { return L_PAREN; }
+")"        { return R_PAREN; }
+"{"        { return L_BRACE; }
+"}"        { return R_BRACE; }
+"["        { return L_BRACKET; }
+"]"        { return R_BRACKET; }
+
+{identifier}       { return IDENTIFIER; }
+{digit}*           { return INTEGER_LITERAL; }
+
+println!\(\"\{[a-zA-Z0-9_]+\}\"\) { return PRINTVAR; }
+println!\(\"[^\"]*\"\)            { return PRINTSTRING; }
+
+\n ++num_lines; ++num_chars;
+.  ++num_chars;
+
+%%
+main() {
+	yylex();
+	printf("# of lines = %d, # of chars = %d\n", num_lines, num_chars);
+}
