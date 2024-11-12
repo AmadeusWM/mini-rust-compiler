@@ -2,15 +2,19 @@
 //#include "../lexer/includes.h"
 #include <iostream>
 #include <cstdio>
+#include <memory>
 
 // C-declarations
 extern "C" int yylex();
 void yyerror(const char *s);
+void yykillme();
 %}
-%defines
+%code requires {
+    #include <memory>
+}
 %union {
     int integer;
-    char *string_literal;
+    char* string_literal;
 }
 // Yacc declarations
 // keywords: https://doc.rust-lang.org/reference/keywords.html
@@ -57,11 +61,17 @@ block:
     ;
 
 declaration:
-    KW_LET IDENTIFIER EQ INTEGER_LITERAL { std::cout << "Variable " << $2 << " to " << $4 << std::endl; }
+    KW_LET IDENTIFIER EQ INTEGER_LITERAL {
+        auto v = std::unique_ptr<char[]>($2);
+        std::cout << "Variable " << v.get() << " to " << $4 << std::endl;
+    }
     ;
 
 print_statement:
-    PRINT L_PAREN STRING_LITERAL R_PAREN { std::cout << "Print string " << $3 << std::endl; }
+    PRINT L_PAREN STRING_LITERAL R_PAREN {
+        auto v = std::unique_ptr<char[]>($3);
+        std::cout << "Print string " << v.get() << std::endl;
+    }
     | PRINT L_PAREN IDENTIFIER R_PAREN { std::cout << "Print variable" << std::endl; }
     | error;
 %%

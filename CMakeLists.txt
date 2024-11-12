@@ -29,16 +29,16 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src/lexer
 )
 
-add_executable(compiler
+add_executable(mini-rust
     ${CMAKE_SOURCE_DIR}/src/main.cpp
     ${BISON_MyParser_OUTPUTS}
     ${FLEX_MyLexer_OUTPUTS}
 )
 
-target_include_directories(compiler PRIVATE
+target_include_directories(mini-rust PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/parser
     ${CMAKE_SOURCE_DIR}/src/lexer
 )
 
-target_link_libraries(compiler ${FLEX_LIBRARIES})
+target_link_libraries(mini-rust ${FLEX_LIBRARIES})

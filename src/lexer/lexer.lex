@@ -3,6 +3,7 @@
 //#include "includes.h"
 #include <string>
 #include <cstdio>
+#include <memory>
 
 int line_nr = 1;
 int col_nr = 1;

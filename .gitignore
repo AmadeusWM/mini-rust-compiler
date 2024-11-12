@@ -7,5 +7,5 @@ build
 CMakeCache.txt
 cmake_install.cmake
 Makefile
-compiler
+mini-rust
 CMakeFiles
