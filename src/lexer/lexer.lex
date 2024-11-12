@@ -1,10 +1,12 @@
 %{
 #include "../parser/parser.h"
+//#include "includes.h"
 #include <string>
 #include <cstdio>
 
 int line_nr = 1;
 int col_nr = 1;
+extern "C" int yylex();
 %}
 
 digit      [0-9]

@@ -1,11 +1,10 @@
 %{
-#include "../lexer/lexer.h"
+//#include "../lexer/includes.h"
 #include <iostream>
 #include <cstdio>
 
 // C-declarations
-
-void yylex(int* str);
+extern "C" int yylex();
 void yyerror(const char *s);
 %}
 %defines
