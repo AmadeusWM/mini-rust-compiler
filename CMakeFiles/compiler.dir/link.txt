@@ -1,1 +1,0 @@
-/nix/store/zznja5f8v3jafffyah1rk46vpfcn38dv-gcc-wrapper-13.3.0/bin/g++ CMakeFiles/compiler.dir/src/main.cpp.o CMakeFiles/compiler.dir/src/parser/parser.cpp.o CMakeFiles/compiler.dir/src/lexer/lexer.cpp.o -o compiler  /nix/store/9z7zqgsw0lcn79rdvmak680sjzi5pyzf-flex-2.6.4/lib/libfl.so
