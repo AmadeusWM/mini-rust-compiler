@@ -17,6 +17,8 @@
         default = pkgs.mkShell {
           packages = with pkgs; [
             flex
+            bison
+            cmake
           ];
         };
       });

@@ -1,1 +1,10 @@
 .direnv
+lexer.cpp
+lexer.h
+parser.cpp
+parser.h
+build
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compiler

@@ -1,0 +1,44 @@
+cmake_minimum_required(VERSION 3.15...3.30)
+
+project(
+  MiniRustCompiler
+  VERSION 1.0
+  LANGUAGES CXX)
+
+
+find_package(FLEX)
+FLEX_TARGET(MyLexer ${CMAKE_SOURCE_DIR}/src/lexer/lexer.lex
+            ${CMAKE_SOURCE_DIR}/src/lexer/lexer.cpp
+            DEFINES_FILE ${CMAKE_SOURCE_DIR}/src/lexer/lexer.h
+)
+
+find_package(BISON)
+BISON_TARGET(MyParser ${CMAKE_SOURCE_DIR}/src/parser/parser.y
+             ${CMAKE_SOURCE_DIR}/src/parser/parser.cpp
+             DEFINES_FILE ${CMAKE_SOURCE_DIR}/src/parser/parser.h
+)
+
+ADD_FLEX_BISON_DEPENDENCY(MyLexer MyParser)
+
+message(STATUS "Flex output: ${FLEX_MyLexer_OUTPUTS}")
+message(STATUS "Bison output: ${BISON_MyParser_OUTPUTS}")
+
+include_directories(
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/parser
+    ${CMAKE_SOURCE_DIR}/src/lexer
+)
+
+add_executable(compiler
+    ${CMAKE_SOURCE_DIR}/src/main.cpp
+    ${BISON_MyParser_OUTPUTS}
+    ${FLEX_MyLexer_OUTPUTS}
+)
+
+target_include_directories(compiler PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/parser
+    ${CMAKE_SOURCE_DIR}/src/lexer
+)
+
+target_link_libraries(compiler ${FLEX_LIBRARIES})

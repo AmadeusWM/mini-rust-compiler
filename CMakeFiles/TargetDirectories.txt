@@ -1,0 +1,3 @@
+/home/amadeusw/university/master1/compilers/mini-rust-compiler/CMakeFiles/compiler.dir
+/home/amadeusw/university/master1/compilers/mini-rust-compiler/CMakeFiles/edit_cache.dir
+/home/amadeusw/university/master1/compilers/mini-rust-compiler/CMakeFiles/rebuild_cache.dir
