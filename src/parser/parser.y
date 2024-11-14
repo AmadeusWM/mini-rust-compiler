@@ -1,4 +1,4 @@
-%require  "3.0"
+%require  "3.2"
 %skeleton "lalr1.cc" 
 
 %code requires {
@@ -63,7 +63,40 @@
 %%
 // productions
 program:
-    KW_AS { std::cout << "AS" << std::endl; };
+    statements
+    ;
+
+statements:
+    statements statement
+    | statement
+    ;
+
+statement:
+    declaration SEMI { std::cout << "Declaration" << std::endl; }
+    | print_statement SEMI { std::cout << "Print statement" << std::endl; }
+    | function_definition { std::cout << "Function definition" << std::endl; }
+    ;
+
+function_definition:
+    KW_FN IDENTIFIER L_PAREN R_PAREN block { std::cout << "Function definition" << std::endl; }
+    ;
+
+block:
+    L_BRACE statements R_BRACE { std::cout << "Block" << std::endl; }
+    ;
+
+declaration:
+    KW_LET IDENTIFIER EQ INTEGER_LITERAL {
+        std::cout << "Variable" << std::endl;
+    }
+    ;
+
+print_statement:
+    PRINT L_PAREN STRING_LITERAL R_PAREN {
+        std::cout << "Print string" << std::endl;
+    }
+    | PRINT L_PAREN IDENTIFIER R_PAREN { std::cout << "Print variable" << std::endl; }
+    | error;
 %%
 
 // Bison expects us to provide implementation - otherwise linker complains
