@@ -3,6 +3,9 @@ lexer.cpp
 lexer.h
 parser.cpp
 parser.h
+position.hh
+stack.hh
+location.hh
 build
 CMakeCache.txt
 cmake_install.cmake

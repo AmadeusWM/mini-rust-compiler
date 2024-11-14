@@ -1,19 +1,14 @@
 // #include "lexer/lexer.h"
 #include "parser/parser.h"
-#include "lexer/lexer.h"
+#include "parser/mri_scanner.h"
 #include <cstdio>
 #include <iostream>
+#include <fstream>
 
 int main(int argc, char *argv[]) {
-  FILE *myfile = fopen(argv[1], "r");
-  if (!myfile) {
-    std::cout << "I can't open the file!" << std::endl;
-    return -1;
-  }
+  std::ifstream file(argv[1]);
 
-  yyin = myfile;
-
-  int result = yyparse();
-
-  return result;
+  MRI::Scanner scanner(&file);
+  MRI::Parser parser(scanner);
+  parser();
 }

@@ -1,22 +1,46 @@
-%{
-//#include "../lexer/includes.h"
-#include <iostream>
-#include <cstdio>
-#include <memory>
+%require  "3.0"
+%skeleton "lalr1.cc" 
 
-// C-declarations
-extern "C" int yylex();
-void yyerror(const char *s);
-void yykillme();
-%}
 %code requires {
-    #include <memory>
+
+    namespace MRI {
+        class Scanner;
+        // class Driver;
+    }
 }
-%union {
-    int integer;
-    char* string_literal;
+
+%code top {
+    #include <iostream>
+
+    #include "mri_scanner.h"
+    #include "parser.h"
+    #include "location.hh"
 }
+
+%header
+%verbose
+%define api.token.constructor
+%define api.value.type variant
+%define parse.assert
+
+%lex-param { MRI::Scanner &scanner }
+%parse-param { MRI::Scanner &scanner }
+
+%code {
+    static MRI::Parser::symbol_type yylex(MRI::Scanner &scanner) {
+        return scanner.get_next_token();
+    }
+    // #define yylex(x, y) scanner.get_next_token()
+}
+
+%define api.parser.class { Parser }
+%define api.namespace { MRI }
+%locations
+
+%defines
 // Yacc declarations
+%token END
+
 // keywords: https://doc.rust-lang.org/reference/keywords.html
 %token KW_AS KW_BREAK KW_CONST KW_CONTINUE KW_CRATE KW_ELSE KW_ENUM KW_EXTERN KW_FALSE KW_FN KW_FOR KW_IF KW_IMPL KW_IN KW_LET KW_LOOP KW_MATCH KW_MOD KW_MOVE KW_MUT KW_PUB KW_REF KW_RETURN KW_SELFVALUE KW_SELFTYPE KW_STATIC KW_STRUCT KW_SUPER KW_TRAIT KW_TRUE KW_TYPE KW_UNSAFE KW_USE KW_WHERE KW_WHILE KW_ASYNC KW_AWAIT KW_DYN KW_ABSTRACT KW_BECOME KW_BOX KW_DO KW_FINAL KW_MACRO KW_OVERRIDE KW_PRIV KW_TYPEOF KW_UNSIZED KW_VIRTUAL KW_YIELD KW_TRY
 
@@ -31,51 +55,23 @@ void yykillme();
 
 // identifiers: https://doc.rust-lang.org/reference/identifiers.html
 // literals: https://doc.rust-lang.org/reference/tokens.html#literals
-%token <string_literal> IDENTIFIER <integer> INTEGER_LITERAL <string_literal> STRING_LITERAL
+%token IDENTIFIER INTEGER_LITERAL STRING_LITERAL
 
 // custom
 %token PRINT
+
+%start program
+
 %%
 // productions
 program:
-    statements
-    ;
-
-statements:
-    statements statement
-    | statement
-    ;
-
-statement:
-    declaration SEMI { std::cout << "Declaration" << std::endl; }
-    | print_statement SEMI { std::cout << "Print statement" << std::endl; }
-    | function_definition { std::cout << "Function definition" << std::endl; }
-    ;
-
-function_definition:
-    KW_FN IDENTIFIER L_PAREN R_PAREN block { std::cout << "Function definition" << std::endl; }
-    ;
-
-block:
-    L_BRACE statements R_BRACE { std::cout << "Block" << std::endl; }
-    ;
-
-declaration:
-    KW_LET IDENTIFIER EQ INTEGER_LITERAL {
-        auto v = std::unique_ptr<char[]>($2);
-        std::cout << "Variable " << v.get() << " to " << $4 << std::endl;
-    }
-    ;
-
-print_statement:
-    PRINT L_PAREN STRING_LITERAL R_PAREN {
-        auto v = std::unique_ptr<char[]>($3);
-        std::cout << "Print string " << v.get() << std::endl;
-    }
-    | PRINT L_PAREN IDENTIFIER R_PAREN { std::cout << "Print variable" << std::endl; }
-    | error;
+    KW_AS { std::cout << "AS" << std::endl; };
 %%
 
-void yyerror(const char *s) {
-  std::cerr << "Error: " << s << std::endl;
+// Bison expects us to provide implementation - otherwise linker complains
+void MRI::Parser::error(const location &loc , const std::string &message) {
+        
+        // Location should be initialized inside scanner action, but is not in this example.
+        // Let's grab location directly from driver class.
+	std::cout << "Error: " << message << std::endl << "Location: " << loc << std::endl;
 }
