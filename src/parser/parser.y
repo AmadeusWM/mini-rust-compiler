@@ -14,7 +14,6 @@
 
     #include "mri_scanner.h"
     #include "parser.h"
-    #include "location.hh"
 }
 
 %header
