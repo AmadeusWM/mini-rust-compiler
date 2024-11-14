@@ -3,9 +3,6 @@
 
 using namespace MRI;
 
-// #undef  YY_DECL
-// #define YY_DECL int Scanner::yylex( Parser::semantic_type * const yylval, Parser::location_type *yylloc )
-
 %}
 
 %option c++

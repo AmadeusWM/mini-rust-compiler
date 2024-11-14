@@ -30,7 +30,6 @@
     static MRI::Parser::symbol_type yylex(MRI::Scanner &scanner) {
         return scanner.get_next_token();
     }
-    // #define yylex(x, y) scanner.get_next_token()
 }
 
 %define api.parser.class { Parser }

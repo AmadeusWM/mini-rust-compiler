@@ -22,7 +22,6 @@ class Scanner : public yyFlexLexer {
       };
       virtual ~Scanner() {};
 
-      // virtual Parser::symbol_type yylex( Parser::semantic_type* const yylval, Parser::location_type* yylloc );
       virtual MRI::Parser::symbol_type get_next_token();
          // Method body created by flex in lexer.cpp
   private:
