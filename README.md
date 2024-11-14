@@ -8,3 +8,6 @@
   - http://www.jonathanbeard.io/tutorials/FlexBisonC++
     - https://github.com/jonathan-beard/simple_wc_example
   - https://github.com/ezaquarii/bison-flex-cpp-example
+  - https://github.com/bingmann/flex-bison-cpp-example/tree/master/src
+- BISON docs: https://www.gnu.org/software/bison/manual/html_node/Concepts.html
+- FLEX docs: https://westes.github.io/flex/manual/Cxx.html#Cxx

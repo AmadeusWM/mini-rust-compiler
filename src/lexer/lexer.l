@@ -1,5 +1,5 @@
 %{
-#include "mri_scanner.h"
+#include "scanner.h"
 
 using namespace MRI;
 

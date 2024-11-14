@@ -12,7 +12,7 @@
 #undef YY_DECL
 #define YY_DECL MRI::Parser::symbol_type MRI::Scanner::get_next_token()
 
-#include "parser.h"
+#include "../parser/parser.h"
 
 namespace MRI {
 class Scanner : public yyFlexLexer {

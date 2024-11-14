@@ -12,7 +12,7 @@
 %code top {
     #include <iostream>
 
-    #include "mri_scanner.h"
+    #include "../lexer/scanner.h"
     #include "parser.h"
 }
 

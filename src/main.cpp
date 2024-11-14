@@ -1,6 +1,6 @@
 // #include "lexer/lexer.h"
 #include "parser/parser.h"
-#include "parser/mri_scanner.h"
+#include "lexer/scanner.h"
 #include <cstdio>
 #include <iostream>
 #include <fstream>
