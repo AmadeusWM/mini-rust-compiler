@@ -11,6 +11,7 @@
 
 %code top {
     #include <iostream>
+    #include <string>
 
     #include "../lexer/scanner.h"
     #include "parser.h"
@@ -22,10 +23,12 @@
 %define api.value.type variant
 %define parse.assert
 
+/* parameter to yylex */
 %lex-param { MRI::Scanner &scanner }
 %parse-param { MRI::Scanner &scanner }
 
 %code {
+    // scanner is provided to yylex by the %lex-param directive
     static MRI::Parser::symbol_type yylex(MRI::Scanner &scanner) {
         return scanner.get_next_token();
     }
@@ -34,6 +37,7 @@
 %define api.parser.class { Parser }
 %define api.namespace { MRI }
 %locations
+/* %define api.location.type {location_t} */
 
 %defines
 // Yacc declarations
@@ -53,7 +57,7 @@
 
 // identifiers: https://doc.rust-lang.org/reference/identifiers.html
 // literals: https://doc.rust-lang.org/reference/tokens.html#literals
-%token IDENTIFIER INTEGER_LITERAL STRING_LITERAL
+%token <std::string> IDENTIFIER INTEGER_LITERAL STRING_LITERAL
 
 // custom
 %token PRINT
@@ -62,7 +66,13 @@
 
 %%
 // productions
+
 program:
+    KW_LET IDENTIFIER EQ INTEGER_LITERAL {
+        std::cout << "Variable " << $2 << std::endl;
+    }
+    ;
+/* program:
     statements
     ;
 
@@ -85,18 +95,12 @@ block:
     L_BRACE statements R_BRACE { std::cout << "Block" << std::endl; }
     ;
 
-declaration:
-    KW_LET IDENTIFIER EQ INTEGER_LITERAL {
-        std::cout << "Variable" << std::endl;
-    }
-    ;
-
 print_statement:
     PRINT L_PAREN STRING_LITERAL R_PAREN {
         std::cout << "Print string" << std::endl;
     }
     | PRINT L_PAREN IDENTIFIER R_PAREN { std::cout << "Print variable" << std::endl; }
-    | error;
+    | error; */
 %%
 
 // Bison expects us to provide implementation - otherwise linker complains

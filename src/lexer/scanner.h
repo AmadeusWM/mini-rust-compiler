@@ -23,9 +23,9 @@ class Scanner : public yyFlexLexer {
       virtual ~Scanner() {};
 
       virtual MRI::Parser::symbol_type get_next_token();
-         // Method body created by flex in lexer.cpp
+      // Method body created by flex in lexer.cpp
   private:
-     /* yyval ptr */
      Parser::semantic_type *yylval = nullptr;
+     Parser::location_type yylloc{};
   };
 }
