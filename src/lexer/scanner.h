@@ -1,9 +1,4 @@
 #pragma once
-// #if ! defined(yyFlexLexerOnce)
-// #undef yyFlexLexer
-// #define yyFlexLexer MRI_FlexLexer // the trick with prefix; no namespace here :(
-// #include <FlexLexer.h>
-// #endif
 
 #if ! defined(yyFlexLexerOnce)
 #include <FlexLexer.h>
@@ -25,7 +20,6 @@ class Scanner : public yyFlexLexer {
       virtual MRI::Parser::symbol_type get_next_token();
       // Method body created by flex in lexer.cpp
   private:
-     Parser::semantic_type *yylval = nullptr;
      Parser::location_type yylloc{};
   };
 }

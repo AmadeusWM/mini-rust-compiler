@@ -1,11 +1,11 @@
+%language "c++"
 %require  "3.2"
-%skeleton "lalr1.cc" 
 
 %code requires {
 
     namespace MRI {
         class Scanner;
-        // class Driver;
+        class Driver;
     }
 }
 
@@ -14,17 +14,22 @@
     #include <string>
 
     #include "../lexer/scanner.h"
+    #include "driver.h"
     #include "parser.h"
 }
 
 %header
 %verbose
+// defines: https://www.gnu.org/software/bison/manual/html_node/_0025define-Summary.html
 %define api.token.constructor
 %define api.value.type variant
 %define parse.assert
 
+%define parse.error verbose
+
 /* parameter to yylex */
 %lex-param { MRI::Scanner &scanner }
+%parse-param { MRI::Driver &driver }
 %parse-param { MRI::Scanner &scanner }
 
 %code {
@@ -37,11 +42,11 @@
 %define api.parser.class { Parser }
 %define api.namespace { MRI }
 %locations
-/* %define api.location.type {location_t} */
+
 
 %defines
 // Yacc declarations
-%token END
+%token END 0
 
 // keywords: https://doc.rust-lang.org/reference/keywords.html
 %token KW_AS KW_BREAK KW_CONST KW_CONTINUE KW_CRATE KW_ELSE KW_ENUM KW_EXTERN KW_FALSE KW_FN KW_FOR KW_IF KW_IMPL KW_IN KW_LET KW_LOOP KW_MATCH KW_MOD KW_MOVE KW_MUT KW_PUB KW_REF KW_RETURN KW_SELFVALUE KW_SELFTYPE KW_STATIC KW_STRUCT KW_SUPER KW_TRAIT KW_TRUE KW_TYPE KW_UNSAFE KW_USE KW_WHERE KW_WHILE KW_ASYNC KW_AWAIT KW_DYN KW_ABSTRACT KW_BECOME KW_BOX KW_DO KW_FINAL KW_MACRO KW_OVERRIDE KW_PRIV KW_TYPEOF KW_UNSIZED KW_VIRTUAL KW_YIELD KW_TRY
@@ -57,7 +62,9 @@
 
 // identifiers: https://doc.rust-lang.org/reference/identifiers.html
 // literals: https://doc.rust-lang.org/reference/tokens.html#literals
-%token <std::string> IDENTIFIER INTEGER_LITERAL STRING_LITERAL
+%token <std::string> IDENTIFIER 
+%token <std::string> STRING_LITERAL
+%token <int> INTEGER_LITERAL 
 
 // custom
 %token PRINT
@@ -66,14 +73,8 @@
 
 %%
 // productions
-
 program:
-    KW_LET IDENTIFIER EQ INTEGER_LITERAL {
-        std::cout << "Variable " << $2 << std::endl;
-    }
-    ;
-/* program:
-    statements
+    statements END { std::cout << "Program" << std::endl; }
     ;
 
 statements:
@@ -95,18 +96,21 @@ block:
     L_BRACE statements R_BRACE { std::cout << "Block" << std::endl; }
     ;
 
+declaration:
+    KW_LET IDENTIFIER EQ INTEGER_LITERAL {
+        std::cout << "Variable " << $2 << " to " << $4 << std::endl;
+    }
+    ;
+
 print_statement:
     PRINT L_PAREN STRING_LITERAL R_PAREN {
-        std::cout << "Print string" << std::endl;
+        std::cout << "Print string: " << $3 << std::endl;
     }
-    | PRINT L_PAREN IDENTIFIER R_PAREN { std::cout << "Print variable" << std::endl; }
-    | error; */
+    | error;
 %%
 
-// Bison expects us to provide implementation - otherwise linker complains
 void MRI::Parser::error(const location &loc , const std::string &message) {
-        
-        // Location should be initialized inside scanner action, but is not in this example.
-        // Let's grab location directly from driver class.
-	std::cout << "Error: " << message << std::endl << "Location: " << loc << std::endl;
+	std::cout << "Error" 
+        << "(" << loc << "): " 
+        << message << std::endl;
 }

@@ -1,4 +1,4 @@
 fn main() {
-    let abc = 10;
+    let abc = 10
     println!("Hello, World");
 }
