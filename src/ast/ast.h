@@ -1,5 +1,8 @@
 
+#include "node.h"
 class AST {
     public:
-        ProgramNode* program;
-}
+        AST(ProgramNode root)
+        : root(root) {}
+        ProgramNode root;
+};

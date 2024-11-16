@@ -28,6 +28,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/parser
     ${CMAKE_SOURCE_DIR}/src/lexer
+    ${CMAKE_SOURCE_DIR}/src/ast
 )
 
 add_executable(mini-rust
@@ -41,6 +42,7 @@ target_include_directories(mini-rust PRIVATE
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/parser
     ${CMAKE_SOURCE_DIR}/src/lexer
+    ${CMAKE_SOURCE_DIR}/src/ast
 )
 
 # target_link_libraries(mini-rust ${FLEX_LIBRARIES})

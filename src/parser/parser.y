@@ -2,6 +2,7 @@
 %require  "3.2"
 
 %code requires {
+    #include "../ast/node.h"
 
     namespace MRI {
         class Scanner;
@@ -16,6 +17,8 @@
     #include "../lexer/scanner.h"
     #include "driver.h"
     #include "parser.h"
+
+    // #define YYDEBUG 1 // print ambiguous states
 }
 
 %header
@@ -66,47 +69,46 @@
 %token <std::string> STRING_LITERAL
 %token <int> INTEGER_LITERAL 
 
+%type <ProgramNode> program
+%type <ProgramNode> function_definitions
+%type <FunctionDefinitionNode> function_definition
+
+
 // custom
 %token PRINT
-
-%start program
 
 %%
 // productions
 program:
-    statements END { std::cout << "Program" << std::endl; }
+    function_definitions END { 
+        // todo: we now parsed the program and have an AST. We 
+        // want to transition to the next state, so we want to
+        // transition into the ASTDriverState, which takes
+        // an AST as a parameter.
+        // e.g.: driver.transition(ASTDriverState(ProgramNode($1)));
+        driver.ast = new AST(ProgramNode($1));
+        $$ = $1;
+    }
     ;
 
-statements:
-    statements statement
-    | statement
+function_definitions:
+    function_definitions function_definition {
+        $1.children.push_back($2);
+        $$ = $1;
+    }
+    | function_definition {
+        $$ = ProgramNode();
+        $$.children.push_back($1);
+    }
     ;
 
-statement:
-    declaration SEMI { std::cout << "Declaration" << std::endl; }
-    | print_statement SEMI { std::cout << "Print statement" << std::endl; }
-    | function_definition { std::cout << "Function definition" << std::endl; }
-    ;
 
 function_definition:
-    KW_FN IDENTIFIER L_PAREN R_PAREN block { std::cout << "Function definition" << std::endl; }
-    ;
-
-block:
-    L_BRACE statements R_BRACE { std::cout << "Block" << std::endl; }
-    ;
-
-declaration:
-    KW_LET IDENTIFIER EQ INTEGER_LITERAL {
-        std::cout << "Variable " << $2 << " to " << $4 << std::endl;
+    KW_FN IDENTIFIER L_PAREN R_PAREN { 
+        $$ = FunctionDefinitionNode{$2};
     }
     ;
 
-print_statement:
-    PRINT L_PAREN STRING_LITERAL R_PAREN {
-        std::cout << "Print string: " << $3 << std::endl;
-    }
-    | error;
 %%
 
 void MRI::Parser::error(const location &loc , const std::string &message) {

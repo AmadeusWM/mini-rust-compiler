@@ -22,6 +22,7 @@
 - Some rust scanne; https://github.com/mjehrhart/lexical_scanner/blob/master/src/enums/mod.rs
 - Rust reference (tokens): https://doc.rust-lang.org/reference/tokens.html
 - AST in cpp: https://lesleylai.info/en/ast-in-cpp-part-1-variant/
+- AST rust impl: https://doc.rust-lang.org/beta/nightly-rustc/rustc_ast/ast/struct.Stmt.html
 - Flex and bison cpp:
   - http://www.jonathanbeard.io/tutorials/FlexBisonC++
     - https://github.com/jonathan-beard/simple_wc_example
@@ -30,3 +31,6 @@
 - BISON docs: https://www.gnu.org/software/bison/manual/html_node/Concepts.html
 - FLEX docs: https://westes.github.io/flex/manual/Cxx.html#Cxx
 - https://blog.trailofbits.com/2024/05/02/the-life-and-times-of-an-abstract-syntax-tree/
+
+- THE RUST COMPILER:
+  - type inference: https://rustc-dev-guide.rust-lang.org/type-inference.html
