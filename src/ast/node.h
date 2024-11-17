@@ -1,39 +1,72 @@
 #pragma once
 
 #include <iostream>
+#include <memory>
 #include <string>
 #include <variant>
 #include <vector>
 
 struct ProgramNode;
 struct FunctionDefinitionNode;
+struct BlockNode;
+struct StatementNode;
+struct AssignmentNode;
+
+template <typename T> using P = std::unique_ptr<T>;
 
 typedef std::variant<
   ProgramNode,
-  FunctionDefinitionNode
+  FunctionDefinitionNode,
+  BlockNode,
+  StatementNode,
+  AssignmentNode
 > Node;
 
 struct ProgramNode {
-  std::vector<Node> children;
+  std::vector<FunctionDefinitionNode> children;
 };
 
 struct FunctionDefinitionNode {
-  std::string name;
+  std::string identifier;
+  P<BlockNode> block;
 };
 
-static void test_nodes() {
-  FunctionDefinitionNode function{"abc"};
-  ProgramNode program{
-    std::vector{Node(function)}
+struct BlockNode {
+  std::vector<StatementNode> children;
+};
+
+struct StatementNode {
+  P<Node> node;
+};
+
+struct AssignmentNode {
+  std::string identifier;
+  int value;
+};
+
+
+class Visitor {
+public:
+  virtual void visit(const ProgramNode& node) {
+    for (const auto& child : node.children) {
+      visit(child);
+    }
+  };
+  virtual void visit(const FunctionDefinitionNode& node) {
+    visit(*node.block);
+  }
+  virtual void visit(const BlockNode& node) {
+    for (const auto& child : node.children) {
+      visit(child);
+    }
+  }
+  virtual void visit(const StatementNode& node) {
+    visit(*node.node);
+  }
+  virtual void visit(const AssignmentNode& node) {
+    // do nothing
   };
 
-  Node node = program;
-}
-
-class NodeVisitor {
-public:
-  virtual void visit(const ProgramNode& node) = 0;
-  virtual void visit(const FunctionDefinitionNode& node) = 0;
   void visit (const Node& node) {
     if (std::holds_alternative<ProgramNode>(node)) {
       visit(std::get<ProgramNode>(node));
@@ -41,23 +74,24 @@ public:
     else if (std::holds_alternative<FunctionDefinitionNode>(node)) {
       visit(std::get<FunctionDefinitionNode>(node));
     }
-  }
-};
-
-class DefaultVisitor : public NodeVisitor {
-  void visit(const ProgramNode& node) override {}
-  void visit(const FunctionDefinitionNode& node) override {}
-};
-
-class PrintVisitor : public NodeVisitor {
-public:
-  void visit(const ProgramNode& node) override {
-    for (const Node& child : node.children) {
-      NodeVisitor::visit(child);
+    else if (std::holds_alternative<BlockNode>(node)) {
+      visit(std::get<BlockNode>(node));
+    }
+    else if (std::holds_alternative<StatementNode>(node)) {
+      visit(std::get<StatementNode>(node));
+    }
+    else if (std::holds_alternative<AssignmentNode>(node)) {
+      visit(std::get<AssignmentNode>(node));
     }
   }
+};
 
-  void visit(const FunctionDefinitionNode& node) override {
-    std::cout << "FunctionDefinitionNode: " << node.name << std::endl;
+class PrintVisitor : public Visitor {
+public:
+  void visit(const AssignmentNode& node) override {
+    std::cout << "AssignmentNode: " << node.identifier << " = " << node.value << std::endl;
+  }
+  void visit(const Node& node) {
+    Visitor::visit(node);
   }
 };

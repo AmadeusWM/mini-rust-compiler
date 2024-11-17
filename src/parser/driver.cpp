@@ -8,6 +8,5 @@ MRI::Driver::Driver(MRI::Scanner* scanner)
 void MRI::Driver::parse() {
     this->parser.parse();
     PrintVisitor visitor;
-    visitor.visit(this->ast->root);
+    visitor.visit(Node(std::move(this->ast->root)));
 }
-

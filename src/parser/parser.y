@@ -3,6 +3,7 @@
 
 %code requires {
     #include "../ast/node.h"
+    #include "../ast/ast.h"
 
     namespace MRI {
         class Scanner;
@@ -19,6 +20,7 @@
     #include "parser.h"
 
     // #define YYDEBUG 1 // print ambiguous states
+    using std::unique_ptr;
 }
 
 %header
@@ -69,9 +71,14 @@
 %token <std::string> STRING_LITERAL
 %token <int> INTEGER_LITERAL 
 
-%type <ProgramNode> program
+%type <AST*> program
 %type <ProgramNode> function_definitions
 %type <FunctionDefinitionNode> function_definition
+%type <BlockNode> block
+%type <BlockNode> statements
+%type <StatementNode> statement
+%type <AssignmentNode> assignment_statement
+
 
 
 // custom
@@ -86,27 +93,49 @@ program:
         // transition into the ASTDriverState, which takes
         // an AST as a parameter.
         // e.g.: driver.transition(ASTDriverState(ProgramNode($1)));
-        driver.ast = new AST(ProgramNode($1));
-        $$ = $1;
+        driver.ast = new AST(ProgramNode(std::move($1)));
+        $$ = driver.ast;
     }
     ;
 
 function_definitions:
     function_definitions function_definition {
-        $1.children.push_back($2);
-        $$ = $1;
+        $1.children.push_back(std::move($2));
+        $$ = std::move($1);
     }
     | function_definition {
         $$ = ProgramNode();
-        $$.children.push_back($1);
+        $$.children.push_back(std::move($1));
     }
     ;
 
 
 function_definition:
-    KW_FN IDENTIFIER L_PAREN R_PAREN { 
-        $$ = FunctionDefinitionNode{$2};
+    KW_FN IDENTIFIER L_PAREN R_PAREN block { 
+        $$ = FunctionDefinitionNode{$2, std::unique_ptr<BlockNode>(new BlockNode{std::move($5)})};
     }
+    ;
+
+block: 
+    L_BRACE statements R_BRACE { $$ = std::move($2); }
+    ; 
+
+statements: 
+    statements statement { 
+        $1.children.push_back(std::move($2));
+        $$ = std::move($1);
+    }
+    | statement { 
+        $$ = BlockNode();
+        $$.children.push_back(std::move($1));
+    }
+    ;
+
+statement:
+    assignment_statement { $$ = StatementNode{std::unique_ptr<Node>(new Node($1))}; }
+
+assignment_statement:
+    KW_LET IDENTIFIER EQ INTEGER_LITERAL SEMI { $$ = AssignmentNode{$2, $4}; }
     ;
 
 %%
