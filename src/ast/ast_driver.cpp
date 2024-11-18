@@ -7,6 +7,6 @@ MRI::ASTDriver::ASTDriver(MRI::Scanner* scanner)
 
 void MRI::ASTDriver::parse() {
     this->parser.parse();
-    PrintVisitor visitor;
-    visitor.visit(std::move(this->ast->root));
+    AST::PrintVisitor visitor;
+    visitor.Visitor::visit(*std::move(this->ast));
 }

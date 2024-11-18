@@ -2,12 +2,11 @@
 %require  "3.2"
 
 %code requires {
-    #include "../ast/node.h"
-    #include "../ast/ast.h"
+    #include "../node.h"
 
     namespace MRI {
         class Scanner;
-        class Driver;
+        class ASTDriver;
     }
 }
 
@@ -18,6 +17,7 @@
     #include "../lexer/scanner.h"
     #include "../ast_driver.h"
     #include "parser.h"
+    #include "../../util/util.h"
 
     // #define YYDEBUG 1 // print ambiguous states
     using std::unique_ptr;
@@ -67,17 +67,21 @@
 
 // identifiers: https://doc.rust-lang.org/reference/identifiers.html
 // literals: https://doc.rust-lang.org/reference/tokens.html#literals
-%token <std::string> IDENTIFIER
+%token <std::string> IDENTIFIER 
 %token <std::string> STRING_LITERAL
-%token <int> INTEGER_LITERAL
+%token <int> INTEGER_LITERAL 
 
-%type <AST*> program
-%type <ProgramNode> function_definitions
-%type <FunctionDefinitionNode> function_definition
-%type <BlockNode> block
-%type <BlockNode> statements
-%type <StatementNode> statement
-%type <AssignmentNode> assignment_statement
+%type <AST::Crate*> crate
+%type <AST::Crate> function_definitions
+%type <AST::Item> function_definition
+%type <AST::Block> block
+%type <AST::Block> statements
+%type <AST::Stmt> statement
+%type <AST::Let> let_statement
+%type <AST::LocalKind> local;
+%type <AST::Expr> expr
+%type <AST::Expr> block_expr
+%type <AST::Expr> literal_expr
 
 
 
@@ -86,14 +90,14 @@
 
 %%
 // productions
-program:
-    function_definitions END {
-        // todo: we now parsed the program and have an AST. We
+crate:
+    function_definitions END { 
+        // todo: we now parsed the program and have an AST. We 
         // want to transition to the next state, so we want to
         // transition into the ASTDriverState, which takes
         // an AST as a parameter.
         // e.g.: driver.transition(ASTDriverState(ProgramNode($1)));
-        driver.ast = new AST(ProgramNode(std::move($1)));
+        driver.ast = new AST::Crate(std::move($1));
         $$ = driver.ast;
     }
     ;
@@ -104,7 +108,7 @@ function_definitions:
         $$ = std::move($1);
     }
     | function_definition {
-        $$ = ProgramNode();
+        $$ = AST::Crate();
         $$.children.push_back(std::move($1));
     }
     ;
@@ -112,36 +116,83 @@ function_definitions:
 
 function_definition:
     KW_FN IDENTIFIER L_PAREN R_PAREN block {
-        $$ = FunctionDefinitionNode{$2, std::unique_ptr<BlockNode>(new BlockNode{std::move($5)})};
+        $$ = AST::Item {
+            AST::ItemKind{
+                P<AST::FnDef>(new AST::FnDef{
+                    $2, 
+                    P<AST::Block>(new AST::Block{std::move($5)})
+                })
+            }
+        };
     }
     ;
 
-block:
+block: 
     L_BRACE statements R_BRACE { $$ = std::move($2); }
-    ;
+    ; 
 
-statements:
-    statements statement {
-        $1.children.push_back(std::move($2));
+statements: 
+    statements statement { 
+        $1.statements.push_back(std::move($2));
         $$ = std::move($1);
     }
-    | statement {
-        $$ = BlockNode();
-        $$.children.push_back(std::move($1));
+    | statement { 
+        $$ = AST::Block();
+        $$.statements.push_back(std::move($1));
     }
     ;
 
 statement:
-    assignment_statement { $$ = StatementNode{std::unique_ptr<Node>(new Node($1))}; }
+    let_statement { 
+        $$ = AST::Stmt{P<AST::Let>(new AST::Let(std::move($1)))};
+    }
 
-assignment_statement:
-    KW_LET IDENTIFIER EQ INTEGER_LITERAL SEMI { $$ = AssignmentNode{$2, $4}; }
+let_statement: 
+    KW_LET IDENTIFIER local SEMI {
+        $$ = AST::Let {
+            $2, 
+            std::move($3)
+        };
+    }
+    ;
+
+local:
+    EQ expr {
+        $$ = AST::LocalKind(P<AST::Expr>(new AST::Expr(std::move($2))));
+    }
+    | { $$ = AST::LocalKind(AST::Decl {}); }
+    ;
+
+expr:
+    block_expr { $$ = std::move($1); }
+    | literal_expr { $$ = std::move($1); }
+    ;
+
+block_expr:
+    block {
+        // this hould become an expr, and block_expr
+        $$ = AST::Expr {
+            AST::ExprKind {
+                P<AST::Block>(new AST::Block{std::move($1)})
+            }
+        };
+    }
+    ;
+
+literal_expr:
+    INTEGER_LITERAL {
+        $$ = AST::Expr {
+            AST::ExprKind {
+                AST::Lit{AST::LitKind($1)}
+            }
+        };
+    }
     ;
 
 %%
 
 void MRI::Parser::error(const location &loc , const std::string &message) {
-	std::cout << "Error"
-        << "(" << loc << "): "
+	std::cout << "Error" 
+        << "(" << loc << "): " 
         << message << std::endl;
 }
