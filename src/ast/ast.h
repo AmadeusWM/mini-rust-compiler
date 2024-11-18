@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "node.h"
+
 class AST {
     public:
         AST(Crate root)

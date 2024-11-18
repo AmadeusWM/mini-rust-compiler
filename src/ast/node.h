@@ -7,14 +7,14 @@
 #include <variant>
 #include <vector>
 
+#import "../util/util.h"
+
 struct Crate;
 struct FunctionDefinition;
 struct Expr;
 struct Stmt;
 
 struct Block;
-
-template <typename T> using P = std::unique_ptr<T>;
 
 typedef std::variant<
   // - modules
@@ -96,11 +96,6 @@ struct AssignmentNode {
   int value;
 };
 
-template<class... Ts>
-struct overloaded : Ts... { using Ts::operator()...; };
-template<class... Ts>
-overloaded(Ts...) -> overloaded<Ts...>;
-
 class Visitor {
 public:
   virtual void visit(const Crate& crate) {
@@ -121,21 +116,19 @@ public:
 
   virtual void visit(const Stmt& node) {
     std::visit(overloaded{
-      [this] (const P<Let>& let) { visit(*let); },
+      [this] (const P<Let>& let) {
+        std::visit(overloaded{
+          [this](const Decl& decl) {
+            std::visit(overloaded{
+              [this](const int i) { std::cout << "DECL_int" << i << std::endl; },
+              [this](const std::string& s) { std::cout << "DECL_str" << s << std::endl; }
+            }, decl.lit.kind);
+          },
+          [this](const P<Expr>& expr) { visit(*expr); }
+        }, let->kind);
+      },
       [this] (const P<Expr>& expr) { visit(*expr); }
     }, node.kind);
-  }
-
-  virtual void visit(const Let& let) {
-    std::visit(overloaded{
-      [this](const Decl& decl) {
-        std::visit(overloaded{
-          [this](const int i) { std::cout << "DECL_int" << i << std::endl; },
-          [this](const std::string& s) { std::cout << "DECL_str" << s << std::endl; }
-        }, decl.lit.kind);
-      },
-      [this](const P<Expr>& expr) { visit(*expr); }
-    }, let.kind);
   }
 
   virtual void visit(const Expr& expr) {
@@ -153,10 +146,14 @@ public:
 
 class PrintVisitor : public Visitor {
 public:
-  void visit(const AssignmentNode& node) override {
-    std::cout << "AssignmentNode: " << node.identifier << " = " << node.value << std::endl;
-  }
-  void visit(const Node& node) {
-    Visitor::visit(node);
+  void visit(const Stmt& stmt) override {
+    std::visit(overloaded{
+      [this] (const P<Let>& let) {
+        std::cout << "LET statement" << std::endl;
+      },
+      [this] (const P<Expr>& expr) {
+        std::cout << "EXPR statement" << std::endl;
+      }
+    }, stmt.kind);
   }
 };

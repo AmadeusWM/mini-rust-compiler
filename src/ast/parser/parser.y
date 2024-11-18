@@ -16,7 +16,7 @@
     #include <string>
 
     #include "../lexer/scanner.h"
-    #include "driver.h"
+    #include "../ast_driver.h"
     #include "parser.h"
 
     // #define YYDEBUG 1 // print ambiguous states
@@ -34,7 +34,7 @@
 
 /* parameter to yylex */
 %lex-param { MRI::Scanner &scanner }
-%parse-param { MRI::Driver &driver }
+%parse-param { MRI::ASTDriver &driver }
 %parse-param { MRI::Scanner &scanner }
 
 %code {
@@ -67,9 +67,9 @@
 
 // identifiers: https://doc.rust-lang.org/reference/identifiers.html
 // literals: https://doc.rust-lang.org/reference/tokens.html#literals
-%token <std::string> IDENTIFIER 
+%token <std::string> IDENTIFIER
 %token <std::string> STRING_LITERAL
-%token <int> INTEGER_LITERAL 
+%token <int> INTEGER_LITERAL
 
 %type <AST*> program
 %type <ProgramNode> function_definitions
@@ -87,8 +87,8 @@
 %%
 // productions
 program:
-    function_definitions END { 
-        // todo: we now parsed the program and have an AST. We 
+    function_definitions END {
+        // todo: we now parsed the program and have an AST. We
         // want to transition to the next state, so we want to
         // transition into the ASTDriverState, which takes
         // an AST as a parameter.
@@ -111,21 +111,21 @@ function_definitions:
 
 
 function_definition:
-    KW_FN IDENTIFIER L_PAREN R_PAREN block { 
+    KW_FN IDENTIFIER L_PAREN R_PAREN block {
         $$ = FunctionDefinitionNode{$2, std::unique_ptr<BlockNode>(new BlockNode{std::move($5)})};
     }
     ;
 
-block: 
+block:
     L_BRACE statements R_BRACE { $$ = std::move($2); }
-    ; 
+    ;
 
-statements: 
-    statements statement { 
+statements:
+    statements statement {
         $1.children.push_back(std::move($2));
         $$ = std::move($1);
     }
-    | statement { 
+    | statement {
         $$ = BlockNode();
         $$.children.push_back(std::move($1));
     }
@@ -141,7 +141,7 @@ assignment_statement:
 %%
 
 void MRI::Parser::error(const location &loc , const std::string &message) {
-	std::cout << "Error" 
-        << "(" << loc << "): " 
+	std::cout << "Error"
+        << "(" << loc << "): "
         << message << std::endl;
 }

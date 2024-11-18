@@ -8,15 +8,15 @@ project(
 # set(FLEX_USE_STATIC_LIB ON)
 
 find_package(BISON)
-BISON_TARGET(MyParser ${CMAKE_SOURCE_DIR}/src/parser/parser.y
-             ${CMAKE_SOURCE_DIR}/src/parser/parser.cpp
-             DEFINES_FILE ${CMAKE_SOURCE_DIR}/src/parser/parser.h
+BISON_TARGET(MyParser ${CMAKE_SOURCE_DIR}/src/ast/parser/parser.y
+             ${CMAKE_SOURCE_DIR}/src/ast/parser/parser.cpp
+             DEFINES_FILE ${CMAKE_SOURCE_DIR}/src/ast/parser/parser.h
 )
 
 find_package(FLEX)
-FLEX_TARGET(MyLexer ${CMAKE_SOURCE_DIR}/src/lexer/lexer.l
-            ${CMAKE_SOURCE_DIR}/src/lexer/lexer.cpp
-            DEFINES_FILE ${CMAKE_SOURCE_DIR}/src/lexer/lexer.h
+FLEX_TARGET(MyLexer ${CMAKE_SOURCE_DIR}/src/ast/lexer/lexer.l
+            ${CMAKE_SOURCE_DIR}/src/ast/lexer/lexer.cpp
+            DEFINES_FILE ${CMAKE_SOURCE_DIR}/src/ast/lexer/lexer.h
 )
 
 ADD_FLEX_BISON_DEPENDENCY(MyLexer MyParser)
@@ -29,11 +29,14 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/src/parser
     ${CMAKE_SOURCE_DIR}/src/lexer
     ${CMAKE_SOURCE_DIR}/src/ast
+    ${CMAKE_SOURCE_DIR}/src/tast
+    ${CMAKE_SOURCE_DIR}/src/interpreter
+    ${CMAKE_SOURCE_DIR}/src/util
 )
 
 add_executable(mini-rust
     ${CMAKE_SOURCE_DIR}/src/main.cpp
-    ${CMAKE_SOURCE_DIR}/src/parser/driver.cpp
+    ${CMAKE_SOURCE_DIR}/src/ast/ast_driver.cpp
     ${BISON_MyParser_OUTPUTS}
     ${FLEX_MyLexer_OUTPUTS}
 )
