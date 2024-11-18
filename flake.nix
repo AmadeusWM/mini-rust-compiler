@@ -3,24 +3,28 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    rust-overlay.url = "github:oxalica/rust-overlay";
+    flake-utils.url  = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs }:
+  outputs = { self, nixpkgs, rust-overlay, flake-utils, ... }:
+    flake-utils.lib.eachDefaultSystem (system:
     let
-      supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
-      forEachSupportedSystem = f: nixpkgs.lib.genAttrs supportedSystems (system: f {
-        pkgs = import nixpkgs { inherit system; };
-      });
+        overlays = [ (import rust-overlay) ];
+        pkgs = import nixpkgs { inherit system overlays; };
     in
     {
-      devShells = forEachSupportedSystem ({ pkgs }: {
-        default = pkgs.mkShell {
-          packages = with pkgs; [
+      devShells.default = pkgs.mkShell {
+        packages = with pkgs; [
             flex
             bison
             cmake
-          ];
-        };
-      });
-    };
+            # get ast: cargo rustc -- -Z unpretty=ast-tree
+            # get hir: cargo rustc -- -Z unpretty=hir-tree
+            # get typed: cargo rustc -- -Z unpretty=thir-tree
+            rust-bin.nightly."2024-01-01".default
+        ];
+      };
+    }
+    );
 }

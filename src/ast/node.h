@@ -1,42 +1,94 @@
 #pragma once
 
+#include <cmath>
 #include <iostream>
 #include <memory>
 #include <string>
 #include <variant>
 #include <vector>
 
-struct ProgramNode;
-struct FunctionDefinitionNode;
-struct BlockNode;
-struct StatementNode;
-struct AssignmentNode;
+struct Crate;
+struct FunctionDefinition;
+struct Expr;
+struct Stmt;
+
+struct Block;
 
 template <typename T> using P = std::unique_ptr<T>;
 
 typedef std::variant<
-  ProgramNode,
-  FunctionDefinitionNode,
-  BlockNode,
-  StatementNode,
-  AssignmentNode
-> Node;
+  // - modules
+  // - type definitions
+  // - function definitions
+  // - use declarations
+  P<FunctionDefinition>
+> ItemKind;
 
-struct ProgramNode {
-  std::vector<FunctionDefinitionNode> children;
+struct Let;
+
+typedef std::variant<
+  P<Let>,
+  P<Expr>
+  // Item
+  // Semi
+  // Empty
+> StmtKind;
+
+typedef std::variant<
+  int,
+  std::string
+> LitKind;
+
+struct Lit {
+  // potentially add:
+  // - suffix
+  // - symbol
+  LitKind kind;
 };
 
-struct FunctionDefinitionNode {
+struct Decl {
+  Lit lit;
+};
+
+typedef std::variant<
+  Decl,   // declaration
+  P<Expr> // init
+  // InitElse ???? nah, i'm not deranged
+> LocalKind;
+
+struct Let {
+  std::string identifier; // this could be a "pattern"
+  LocalKind kind;
+};
+
+struct Stmt {
+  StmtKind kind;
+};
+
+typedef std::variant<
+  Lit,
+  P<Block>
+> ExprKind;
+
+
+struct Expr {
+  P<ExprKind> kind;
+};
+
+
+struct Crate {
+  std::vector<FunctionDefinition> children;
+};
+
+struct Block;
+
+struct FunctionDefinition {
   std::string identifier;
-  P<BlockNode> block;
+  P<Block> body;
 };
 
-struct BlockNode {
-  std::vector<StatementNode> children;
-};
-
-struct StatementNode {
-  P<Node> node;
+struct Block {
+  std::vector<Stmt> children;
 };
 
 struct AssignmentNode {
@@ -44,45 +96,58 @@ struct AssignmentNode {
   int value;
 };
 
+template<class... Ts>
+struct overloaded : Ts... { using Ts::operator()...; };
+template<class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
 
 class Visitor {
 public:
-  virtual void visit(const ProgramNode& node) {
-    for (const auto& child : node.children) {
+  virtual void visit(const Crate& crate) {
+    for (const auto& child : crate.children) {
       visit(child);
     }
-  };
-  virtual void visit(const FunctionDefinitionNode& node) {
-    visit(*node.block);
-  }
-  virtual void visit(const BlockNode& node) {
-    for (const auto& child : node.children) {
-      visit(child);
-    }
-  }
-  virtual void visit(const StatementNode& node) {
-    visit(*node.node);
-  }
-  virtual void visit(const AssignmentNode& node) {
-    // do nothing
   };
 
-  void visit (const Node& node) {
-    if (std::holds_alternative<ProgramNode>(node)) {
-      visit(std::get<ProgramNode>(node));
+  virtual void visit(const FunctionDefinition& node) {
+    visit(*node.body);
+  }
+
+  virtual void visit(const Block& node) {
+    for (const auto& child : node.children) {
+      visit(child);
     }
-    else if (std::holds_alternative<FunctionDefinitionNode>(node)) {
-      visit(std::get<FunctionDefinitionNode>(node));
-    }
-    else if (std::holds_alternative<BlockNode>(node)) {
-      visit(std::get<BlockNode>(node));
-    }
-    else if (std::holds_alternative<StatementNode>(node)) {
-      visit(std::get<StatementNode>(node));
-    }
-    else if (std::holds_alternative<AssignmentNode>(node)) {
-      visit(std::get<AssignmentNode>(node));
-    }
+  }
+
+  virtual void visit(const Stmt& node) {
+    std::visit(overloaded{
+      [this] (const P<Let>& let) { visit(*let); },
+      [this] (const P<Expr>& expr) { visit(*expr); }
+    }, node.kind);
+  }
+
+  virtual void visit(const Let& let) {
+    std::visit(overloaded{
+      [this](const Decl& decl) {
+        std::visit(overloaded{
+          [this](const int i) { std::cout << "DECL_int" << i << std::endl; },
+          [this](const std::string& s) { std::cout << "DECL_str" << s << std::endl; }
+        }, decl.lit.kind);
+      },
+      [this](const P<Expr>& expr) { visit(*expr); }
+    }, let.kind);
+  }
+
+  virtual void visit(const Expr& expr) {
+    std::visit(overloaded{
+      [this](const Lit& lit) {
+        std::visit(overloaded{
+          [this](const int i) { std::cout << "LIT_int" << i << std::endl; },
+          [this](const std::string& s) { std::cout << "LIT_str" << s << std::endl; }
+        }, lit.kind);
+      },
+      [this](const P<Block>& block) { visit(*block); }
+    }, *expr.kind);
   }
 };
 

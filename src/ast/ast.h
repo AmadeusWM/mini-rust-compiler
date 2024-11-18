@@ -5,7 +5,7 @@
 #include "node.h"
 class AST {
     public:
-        AST(ProgramNode root)
+        AST(Crate root)
         : root(std::move(root)) {}
-        ProgramNode root;
+        Crate root;
 };
