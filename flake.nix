@@ -14,7 +14,7 @@
         pkgs = import nixpkgs { inherit system overlays; };
     in
     {
-      devShells.default = pkgs.mkShell {
+      devShells.default = pkgs.mkShell rec {
         packages = with pkgs; [
             flex
             bison
@@ -23,7 +23,10 @@
             # get hir: cargo rustc -- -Z unpretty=hir-tree
             # get typed: cargo rustc -- -Z unpretty=thir-tree
             rust-bin.nightly."2024-01-01".default
+            spdlog
+            clang-tools
         ];
+        buildInputs = packages;
       };
     }
     );

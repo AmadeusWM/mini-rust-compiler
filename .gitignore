@@ -13,3 +13,4 @@ Makefile
 mini-rust
 CMakeFiles
 parser.output
+compile_commands.json

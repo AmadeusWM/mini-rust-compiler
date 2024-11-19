@@ -1,6 +1,9 @@
 %{
 #include "scanner.h"
 #include <iostream>
+// #define YY_USER_ACTION std::cout << "Token: " << yylloc << std::endl;
+// #define YY_USER_ACTION  yylloc.columns(yyleng);
+static void yyIncrease(int len);
 %}
 
 %option c++

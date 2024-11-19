@@ -5,7 +5,9 @@ project(
   VERSION 1.0
   LANGUAGES CXX)
 
-# set(FLEX_USE_STATIC_LIB ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+find_package(spdlog REQUIRED)
 
 find_package(BISON)
 BISON_TARGET(MyParser ${CMAKE_SOURCE_DIR}/src/ast/parser/parser.y
@@ -48,4 +50,7 @@ target_include_directories(mini-rust PRIVATE
     ${CMAKE_SOURCE_DIR}/src/ast
 )
 
+target_link_libraries(mini-rust PRIVATE spdlog::spdlog)
+target_compile_definitions(mini-rust PRIVATE SPDLOG_FMT_EXTERNAL)
+add_compile_definitions(SPDLOG_FMT_EXTERNAL)
 # target_link_libraries(mini-rust ${FLEX_LIBRARIES})

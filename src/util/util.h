@@ -1,10 +1,13 @@
 #pragma once
 #include <memory>
+#include <optional>
 
 /**
  * shorthand for std::unique_ptr
 */
 template <typename T> using P = std::unique_ptr<T>;
+
+template <typename T> using Opt = std::optional<T>;
 
 /**
  * overloaded operator() for std::visit

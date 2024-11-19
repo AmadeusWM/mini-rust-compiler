@@ -1,16 +1,21 @@
 #pragma once
 
-#include "parser/parser.h"
 #include "lexer/scanner.h"
 #include "node.h"
+#include "parser/parser.h"
+#include "../driver.h"
+#include <optional>
 
-namespace MRI {
-class ASTDriver {
-    public:
-        AST::Crate* ast = nullptr;
-        MRI::Scanner* scanner;
-        MRI::Parser parser;
-        ASTDriver(MRI::Scanner* scanner);
-        void parse();
+class ASTDriver : public Driver {
+public:
+  Opt<AST::Crate> ast = std::nullopt;
+  Scanner *scanner;
+  MRI::Parser parser;
+
+  ASTDriver(Scanner *scanner);
+
+  void parse();
+
+  P<Driver> execute() override;
+  std::string name() override { return "AST Driver"; }
 };
-}

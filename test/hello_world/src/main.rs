@@ -1,3 +1,9 @@
+mod X {
+    fn test() {
+        let y: i32 = 5;
+    }
+}
+
 fn main() {
-    println!("Hello, world!");
+    let x: i32 = 1;
 }

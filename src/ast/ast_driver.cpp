@@ -1,12 +1,21 @@
 #include "ast_driver.h"
+#include "visitors/print_visitor.h"
 
-MRI::ASTDriver::ASTDriver(MRI::Scanner* scanner)
-    : scanner(scanner), parser(*this, *scanner)
+ASTDriver::ASTDriver(Scanner* scanner)
+    : scanner(scanner)
+    , parser(*this, *scanner)
 {
 }
 
-void MRI::ASTDriver::parse() {
-    this->parser.parse();
-    AST::PrintVisitor visitor;
-    visitor.Visitor::visit(*std::move(this->ast));
+void ASTDriver::parse()
+{
+  this->parser.parse();
+  AST::PrintVisitor visitor;
+  visitor.Visitor::visit(std::move(this->ast.value()));
+}
+
+P<Driver> ASTDriver::execute()
+{
+  parse();
+  return nullptr;
 }

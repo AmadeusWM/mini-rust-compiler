@@ -4,11 +4,19 @@
 #include <cstdio>
 #include <iostream>
 #include <fstream>
+#include <spdlog/common.h>
+#include "spdlog/spdlog.h"
 
 int main(int argc, char *argv[]) {
+  spdlog::set_level(spdlog::level::debug);
+
   std::ifstream file(argv[1]);
 
-  MRI::Scanner scanner(&file);
-  MRI::ASTDriver driver(&scanner);
-  driver.parse();
+  Scanner scanner(&file);
+  P<Driver> driver = P<Driver>(new ASTDriver(&scanner));
+
+  while (driver != nullptr) {
+    spdlog::info("Executing driver: {}", driver->name());
+    driver = driver->execute();
+  }
 }
