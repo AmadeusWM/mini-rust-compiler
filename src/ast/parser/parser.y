@@ -79,7 +79,8 @@
 %type <AST::Expr> expr
 %type <AST::Expr> block_expr
 %type <AST::Expr> literal_expr
-
+%type <AST::Ident> ident
+%type <AST::Expr> ident_expr
 
 
 // custom
@@ -114,7 +115,7 @@ function_definitions:
 
 
 function_definition:
-    KW_FN IDENTIFIER L_PAREN R_PAREN block {
+    KW_FN ident L_PAREN R_PAREN block {
         $$ = AST::Item {
             driver.create_node(),
             AST::ItemKind{
@@ -155,11 +156,11 @@ statement:
     }
 
 let_statement:
-    KW_LET IDENTIFIER local SEMI {
+    KW_LET ident local SEMI {
         $$ = AST::Let {
-            driver.create_node(),
-            $2,
-            std::move($3)
+            .id = driver.create_node(),
+            .pat = AST::Pat($2),
+            .kind = std::move($3)
         };
     }
     ;
@@ -174,6 +175,16 @@ local:
 expr:
     block_expr { $$ = std::move($1); }
     | literal_expr { $$ = std::move($1); }
+    | ident_expr { $$ = std::move($1); }
+    ;
+
+ident:
+    IDENTIFIER {
+        $$ = AST::Ident{
+          .id =  driver.create_node(),
+          .identifier = $1
+        };
+    }
     ;
 
 block_expr:
@@ -185,6 +196,20 @@ block_expr:
                 P<AST::Block>(new AST::Block{std::move($1)})
             }
         };
+    }
+    ;
+
+ident_expr:
+    IDENTIFIER {
+      $$ = AST::Expr {
+        driver.create_node(),
+        AST::ExprKind {
+          AST::Ident {
+            driver.create_node(),
+            $1
+          }
+        }
+      };
     }
     ;
 

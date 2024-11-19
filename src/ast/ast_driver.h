@@ -18,6 +18,7 @@ public:
   ASTDriver(Scanner *scanner);
 
   void parse();
+  void nameResolution();
 
   P<Driver> execute() override;
   std::string name() override { return "AST Driver"; }

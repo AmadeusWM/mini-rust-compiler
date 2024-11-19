@@ -15,8 +15,14 @@ int main(int argc, char *argv[]) {
   Scanner scanner(&file);
   P<Driver> driver = P<Driver>(new ASTDriver(&scanner));
 
-  while (driver != nullptr) {
-    spdlog::info("Executing driver: {}", driver->name());
-    driver = driver->execute();
+  try {
+    while (driver != nullptr) {
+      spdlog::info("Executing driver: {}", driver->name());
+      driver = driver->execute();
+    }
+  } catch (const std::exception &e) {
+    spdlog::error("{}", e.what());
+    return 1;
   }
+  return 0;
 }

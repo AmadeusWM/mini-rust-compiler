@@ -57,8 +57,8 @@ struct Lit {
 
 typedef std::variant<
     P<Let>,
-    P<Expr>
-    // Item
+    P<Expr>,
+    P<Item>
     // Semi
     // Empty
     >
@@ -78,13 +78,37 @@ typedef std::variant<
     >
     LocalKind;
 
+struct Ident {
+  NodeId id;
+  std::string identifier;
+};
+
+struct PathSegment {
+  NodeId id;
+  Ident ident;
+};
+
+struct Path {
+  std::vector<PathSegment> segments;
+};
+
+typedef std::variant<
+  // Path,
+  Ident
+> Pat;
+
 struct Let {
   NodeId id;
-  std::string identifier; // this could be a "pattern"
+  Pat pat;
   LocalKind kind;
 };
 
-typedef std::variant<Lit, P<Block>> ExprKind;
+typedef std::variant<
+  // Path,
+  Lit,
+  Ident,
+  P<Block>
+> ExprKind;
 
 struct Expr {
   NodeId id;
@@ -93,7 +117,7 @@ struct Expr {
 
 struct FnDef {
   NodeId id;
-  std::string identifier;
+  Ident ident;
   P<Block> body;
 };
 
