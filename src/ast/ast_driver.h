@@ -7,6 +7,9 @@
 #include <optional>
 
 class ASTDriver : public Driver {
+private:
+  AST::NodeId curr_id = 0;
+
 public:
   Opt<AST::Crate> ast = std::nullopt;
   Scanner *scanner;
@@ -18,4 +21,8 @@ public:
 
   P<Driver> execute() override;
   std::string name() override { return "AST Driver"; }
+
+  AST::NodeId create_node() {
+    return curr_id++;
+  }
 };

@@ -101,12 +101,14 @@ crate:
 
 function_definitions:
     function_definitions function_definition {
-        $1.children.push_back(std::move($2));
+        $1.items.push_back(std::move($2));
         $$ = std::move($1);
     }
     | function_definition {
-        $$ = AST::Crate();
-        $$.children.push_back(std::move($1));
+        $$ = AST::Crate{
+          driver.create_node(),
+        };
+        $$.items.push_back(std::move($1));
     }
     ;
 
@@ -114,8 +116,10 @@ function_definitions:
 function_definition:
     KW_FN IDENTIFIER L_PAREN R_PAREN block {
         $$ = AST::Item {
+            driver.create_node(),
             AST::ItemKind{
                 P<AST::FnDef>(new AST::FnDef{
+                    driver.create_node(),
                     $2,
                     P<AST::Block>(new AST::Block{std::move($5)})
                 })
@@ -134,19 +138,26 @@ statements:
         $$ = std::move($1);
     }
     | statement {
-        $$ = AST::Block();
+          driver.create_node(),
+        $$ = AST::Block{
+          driver.create_node(),
+        };
         $$.statements.push_back(std::move($1));
     }
     ;
 
 statement:
     let_statement {
-        $$ = AST::Stmt{P<AST::Let>(new AST::Let(std::move($1)))};
+        $$ = AST::Stmt{
+          driver.create_node(),
+          P<AST::Let>(new AST::Let(std::move($1)))
+        };
     }
 
 let_statement:
     KW_LET IDENTIFIER local SEMI {
         $$ = AST::Let {
+            driver.create_node(),
             $2,
             std::move($3)
         };
@@ -169,6 +180,7 @@ block_expr:
     block {
         // this hould become an expr, and block_expr
         $$ = AST::Expr {
+            driver.create_node(),
             AST::ExprKind {
                 P<AST::Block>(new AST::Block{std::move($1)})
             }
@@ -179,8 +191,12 @@ block_expr:
 literal_expr:
     INTEGER_LITERAL {
         $$ = AST::Expr {
+            driver.create_node(),
             AST::ExprKind {
-                AST::Lit{AST::LitKind($1)}
+                AST::Lit{
+                  driver.create_node(),
+                  AST::LitKind($1)
+                }
             }
         };
     }

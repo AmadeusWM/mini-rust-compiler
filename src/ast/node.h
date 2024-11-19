@@ -26,6 +26,7 @@ struct Item;
 // TODO: Node variant that contains everything
 
 struct Crate {
+  NodeId id;
   std::vector<Item> items;
 };
 
@@ -37,11 +38,22 @@ typedef std::variant<
     >
     ItemKind;
 
-    struct Item {
+struct Item {
+  NodeId id;
   ItemKind kind;
 };
 
 struct Let;
+
+typedef std::variant<int, std::string> LitKind;
+
+struct Lit {
+  NodeId id;
+  // potentially add:
+  // - suffix
+  // - symbol
+  LitKind kind;
+};
 
 typedef std::variant<
     P<Let>,
@@ -52,13 +64,9 @@ typedef std::variant<
     >
     StmtKind;
 
-typedef std::variant<int, std::string> LitKind;
-
-struct Lit {
-  // potentially add:
-  // - suffix
-  // - symbol
-  LitKind kind;
+struct Stmt {
+  NodeId id;
+  StmtKind kind;
 };
 
 struct Decl { };
@@ -71,30 +79,26 @@ typedef std::variant<
     LocalKind;
 
 struct Let {
+  NodeId id;
   std::string identifier; // this could be a "pattern"
   LocalKind kind;
-};
-
-struct Stmt {
-  StmtKind kind;
 };
 
 typedef std::variant<Lit, P<Block>> ExprKind;
 
 struct Expr {
+  NodeId id;
   ExprKind kind;
 };
+
 struct FnDef {
+  NodeId id;
   std::string identifier;
   P<Block> body;
 };
 
 struct Block {
+  NodeId id;
   std::vector<Stmt> statements;
-};
-
-struct AssignmentNode {
-  std::string identifier;
-  int value;
 };
 }
