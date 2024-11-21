@@ -195,8 +195,9 @@ class NameResolutionVisitor : public Visitor {
         [this, &expr](const P<Block>& block) {
           visit(*block);
         },
-        [this, &expr](const Ident& ident) {
-          auto res = lookup_ident_or_throw(ident.identifier);
+        [this, &expr](const Path& path) {
+          // TODO: we should probably
+          auto res = lookup_ident_or_throw(path.segments.back().ident.identifier);
         }
     }, expr.kind);
   }
@@ -225,8 +226,8 @@ class NameResolutionVisitor : public Visitor {
   {
     scopes.push_back({ .id = let.id, .kind = Scope::Normal {} });
     std::visit(overloaded {
-      [this](const Ident ident) {
-        insert_binding(ident.identifier, Res::Res(Res::Local { .id = ident.id }));
+      [this, &let](const Ident ident) {
+        insert_binding(ident.identifier, Res::Res(Res::Local { .id = let.id }));
       }
     }, let.pat);
     std::visit(overloaded {

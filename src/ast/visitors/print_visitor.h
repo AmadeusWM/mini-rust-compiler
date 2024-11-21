@@ -66,8 +66,8 @@ class PrintVisitor : public AST::Visitor {
             [this](const P<Block>& block) {
               wrap([this, &block]() { visit(*block); });
             },
-            [this](const Ident& ident) {
-              print("Ident " + ident.identifier);
+            [this](const Path& path) {
+              wrap([this, &path]() { visit(path); });
             },
         },
         expr.kind);

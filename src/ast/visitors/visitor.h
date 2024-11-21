@@ -59,7 +59,7 @@ namespace AST {
         overloaded {
           [this](const Lit& lit) { visit(lit); },
           [this](const P<Block>& block) { visit(*block); },
-          [this](const Ident& ident) { }
+          [this](const Path& path) { }
       }, expr.kind);
     }
 

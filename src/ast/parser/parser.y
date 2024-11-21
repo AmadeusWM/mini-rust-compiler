@@ -181,7 +181,6 @@ expr:
 ident:
     IDENTIFIER {
         $$ = AST::Ident{
-          .id =  driver.create_node(),
           .identifier = $1
         };
     }
@@ -204,9 +203,13 @@ ident_expr:
       $$ = AST::Expr {
         driver.create_node(),
         AST::ExprKind {
-          AST::Ident {
-            driver.create_node(),
-            $1
+          AST::Path {
+            .segments = std::vector<AST::PathSegment>{AST::PathSegment {
+              driver.create_node(),
+              AST::Ident {
+                $1
+              }
+            }}
           }
         }
       };

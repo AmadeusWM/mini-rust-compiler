@@ -79,7 +79,6 @@ typedef std::variant<
     LocalKind;
 
 struct Ident {
-  NodeId id;
   std::string identifier;
 };
 
@@ -93,7 +92,6 @@ struct Path {
 };
 
 typedef std::variant<
-  // Path,
   Ident
 > Pat;
 
@@ -106,7 +104,7 @@ struct Let {
 typedef std::variant<
   // Path,
   Lit,
-  Ident,
+  Path,
   P<Block>
 > ExprKind;
 
