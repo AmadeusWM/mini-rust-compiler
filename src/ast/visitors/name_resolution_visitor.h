@@ -121,7 +121,8 @@ class NameResolutionVisitor : public Visitor {
 
   Opt<Res::Res> lookup_ident(std::string iden) {
     spdlog::debug("looking up identifier \"{}\"", iden);
-    for (const auto& scope : scopes) {
+    for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
+      auto scope = *it;
       auto binding = scope.bindings.find(iden);
       if (binding != scope.bindings.end()) {
         return Opt<Res::Res>(binding->second);

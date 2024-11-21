@@ -1,9 +1,12 @@
-mod X {
-    fn test() {
-        let y: i32 = 5;
-    }
+fn a() {
+    main::something(5);
 }
 
 fn main() {
+    something(5);
+    fn something(a: i32) -> i32 {
+        let x = 3;
+        a + x
+    }
     let x: i32 = 1;
 }
