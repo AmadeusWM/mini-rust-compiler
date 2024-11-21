@@ -1,7 +1,7 @@
 #pragma once
 
 #include "lexer/scanner.h"
-#include "node.h"
+#include "tast_node.h"
 #include "parser/parser.h"
 #include "../driver.h"
 #include <optional>

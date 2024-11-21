@@ -13,13 +13,13 @@ void ASTDriver::parse()
   spdlog::info("Parsing...");
   this->parser.parse();
   AST::PrintVisitor visitor;
-  visitor.Visitor::visit(this->ast.value());
+  visitor.Visitor::visit(*this->ast.value());
 }
 
 void ASTDriver::nameResolution() {
   spdlog::info("Name resolution...");
   AST::NameResolutionVisitor visitor;
-  visitor.visit(this->ast.value());
+  visitor.visit(*this->ast.value());
 }
 
 P<Driver> ASTDriver::execute()

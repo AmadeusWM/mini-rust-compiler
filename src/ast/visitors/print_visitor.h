@@ -1,5 +1,5 @@
 #pragma once
-#include "node.h"
+#include "ast_node.h"
 #include "spdlog/spdlog.h"
 #include "util.h"
 #include "visitor.h"
@@ -30,7 +30,7 @@ class PrintVisitor : public AST::Visitor {
   {
     print("Crate");
     for (const auto& child : crate.items) {
-      wrap([this, &child]() { visit(child); });
+      wrap([this, &child]() { visit(*child); });
     }
   };
 
@@ -48,7 +48,7 @@ class PrintVisitor : public AST::Visitor {
   {
     print("Block");
     for (const auto& child : node.statements) {
-      wrap([this, &child]() { visit(child); });
+      wrap([this, &child]() { visit(*child); });
     }
   }
 

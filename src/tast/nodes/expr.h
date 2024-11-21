@@ -1,6 +1,6 @@
 #pragma once
 #include "util/util.h"
-#include "../node.h"
+#include "../tast_node.h"
 
 namespace TAST {
   typedef std::variant<

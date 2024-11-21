@@ -1,5 +1,5 @@
 #pragma once
-#include "../node.h"
+#include "../ast_node.h"
 
 namespace AST {
   class Visitor {
@@ -7,7 +7,7 @@ namespace AST {
     virtual void visit(const Crate& crate)
     {
       for (const auto& child : crate.items) {
-        visit(child);
+        visit(*child);
       }
     };
 
@@ -22,7 +22,7 @@ namespace AST {
     virtual void visit(const Block& node)
     {
       for (const auto& child : node.statements) {
-        visit(child);
+        visit(*child);
       }
     }
 

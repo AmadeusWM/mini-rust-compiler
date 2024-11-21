@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../node.h"
+#include "../ast_node.h"
 #include "visitors/visitor.h"
 #include <exception>
 #include <fmt/core.h>
@@ -154,10 +154,10 @@ class NameResolutionVisitor : public Visitor {
     with_scope(Scope::Module{}, crate.id,
       [this, &crate]() {
         for (const auto& item : crate.items) {
-          resolve_item(item);
+          resolve_item(*item);
         }
         for (const auto& item : crate.items) {
-          Visitor::visit(item);
+          Visitor::visit(*item);
         }
       });
   }
@@ -174,15 +174,15 @@ class NameResolutionVisitor : public Visitor {
   void visit(const Block& block) override
   {
     for (const auto& stmt : block.statements) {
-      if (std::holds_alternative<P<Item>>(stmt.kind)) {
-        const auto& item = std::get<P<Item>>(stmt.kind);
+      if (std::holds_alternative<P<Item>>(stmt->kind)) {
+        const auto& item = std::get<P<Item>>(stmt->kind);
         resolve_item(*item);
       }
     }
 
     with_scope(Scope::Normal {}, block.id, [this, &block]() {
       for (const auto& stmt : block.statements) {
-        visit(stmt);
+        visit(*stmt);
       }
     });
   }

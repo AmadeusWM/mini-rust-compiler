@@ -1,7 +1,7 @@
 #pragma once
 
 #include "lexer/scanner.h"
-#include "node.h"
+#include "ast_node.h"
 #include "parser/parser.h"
 #include "../driver.h"
 #include <optional>
@@ -11,7 +11,7 @@ private:
   AST::NodeId curr_id = 0;
 
 public:
-  Opt<AST::Crate> ast = std::nullopt;
+  Opt<P<AST::Crate>> ast = std::nullopt;
   Scanner *scanner;
   MRI::Parser parser;
 

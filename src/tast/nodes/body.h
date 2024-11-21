@@ -1,13 +1,14 @@
 #pragma once
-#include "../node.h"
+#include "../tast_node.h"
+#include "nodes/expr.h"
 
 namespace TAST {
   struct FnDef;
   struct Item;
 
   struct Body {
-    std::vector<int> params;
-    int expr;
+    std::vector<P<Expr>> params;
+    P<Expr> expr;
   };
 
   /**

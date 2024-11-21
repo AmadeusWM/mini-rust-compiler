@@ -1,5 +1,5 @@
 #pragma once
-#include "../node.h"
+#include "../ast_node.h"
 
 namespace AST {
   struct FnDef;
@@ -7,7 +7,7 @@ namespace AST {
 
   struct Crate {
     NodeId id;
-    std::vector<Item> items;
+    std::vector<P<Item>> items;
   };
 
   typedef std::variant<

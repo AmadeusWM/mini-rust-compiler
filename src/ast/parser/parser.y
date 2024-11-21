@@ -2,7 +2,7 @@
 %require  "3.2"
 
 %code requires {
-    #include "../node.h"
+    #include "../ast_node.h"
 
     class Scanner;
     class ASTDriver;
@@ -69,20 +69,20 @@
 %token <int> INTEGER_LITERAL
 
 %type <int> crate
-%type <AST::Crate> function_definitions
-%type <AST::Item> function_definition
-%type <AST::Block> block
-%type <AST::Block> statements
-%type <AST::Stmt> statement
-%type <AST::Let> let_statement
+%type <P<AST::Crate>> function_definitions
+%type <P<AST::Item>> function_definition
+%type <P<AST::Block>> block
+%type <P<AST::Block>> statements
+%type <P<AST::Stmt>> statement
+%type <P<AST::Let>> let_statement
 %type <AST::LocalKind> local;
-%type <AST::Expr> expr
-%type <AST::Expr> expr_with_block
-%type <AST::Expr> expr_without_block
-%type <AST::Expr> block_expr
-%type <AST::Expr> literal_expr
+%type <P<AST::Expr>> expr
+%type <P<AST::Expr>> expr_with_block
+%type <P<AST::Expr>> expr_without_block
+%type <P<AST::Expr>> block_expr
+%type <P<AST::Expr>> literal_expr
 %type <AST::Ident> ident
-%type <AST::Expr> ident_expr
+%type <P<AST::Expr>> ident_expr
 
 
 // custom
@@ -97,37 +97,37 @@ crate:
         // transition into the ASTDriverState, which takes
         // an AST as a parameter.
         // e.g.: driver.transition(ASTDriverState(ProgramNode($1)));
-        driver.ast = Opt<AST::Crate>(AST::Crate(std::move($1)));
+        driver.ast = Opt<P<AST::Crate>>(std::move($1));
         $$ = 1;
     }
     ;
 
 function_definitions:
     function_definitions function_definition {
-        $1.items.push_back(std::move($2));
+        $1->items.push_back(std::move($2));
         $$ = std::move($1);
     }
     | function_definition {
-        $$ = AST::Crate{
+        $$ = P<AST::Crate>(new AST::Crate{
           driver.create_node(),
-        };
-        $$.items.push_back(std::move($1));
+        });
+        $$->items.push_back(std::move($1));
     }
     ;
 
 
 function_definition:
     KW_FN ident L_PAREN R_PAREN block {
-        $$ = AST::Item {
+        $$ = P<AST::Item>(new AST::Item {
             driver.create_node(),
             AST::ItemKind{
                 P<AST::FnDef>(new AST::FnDef{
                     driver.create_node(),
                     $2,
-                    P<AST::Block>(new AST::Block{std::move($5)})
+                    std::move($5)
                 })
             }
-        };
+        });
     }
     ;
 
@@ -137,59 +137,58 @@ block:
 
 statements:
     statements statement {
-        $1.statements.push_back(std::move($2));
+        $1->statements.push_back(std::move($2));
         $$ = std::move($1);
     }
     | statement {
-        driver.create_node(),
-        $$ = AST::Block{
+        $$ = P<AST::Block>(new AST::Block {
           driver.create_node(),
-        };
-        $$.statements.push_back(std::move($1));
+        });
+        $$->statements.push_back(std::move($1));
     }
     ;
 
 statement:
     let_statement {
-        $$ = AST::Stmt{
+        $$ = P<AST::Stmt>(new AST::Stmt {
           driver.create_node(),
-          P<AST::Let>(new AST::Let(std::move($1)))
-        };
+          std::move($1)
+        });
     }
     | expr_without_block SEMI {
-        $$ = AST::Stmt{
+        $$ = P<AST::Stmt>(new AST::Stmt{
           driver.create_node(),
-          P<AST::Expr>(new AST::Expr(std::move($1)))
-        };
+          std::move($1)
+        });
     }
     | expr_with_block SEMI {
-        $$ = AST::Stmt{
+        $$ = P<AST::Stmt>(new AST::Stmt{
           driver.create_node(),
-          P<AST::Expr>(new AST::Expr(std::move($1)))
-        };
+          std::move($1)
+        });
     }
     | expr_with_block {
-        $$ = AST::Stmt{
+        $$ = P<AST::Stmt>(new AST::Stmt{
           driver.create_node(),
-          P<AST::Expr>(new AST::Expr(std::move($1)))
-        };
+          std::move($1)
+        });
     }
     ;
 
 
 let_statement:
     KW_LET ident local SEMI {
-        $$ = AST::Let {
+        $$ = P<AST::Let>(new AST::Let {
             .id = driver.create_node(),
             .pat = AST::Pat($2),
             .kind = std::move($3)
-        };
+        });
     }
     ;
 
 local:
     EQ expr {
-        $$ = AST::LocalKind(P<AST::Expr>(new AST::Expr(std::move($2))));
+        $$ = AST::LocalKind(std::move($2));
     }
     | { $$ = AST::LocalKind(AST::Decl {}); }
     ;
@@ -220,18 +219,18 @@ ident:
 
 block_expr:
     block {
-        $$ = AST::Expr {
+        $$ = P<AST::Expr>(new AST::Expr {
             driver.create_node(),
             AST::ExprKind {
-                P<AST::Block>(new AST::Block{std::move($1)})
+                std::move($1)
             }
-        };
+        });
     }
     ;
 
 ident_expr:
     IDENTIFIER {
-      $$ = AST::Expr {
+      $$ = P<AST::Expr>(new AST::Expr {
         driver.create_node(),
         AST::ExprKind {
           AST::Path {
@@ -243,13 +242,13 @@ ident_expr:
             }}
           }
         }
-      };
+      });
     }
     ;
 
 literal_expr:
     INTEGER_LITERAL {
-        $$ = AST::Expr {
+        $$ = P<AST::Expr>(new AST::Expr {
             driver.create_node(),
             AST::ExprKind {
                 AST::Lit{
@@ -257,7 +256,7 @@ literal_expr:
                   AST::LitKind($1)
                 }
             }
-        };
+        });
     }
     ;
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "util/util.h"
-#include "../node.h"
+#include "../ast_node.h"
+#include <bits/types/wint_t.h>
 
 namespace AST {
   struct Block;
@@ -19,6 +20,6 @@ namespace AST {
 
   struct Block {
     NodeId id;
-    std::vector<Stmt> statements;
+    std::vector<P<Stmt>> statements;
   };
 }
