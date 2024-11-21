@@ -77,6 +77,8 @@
 %type <AST::Let> let_statement
 %type <AST::LocalKind> local;
 %type <AST::Expr> expr
+%type <AST::Expr> expr_with_block
+%type <AST::Expr> expr_without_block
 %type <AST::Expr> block_expr
 %type <AST::Expr> literal_expr
 %type <AST::Ident> ident
@@ -139,7 +141,7 @@ statements:
         $$ = std::move($1);
     }
     | statement {
-          driver.create_node(),
+        driver.create_node(),
         $$ = AST::Block{
           driver.create_node(),
         };
@@ -154,6 +156,26 @@ statement:
           P<AST::Let>(new AST::Let(std::move($1)))
         };
     }
+    | expr_without_block SEMI {
+        $$ = AST::Stmt{
+          driver.create_node(),
+          P<AST::Expr>(new AST::Expr(std::move($1)))
+        };
+    }
+    | expr_with_block SEMI {
+        $$ = AST::Stmt{
+          driver.create_node(),
+          P<AST::Expr>(new AST::Expr(std::move($1)))
+        };
+    }
+    | expr_with_block {
+        $$ = AST::Stmt{
+          driver.create_node(),
+          P<AST::Expr>(new AST::Expr(std::move($1)))
+        };
+    }
+    ;
+
 
 let_statement:
     KW_LET ident local SEMI {
@@ -173,10 +195,20 @@ local:
     ;
 
 expr:
-    block_expr { $$ = std::move($1); }
-    | literal_expr { $$ = std::move($1); }
+    expr_without_block { $$ = std::move($1); }
+    | expr_with_block { $$ = std::move($1); }
+    ;
+
+expr_without_block:
+    literal_expr { $$ = std::move($1); }
     | ident_expr { $$ = std::move($1); }
     ;
+
+
+expr_with_block:
+    block_expr { $$ = std::move($1); }
+    ;
+;
 
 ident:
     IDENTIFIER {
@@ -188,7 +220,6 @@ ident:
 
 block_expr:
     block {
-        // this hould become an expr, and block_expr
         $$ = AST::Expr {
             driver.create_node(),
             AST::ExprKind {

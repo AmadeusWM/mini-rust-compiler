@@ -1,6 +1,6 @@
 fn main() {
-    let q;
-    let abc = 10;
+    let mut q = 0;
+    q += 10
     let x = {
         let y = 0;
     };
