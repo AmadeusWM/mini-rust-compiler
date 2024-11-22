@@ -1,6 +1,7 @@
 #pragma once
 #include "util/util.h"
 #include "../tast_node.h"
+#include "type.h"
 
 namespace TAST {
   typedef std::variant<
@@ -13,6 +14,7 @@ namespace TAST {
   struct Expr {
     NodeId id;
     ExprKind kind;
+    Ty ty;
   };
 
   struct Block {

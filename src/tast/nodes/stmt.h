@@ -10,8 +10,7 @@ namespace TAST {
 
   typedef std::variant<
       P<Let>,
-      P<Expr>,
-      P<Item>
+      P<Expr>
       // Semi
       // Empty
       >
@@ -24,16 +23,11 @@ namespace TAST {
 
   struct Decl { };
 
-  typedef std::variant<
-      Decl, // declaration
-      P<Expr> // init
-      // InitElse ???? nah, i'm not deranged
-      >
-      LocalKind;
-
-      struct Let {
-        NodeId id;
-        Pat pat;
-        LocalKind kind;
-      };
+  struct Let {
+    NodeId id;
+    // let <PAT> = 5;
+    Pat pat;
+    // let x: i32 = <INIT>;
+    Opt<P<Expr>> initializer;
+  };
 }

@@ -5,6 +5,7 @@
 #include "nodes/expr.h"
 #include "nodes/item.h"
 #include "nodes/stmt.h"
+#include "nodes/type.h"
 #include "util.h"
 #include "visitors/visitor.h"
 #include <memory>
@@ -13,10 +14,7 @@
 
 /**
 * TODO:
-* 1. first lower the AST to 2 maps: expressions and statements
-* 2. then lower the AST to bodies, every body consists of
-* see:  https://doc.rust-lang.org/beta/nightly-rustc/rustc_ast_lowering/fn.lower_to_hir.html,
-*       https://doc.rust-lang.org/nightly/nightly-rustc/src/rustc_ast_lowering/item.rs.html#26-31
+* - Prefix Call paths with the current Namespace (so we can immediately query the correct body)
 */
 namespace AST {
 class LowerAstVisitor : public Visitor {
@@ -55,6 +53,7 @@ public:
   void visit(const Item& item) {
     std::visit(overloaded {
       [this](const P<FnDef>& fn) {
+        visit(*fn);
       },
     }, item.kind);
   }
@@ -66,7 +65,7 @@ public:
           .params = {},
           .expr = P<TAST::Expr>(new TAST::Expr{
             .id = fn.id,
-            .kind = lower_body(*fn.body)
+            .kind = lower_block(*fn.body)
             }
           )
         }
@@ -74,13 +73,14 @@ public:
     });
   }
 
-  P<TAST::Block> lower_body(const Block& block) {
+  P<TAST::Block> lower_block(const Block& block) {
     P<TAST::Block> lowered_block = P<TAST::Block>(new TAST::Block{
       .id = block.id,
       .statements = {},
       .expr = std::nullopt
     });
 
+    // if the block is empty, we can return early
     if (block.statements.empty()) {
       return lowered_block;
     }
@@ -88,12 +88,16 @@ public:
     int length = block.statements.size();
     const P<AST::Stmt>& last = block.statements.back();
 
+    // when the last statement is an expression, we can move it to the expr field
     if (std::holds_alternative<P<Expr>>(last->kind)) {
       const auto& expr = std::get<P<Expr>>(last->kind);
       lowered_block->expr = Opt<P<TAST::Expr>>(lower_expr(*expr));
       length--;
     }
 
+    // iterate over all statements and lower them
+    // * items are handled by the visitor
+    // * other statements are added to the lowered block
     for (int i = 0; i < length; i++){
       const auto& stmt = block.statements[i];
       std::visit(overloaded {
@@ -121,12 +125,12 @@ public:
     return P<TAST::Let>(new TAST::Let {
       .id = let.id,
       .pat = lower_pat(let.pat),
-      .kind = std::visit(overloaded {
+      .initializer = std::visit(overloaded {
         [this, &let](const Decl& decl) {
-          return TAST::LocalKind{TAST::Decl{}};
+          return Opt<P<TAST::Expr>>();
         },
         [this, &let](const P<Expr>& expr){
-          return TAST::LocalKind{lower_expr(*expr)};
+          return Opt<P<TAST::Expr>>(lower_expr(*expr));
         }
       }, let.kind)
     });
@@ -135,36 +139,59 @@ public:
   P<TAST::Expr> lower_expr(const Expr& expr) {
     return std::visit(overloaded {
       [this, &expr](const Lit& lit) {
+        auto tast_lit = lower_lit(lit);
         return P<TAST::Expr>(new TAST::Expr {
           .id = expr.id,
-          .kind = lower_lit(lit)
+          .kind = tast_lit,
+          .ty = lit_type(tast_lit)
         });
       },
       [this, &expr](const Path& path) {
         return P<TAST::Expr>(new TAST::Expr {
           .id = expr.id,
-          .kind = lower_path(path)
+          .kind = lower_path(path),
+          .ty = {TAST::InferTy{}}
         });
       },
       [this, &expr](const P<Block>& block){
+        auto lowered_block = lower_block(*block);
+        TAST::Ty ty = lowered_block->expr.has_value()
+          ? lowered_block->expr->get()->ty
+          : TAST::Ty{.kind = TAST::Unit{}};
         return P<TAST::Expr>(new TAST::Expr {
           .id = expr.id,
-          .kind = lower_body(*block)
+          .kind = std::move(lowered_block),
+          .ty = ty
         });
       }
     }, expr.kind);
   }
 
+  TAST::Ty lit_type(const TAST::Lit& lit) {
+    return TAST::Ty{
+      .kind = {std::visit(overloaded {
+        [this](const int& i) {
+          return TAST::TyKind(TAST::InferTy(TAST::IntVar{}));
+        },
+        [this](const std::string& s) {
+          return TAST::TyKind(TAST::StrTy{});
+        },
+      }, lit.kind)}
+    };
+  }
+
   TAST::Lit lower_lit(const Lit& lit) {
-    auto kind = std::visit(overloaded {
-      [](const int& i) {
-        return TAST::LitKind(i);
-      },
-      [](const std::string& s) {
-        return TAST::LitKind(s);
-      },
-    }, lit.kind);
-    return TAST::Lit{.kind = kind};
+    return {
+      .id = lit.id,
+      .kind = std::visit(overloaded {
+        [](const int& i) {
+          return TAST::LitKind(i);
+        },
+        [](const std::string& s) {
+          return TAST::LitKind(s);
+        },
+      }, lit.kind)
+    };
   }
 
   TAST::Pat lower_pat(const AST::Pat& pat) {
