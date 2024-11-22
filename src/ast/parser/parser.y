@@ -68,8 +68,9 @@
 %token <int> INTEGER_LITERAL
 
 %type <int> crate
-%type <P<AST::Crate>> function_definitions
-%type <P<AST::Item>> function_definition
+%type <P<AST::Crate>> items
+%type <P<AST::Item>> item
+%type <P<AST::FnDef>> function_definition
 %type <P<AST::Block>> block
 %type <P<AST::Block>> statements
 %type <P<AST::Stmt>> statement
@@ -90,7 +91,7 @@
 %%
 // productions
 crate:
-    function_definitions END {
+    items END {
         // todo: we now parsed the program and have an AST. We
         // want to transition to the next state, so we want to
         // transition into the ASTDriverState, which takes
@@ -101,30 +102,17 @@ crate:
     }
     ;
 
-function_definitions:
-    function_definitions function_definition {
-        $1->items.push_back(std::move($2));
-        $$ = std::move($1);
-    }
-    | function_definition {
-        $$ = driver.rules->initFunctionDefinitions(std::move($1));
-    }
+items:
+    items item { $$ = driver.rules->addItem(std::move($1), std::move($2)); }
+    | item { $$ = driver.rules->initItems(std::move($1)); }
     ;
 
 
+item:
+    function_definition { $$ = driver.rules->item(std::move($1)); }
+
 function_definition:
-    KW_FN ident L_PAREN R_PAREN block {
-        $$ = P<AST::Item>(new AST::Item {
-            driver.create_node(),
-            AST::ItemKind{
-                P<AST::FnDef>(new AST::FnDef{
-                    driver.create_node(),
-                    $2,
-                    std::move($5)
-                })
-            }
-        });
-    }
+    KW_FN ident L_PAREN R_PAREN block { $$ = driver.rules->functionDefinition(std::move($2), std::move($5)); }
     ;
 
 block:
@@ -132,43 +120,15 @@ block:
     ;
 
 statements:
-    statements statement {
-        $1->statements.push_back(std::move($2));
-        $$ = std::move($1);
-    }
-    | statement {
-        $$ = P<AST::Block>(new AST::Block {
-          driver.create_node(),
-        });
-        $$->statements.push_back(std::move($1));
-    }
+    statements statement { driver.rules->addStatement(std::move($1), std::move($2)); }
+    | statement { driver.rules->initStatements(std::move($1)); }
     ;
 
 statement:
-    let_statement {
-        $$ = P<AST::Stmt>(new AST::Stmt {
-          driver.create_node(),
-          std::move($1)
-        });
-    }
-    | expr_without_block SEMI {
-        $$ = P<AST::Stmt>(new AST::Stmt{
-          driver.create_node(),
-          std::move($1)
-        });
-    }
-    | expr_with_block SEMI {
-        $$ = P<AST::Stmt>(new AST::Stmt{
-          driver.create_node(),
-          std::move($1)
-        });
-    }
-    | expr_with_block {
-        $$ = P<AST::Stmt>(new AST::Stmt{
-          driver.create_node(),
-          std::move($1)
-        });
-    }
+    let_statement { $$ = driver.rules->statement(std::move($1)); }
+    | expr_without_block SEMI { $$ = driver.rules->statement(std::move($1)); }
+    | expr_with_block SEMI { $$ = driver.rules->statement(std::move($1)); }
+    | expr_with_block { $$ = driver.rules->statement(std::move($1)); }
     ;
 
 

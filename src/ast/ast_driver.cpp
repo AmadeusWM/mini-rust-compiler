@@ -4,7 +4,7 @@
 
 ASTDriver::ASTDriver(Scanner* scanner)
     : scanner(scanner)
-    , rules(P<ParserRules>(new ParserRules(this)))
+    , rules(P<ParserRules>(new ParserRules(*this)))
     , parser(*this, *scanner)
 {}
 
