@@ -74,15 +74,14 @@
 %type <P<AST::Block>> block
 %type <P<AST::Block>> statements
 %type <P<AST::Stmt>> statement
-%type <P<AST::Let>> let_statement
+%type <P<AST::Let>> let
 %type <AST::LocalKind> local;
 %type <P<AST::Expr>> expr
 %type <P<AST::Expr>> expr_with_block
 %type <P<AST::Expr>> expr_without_block
-%type <P<AST::Expr>> block_expr
-%type <P<AST::Expr>> literal_expr
+%type <AST::Lit> literal
 %type <AST::Ident> ident
-%type <P<AST::Expr>> ident_expr
+%type <AST::Path> path
 
 
 // custom
@@ -125,15 +124,15 @@ statements:
     ;
 
 statement:
-    let_statement { $$ = driver.rules->statement(std::move($1)); }
+    let { $$ = driver.rules->statement(std::move($1)); }
     | expr_without_block SEMI { $$ = driver.rules->statement(std::move($1)); }
     | expr_with_block SEMI { $$ = driver.rules->statement(std::move($1)); }
     | expr_with_block { $$ = driver.rules->statement(std::move($1)); }
     ;
 
 
-let_statement:
-    KW_LET ident local SEMI { $$ = driver.rules->letStatement($2, std::move($3)); }
+let:
+    KW_LET ident local SEMI { $$ = driver.rules->let($2, std::move($3)); }
     ;
 
 local:
@@ -147,65 +146,26 @@ expr:
     ;
 
 expr_without_block:
-    literal_expr { $$ = std::move($1); }
-    | ident_expr { $$ = std::move($1); }
+    literal { $$ = driver.rules->expr(std::move($1)); }
+    | path { $$ = driver.rules->expr(std::move($1)); }
     ;
 
 
 expr_with_block:
-    block_expr { $$ = std::move($1); }
+    block { $$ = driver.rules->expr(std::move($1)); }
     ;
 ;
 
 ident:
-    IDENTIFIER {
-        $$ = AST::Ident{
-          .identifier = $1
-        };
-    }
+    IDENTIFIER { driver.rules->ident($1); }
     ;
 
-block_expr:
-    block {
-        $$ = P<AST::Expr>(new AST::Expr {
-            driver.create_node(),
-            AST::ExprKind {
-                std::move($1)
-            }
-        });
-    }
+path:
+    ident { $$ = driver.rules->path(std::move($1)); }
     ;
 
-ident_expr:
-    IDENTIFIER {
-      $$ = P<AST::Expr>(new AST::Expr {
-        driver.create_node(),
-        AST::ExprKind {
-          AST::Path {
-            .segments = std::vector<AST::PathSegment>{AST::PathSegment {
-              driver.create_node(),
-              AST::Ident {
-                $1
-              }
-            }}
-          }
-        }
-      });
-    }
-    ;
-
-literal_expr:
-    INTEGER_LITERAL {
-        $$ = P<AST::Expr>(new AST::Expr {
-            driver.create_node(),
-            AST::ExprKind {
-                AST::Lit{
-                  driver.create_node(),
-                  AST::LitKind($1)
-                }
-            }
-        });
-    }
+literal:
+    INTEGER_LITERAL { $$ = driver.rules->lit($1); }
     ;
 
 %%

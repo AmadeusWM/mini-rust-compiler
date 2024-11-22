@@ -1,4 +1,6 @@
 #include "parser_rules.h"
+#include "nodes/core.h"
+#include "nodes/expr.h"
 #include "nodes/item.h"
 #include "nodes/stmt.h"
 
@@ -20,8 +22,8 @@ P<AST::Crate> ParserRules::addItem(P<AST::Crate> $1, P<AST::Item> $2) {
 
 P<AST::Item> ParserRules::item(AST::ItemKind $1) {
   return P<AST::Item>(new AST::Item{
-    driver.create_node(),
-    std::move($1)
+    .id = driver.create_node(),
+    .kind = std::move($1)
   });
 }
 
@@ -53,10 +55,43 @@ P<AST::Stmt> ParserRules::statement(AST::StmtKind $1) {
   });
 }
 
-P<AST::Let> ParserRules::letStatement(AST::Ident $1, AST::LocalKind $2) {
+P<AST::Let> ParserRules::let(AST::Ident $1, AST::LocalKind $2) {
   return P<AST::Let>(new AST::Let {
       .id = driver.create_node(),
       .pat = AST::Pat($1),
       .kind = std::move($2)
   });
+}
+
+AST::Ident ParserRules::ident(std::string $1) {
+  return AST::Ident {
+    .identifier = std::move($1)
+  };
+}
+
+AST::Path ParserRules::path(AST::Ident $1) {
+  return AST::Path {
+    .segments = std::vector<AST::PathSegment>{
+      AST::PathSegment {
+        .id = driver.create_node(),
+        .ident = $1
+      }
+    }
+  };
+}
+
+P<AST::Expr> ParserRules::expr(AST::ExprKind $1) {
+  return P<AST::Expr>(new AST::Expr {
+      .id = driver.create_node(),
+      .kind = AST::ExprKind {
+          std::move($1)
+      }
+  });
+}
+
+AST::Lit ParserRules::lit(AST::LitKind $1) {
+  return AST::Lit {
+    .id = driver.create_node(),
+    .kind = std::move($1)
+  };
 }

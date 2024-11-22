@@ -26,5 +26,12 @@ class ParserRules {
     P<AST::Block> addStatement(P<AST::Block> $1, P<AST::Stmt> $2);
     P<AST::Stmt> statement(AST::StmtKind $1);
 
-    P<AST::Let> letStatement(AST::Ident $1, AST::LocalKind $2);
+    P<AST::Let> let(AST::Ident $1, AST::LocalKind $2);
+
+    AST::Ident ident(std::string $1);
+    AST::Path path(AST::Ident $1);
+
+    P<AST::Expr> expr(AST::ExprKind $1);
+
+    AST::Lit lit(AST::LitKind $1);
 };
