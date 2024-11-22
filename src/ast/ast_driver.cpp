@@ -4,9 +4,9 @@
 
 ASTDriver::ASTDriver(Scanner* scanner)
     : scanner(scanner)
+    , rules(P<ParserRules>(new ParserRules(this)))
     , parser(*this, *scanner)
-{
-}
+{}
 
 void ASTDriver::parse()
 {
@@ -27,4 +27,8 @@ P<Driver> ASTDriver::execute()
   parse();
   nameResolution();
   return nullptr;
+}
+
+AST::NodeId ASTDriver::create_node() {
+  return this->curr_id++;
 }

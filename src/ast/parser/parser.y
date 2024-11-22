@@ -18,7 +18,6 @@
     #include "../../util/util.h"
 
     // #define YYDEBUG 1 // print ambiguous states
-    using std::unique_ptr;
 }
 
 %header
@@ -108,10 +107,7 @@ function_definitions:
         $$ = std::move($1);
     }
     | function_definition {
-        $$ = P<AST::Crate>(new AST::Crate{
-          driver.create_node(),
-        });
-        $$->items.push_back(std::move($1));
+        $$ = driver.rules->initFunctionDefinitions(std::move($1));
     }
     ;
 

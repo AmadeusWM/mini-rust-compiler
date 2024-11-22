@@ -4,7 +4,10 @@
 #include "ast_node.h"
 #include "parser/parser.h"
 #include "../driver.h"
+#include "parser/parser_rules.h"
 #include <optional>
+
+class ParserRules;
 
 class ASTDriver : public Driver {
 private:
@@ -14,6 +17,7 @@ public:
   Opt<P<AST::Crate>> ast = std::nullopt;
   Scanner *scanner;
   MRI::Parser parser;
+  P<ParserRules> rules;
 
   ASTDriver(Scanner *scanner);
 
@@ -23,7 +27,5 @@ public:
   P<Driver> execute() override;
   std::string name() override { return "AST Driver"; }
 
-  AST::NodeId create_node() {
-    return curr_id++;
-  }
+  AST::NodeId create_node();
 };

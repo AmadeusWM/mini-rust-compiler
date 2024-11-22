@@ -39,6 +39,7 @@ include_directories(
 add_executable(mini-rust
     ${CMAKE_SOURCE_DIR}/src/main.cpp
     ${CMAKE_SOURCE_DIR}/src/ast/ast_driver.cpp
+    ${CMAKE_SOURCE_DIR}/src/ast/parser/parser_rules.cpp
     ${BISON_MyParser_OUTPUTS}
     ${FLEX_MyLexer_OUTPUTS}
 )
