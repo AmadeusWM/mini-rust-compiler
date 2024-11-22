@@ -133,15 +133,11 @@ statement:
 
 
 let_statement:
-    KW_LET ident local SEMI {
-        $$ = driver.rules->letStatement($2, std::move($3));
-    }
+    KW_LET ident local SEMI { $$ = driver.rules->letStatement($2, std::move($3)); }
     ;
 
 local:
-    EQ expr {
-        $$ = std::move($2);
-    }
+    EQ expr { $$ = std::move($2); }
     | { $$ = AST::Decl {}; }
     ;
 
