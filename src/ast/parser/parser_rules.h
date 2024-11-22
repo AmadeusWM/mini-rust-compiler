@@ -4,6 +4,7 @@
 #include "nodes/core.h"
 #include "nodes/expr.h"
 #include "nodes/item.h"
+#include "nodes/stmt.h"
 #include "util.h"
 #include <vector>
 
@@ -24,4 +25,6 @@ class ParserRules {
     P<AST::Block> initStatements(P<AST::Stmt> $1);
     P<AST::Block> addStatement(P<AST::Block> $1, P<AST::Stmt> $2);
     P<AST::Stmt> statement(AST::StmtKind $1);
+
+    P<AST::Let> letStatement(AST::Ident $1, AST::LocalKind $2);
 };

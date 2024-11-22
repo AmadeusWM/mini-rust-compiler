@@ -134,19 +134,15 @@ statement:
 
 let_statement:
     KW_LET ident local SEMI {
-        $$ = P<AST::Let>(new AST::Let {
-            .id = driver.create_node(),
-            .pat = AST::Pat($2),
-            .kind = std::move($3)
-        });
+        $$ = driver.rules->letStatement($2, std::move($3));
     }
     ;
 
 local:
     EQ expr {
-        $$ = AST::LocalKind(std::move($2));
+        $$ = std::move($2);
     }
-    | { $$ = AST::LocalKind(AST::Decl {}); }
+    | { $$ = AST::Decl {}; }
     ;
 
 expr:
