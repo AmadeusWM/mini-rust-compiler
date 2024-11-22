@@ -111,7 +111,9 @@ item:
     function_definition { $$ = driver.rules->item(std::move($1)); }
 
 function_definition:
-    KW_FN ident L_PAREN R_PAREN block { $$ = driver.rules->functionDefinition(std::move($2), std::move($5)); }
+    KW_FN ident L_PAREN R_PAREN block {
+        $$ = driver.rules->functionDefinition(std::move($2), std::move($5));
+    }
     ;
 
 block:
