@@ -3,7 +3,7 @@
 #include <optional>
 
 /**
- * shorthand for std::unique_ptr
+* P is a shorthand for std::unique_ptr
 */
 template <typename T> using P = std::unique_ptr<T>;
 

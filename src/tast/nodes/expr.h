@@ -17,8 +17,8 @@ namespace TAST {
 
   struct Block {
     NodeId id;
-    std::vector<Stmt> statements;
+    std::vector<P<Stmt>> statements;
     // optional expression at the end of the block for implicit return
-    Opt<Expr> expr;
+    Opt<P<Expr>> expr;
   };
 }
