@@ -2,6 +2,7 @@
 
 #include "lexer/scanner.h"
 #include "ast_node.h"
+#include "nodes/body.h"
 #include "parser/parser.h"
 #include "../driver.h"
 #include "parser/parser_rules.h"
@@ -23,6 +24,7 @@ public:
 
   void parse();
   void nameResolution();
+  P<TAST::Crate> lower();
 
   P<Driver> execute() override;
   std::string name() override { return "AST Driver"; }

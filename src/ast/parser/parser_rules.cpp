@@ -3,8 +3,10 @@
 #include "nodes/expr.h"
 #include "nodes/item.h"
 #include "nodes/stmt.h"
+#include <spdlog/spdlog.h>
 
-ParserRules::ParserRules(ASTDriver& driver) : driver{driver} {}
+ParserRules::ParserRules(ASTDriver& driver) : driver{driver} {
+}
 
 P<AST::Crate> ParserRules::initItems(P<AST::Item> $1) {
     auto $$ = P<AST::Crate>(new AST::Crate{
@@ -38,14 +40,15 @@ P<AST::FnDef> ParserRules::functionDefinition(AST::Ident $1, P<AST::Block> $2) {
 P<AST::Block> ParserRules::initStatements(P<AST::Stmt> $1) {
   auto $$ = P<AST::Block>(new AST::Block {
     .id = driver.create_node(),
+    .statements{}
   });
   $$->statements.push_back(std::move($1));
-  return $$;
+  return std::move($$);
 }
 
 P<AST::Block> ParserRules::addStatement(P<AST::Block> $1, P<AST::Stmt> $2) {
   $1->statements.push_back(std::move($2));
-  return $1;
+  return std::move($1);
 }
 
 P<AST::Stmt> ParserRules::statement(AST::StmtKind $1) {

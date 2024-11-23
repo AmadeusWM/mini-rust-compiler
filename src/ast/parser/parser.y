@@ -121,8 +121,8 @@ block:
     ;
 
 statements:
-    statements statement { driver.rules->addStatement(std::move($1), std::move($2)); }
-    | statement { driver.rules->initStatements(std::move($1)); }
+    statements statement { $$ = driver.rules->addStatement(std::move($1), std::move($2)); }
+    | statement { $$ = driver.rules->initStatements(std::move($1)); }
     ;
 
 statement:
@@ -159,7 +159,7 @@ expr_with_block:
 ;
 
 ident:
-    IDENTIFIER { driver.rules->ident($1); }
+    IDENTIFIER { $$ = driver.rules->ident($1); }
     ;
 
 path:

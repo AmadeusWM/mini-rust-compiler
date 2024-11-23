@@ -13,6 +13,14 @@ namespace TAST {
   struct NS {
     std::vector<AST::Ident> segments;
     // TODO: implement < and == operators
+    bool operator<(const NS &o)  const {
+      for (size_t i = 0; i < segments.size(); i++) {
+        if (segments[i].identifier != o.segments[i].identifier) {
+          return false;
+        }
+      }
+      return true;
+    }
   };
 
   struct Body {

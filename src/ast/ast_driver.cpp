@@ -1,4 +1,5 @@
 #include "ast_driver.h"
+#include "visitors/lower_ast_visitor.h"
 #include "visitors/name_resolution_visitor.h"
 #include "visitors/print_visitor.h"
 
@@ -26,9 +27,16 @@ P<Driver> ASTDriver::execute()
 {
   parse();
   nameResolution();
+  lower();
   return nullptr;
 }
 
 AST::NodeId ASTDriver::create_node() {
   return this->curr_id++;
+}
+
+P<TAST::Crate> ASTDriver::lower() {
+  spdlog::info("Lowering to TAST...");
+  AST::LowerAstVisitor visitor;
+  return visitor.lower_crate(*this->ast.value());
 }
