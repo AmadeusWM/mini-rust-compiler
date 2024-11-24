@@ -4,17 +4,26 @@
 #include "type.h"
 
 namespace TAST {
+  struct Binary;
+
   typedef std::variant<
     // Path,
     Lit,
     Path,
-    P<Block>
+    P<Block>,
+    P<Binary>
   > ExprKind;
 
   struct Expr {
     NodeId id;
     ExprKind kind;
     Ty ty;
+  };
+
+  struct Binary {
+    AST::BinOp op;
+    P<Expr> lhs;
+    P<Expr> rhs;
   };
 
   struct Block {

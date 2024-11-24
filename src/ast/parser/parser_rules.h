@@ -36,4 +36,6 @@ class ParserRules {
     P<AST::Expr> expr(AST::ExprKind $1);
 
     AST::Lit lit(AST::LitKind $1);
+
+    P<AST::Binary> binary(P<AST::Expr> $1, AST::BinOp $2, P<AST::Expr> $3);
 };

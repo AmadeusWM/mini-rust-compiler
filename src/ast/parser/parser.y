@@ -82,6 +82,8 @@
 %type <AST::Lit> literal
 %type <AST::Ident> ident
 %type <AST::Path> path
+%type <P<AST::Binary>> binary
+%type <AST::BinOp> bin_op
 
 
 // custom
@@ -135,6 +137,15 @@ statement:
     | expr_with_block { $$ = driver.rules->statement(std::move($1)); }
     ;
 
+binary:
+    expr bin_op expr { $$ = driver.rules->binary(std::move($1), $2, std::move($3)); }
+    ;
+
+bin_op:
+    PLUS { $$ = AST::Bin::Add{}; }
+    | MIN { $$ = AST::Bin::Sub{}; }
+    ;
+
 
 let:
     KW_LET ident local SEMI { $$ = driver.rules->let($2, std::move($3)); }
@@ -151,7 +162,8 @@ expr:
     ;
 
 expr_without_block:
-    literal { $$ = driver.rules->expr(std::move($1)); }
+    binary { $$ = driver.rules->expr(std::move($1)); }
+    | literal { $$ = driver.rules->expr(std::move($1)); }
     | path { $$ = driver.rules->expr(std::move($1)); }
     ;
 

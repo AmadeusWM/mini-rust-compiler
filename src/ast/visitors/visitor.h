@@ -63,8 +63,8 @@ namespace AST {
           [this](const P<Block>& block) { visit(*block); },
           [this](const Path& path) { },
           [this](const P<Binary>& binary) {
-            visit(*binary->left);
-            visit(*binary->right);
+            visit(*binary->lhs);
+            visit(*binary->rhs);
           }
       }, expr.kind);
     }

@@ -17,6 +17,11 @@ private:
     }
     spdlog::debug("{}|-{}", ind, str);
   }
+
+  void print(std::string str, Ty ty) {
+    print(str + " -> " + type(ty));
+  }
+
   void wrap(std::function<void()> func)
   {
     indent += 1;
@@ -85,6 +90,7 @@ public:
   void visit(const Let& let) {
     print("Let");
     wrap([&] {
+      visit(let.pat);
       WalkVisitor::visit(let);
     });
   }
@@ -101,9 +107,23 @@ public:
     });
   }
   void visit(const Expr& expr) {
-    print("Expr:" + type(expr.ty));
+    print("Expr", expr.ty);
     wrap([&] {
-      WalkVisitor::visit(expr);
+      std::visit(overloaded {
+        [this](const P<Block>& block) { visit(*block); },
+        [this](const Lit& lit) { visit(lit); },
+        [this](const P<Binary>& binary) {
+          visit(*binary->lhs);
+          print(fmt::format("BinOp: {}",
+            std::visit(overloaded {
+              [](const AST::Bin::Add) { return "Add"; },
+              [](const AST::Bin::Sub) { return "Sub"; }
+            }, binary->op))
+          );
+          visit(*binary->rhs);
+        },
+        [this](const Path& path) { visit(path); },
+      }, expr.kind);
     });
   }
   void visit(const Lit& lit) {
@@ -115,6 +135,14 @@ public:
     wrap([&] {
       WalkVisitor::visit(lit);
     });
+  }
+
+  void visit(const Pat& pat) {
+    std::visit(overloaded {
+      [&](const Ident& ident) {
+        print(fmt::format("Ident: {}", ident.identifier));
+      }
+    }, pat);
   }
 };
 }

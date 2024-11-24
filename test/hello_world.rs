@@ -1,7 +1,3 @@
 fn main() {
-    let q = 5;
-    fn add() {
-        let a = 3;
-        5
-    }
+    let q = 5 + 3;
 }

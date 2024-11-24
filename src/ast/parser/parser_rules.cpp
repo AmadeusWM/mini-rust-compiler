@@ -109,3 +109,11 @@ AST::Lit ParserRules::lit(AST::LitKind $1) {
     .kind = std::move($1)
   };
 }
+
+P<AST::Binary> ParserRules::binary(P<AST::Expr> $1, AST::BinOp $2, P<AST::Expr> $3) {
+  return P<AST::Binary>(new AST::Binary {
+    .op = $2,
+    .lhs = std::move($1),
+    .rhs = std::move($3)
+  });
+}

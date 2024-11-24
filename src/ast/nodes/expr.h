@@ -31,8 +31,8 @@ namespace AST {
 
   struct Binary {
     BinOp op;
-    P<Expr> left;
-    P<Expr> right;
+    P<Expr> lhs;
+    P<Expr> rhs;
   };
 
   struct Block {

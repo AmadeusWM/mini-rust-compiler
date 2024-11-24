@@ -56,6 +56,7 @@ class WalkVisitor : public Visitor<void> {
     std::visit(overloaded {
       [this](const P<Block>& block) { visit(*block); },
       [this](const Lit& lit) { visit(lit); },
+      [this](const P<Binary>& binary) { visit(*binary->lhs); visit(*binary->rhs); },
       [this](const Path& path) { visit(path); },
     }, expr.kind);
   }

@@ -171,6 +171,17 @@ public:
           .kind = std::move(lowered_block),
           .ty = ty
         });
+      },
+      [this, &expr](const P<Binary>& binary) {
+        return P<TAST::Expr>(new TAST::Expr {
+          .id = expr.id,
+          .kind = P<TAST::Binary>(new TAST::Binary {
+            .op = binary->op,
+            .lhs = lower_expr(*binary->lhs),
+            .rhs = lower_expr(*binary->rhs)
+          }),
+          .ty = {TAST::InferTy{}}
+        });
       }
     }, expr.kind);
   }

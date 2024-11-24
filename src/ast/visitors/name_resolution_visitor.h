@@ -198,6 +198,10 @@ class NameResolutionVisitor : public Visitor {
         [this, &expr](const Path& path) {
           // TODO: we should probably
           auto res = lookup_ident_or_throw(path.segments.back().ident.identifier);
+        },
+        [this, &expr](const P<Binary>& binary) {
+          visit(*binary->lhs);
+          visit(*binary->rhs);
         }
     }, expr.kind);
   }
