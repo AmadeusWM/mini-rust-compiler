@@ -1,6 +1,9 @@
 #pragma once
 
+#include "nodes/type.h"
+#include "util.h"
 #include "visitors/tast_visitor.h"
+#include <variant>
 namespace TAST {
 class PrintVisitor : public WalkVisitor {
 private:
@@ -19,6 +22,30 @@ private:
     indent += 1;
     func();
     indent -= 1;
+  }
+  std::string type(Ty ty) {
+    return std::visit(overloaded {
+      [](const Unit&) { return "Unit"; },
+      [](const IntTy& intTy) {
+        return std::visit(overloaded {
+          [](const I8&) { return "I8"; }
+        }, intTy);
+      },
+      [](const FloatTy& floatTy) {
+        return std::visit(overloaded {
+          [](const F8&) { return "F8"; }
+        }, floatTy);
+      },
+      [](const StrTy&) { return "StrTy"; },
+      [](const FnDefTy&) { return "FnDefTy"; },
+      [](const InferTy& inferTy) {
+        return std::visit(overloaded {
+          [](const TyVar&) { return "TyVar"; },
+          [](const IntVar&) { return "IntVar"; },
+          [](const FloatVar&) { return "FloatVar"; }
+        }, inferTy);
+      }
+    }, ty.kind);
   }
 public:
   void visit(const Crate& crate) {
@@ -71,7 +98,7 @@ public:
     });
   }
   void visit(const Expr& expr) {
-    print("Expr");
+    print("Expr:" + type(expr.ty));
     wrap([&] {
       WalkVisitor::visit(expr);
     });

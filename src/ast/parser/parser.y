@@ -121,12 +121,14 @@ block:
     ;
 
 statements:
-    statements statement { $$ = driver.rules->addStatement(std::move($1), std::move($2)); }
+    statements expr_without_block { $$ = driver.rules->addStatement(std::move($1), driver.rules->statement(std::move($2))); }
+    | statements statement { $$ = driver.rules->addStatement(std::move($1), std::move($2)); }
     | statement { $$ = driver.rules->initStatements(std::move($1)); }
     ;
 
 statement:
     let { $$ = driver.rules->statement(std::move($1)); }
+    | item { $$ = driver.rules->statement(std::move($1)); }
     | expr_without_block SEMI { $$ = driver.rules->statement(std::move($1)); }
     | expr_with_block SEMI { $$ = driver.rules->statement(std::move($1)); }
     | expr_with_block { $$ = driver.rules->statement(std::move($1)); }
