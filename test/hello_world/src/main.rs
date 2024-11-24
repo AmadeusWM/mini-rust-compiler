@@ -1,5 +1,5 @@
 fn main() {
-    let mut q = 0;
-    q += 10
-    let x = 5;
+    let a: i32 = 5;
+    let b: u32 = 6;
+    let c: f32 = 7.0;
 }
