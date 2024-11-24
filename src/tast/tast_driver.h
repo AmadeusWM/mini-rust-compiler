@@ -6,24 +6,18 @@
 #include "../driver.h"
 #include <optional>
 
-class TASTDRiver : public Driver {
+class TASTDriver : public Driver {
 private:
   AST::NodeId curr_id = 0;
 
 public:
-  Opt<AST::Crate> ast = std::nullopt;
-  Scanner *scanner;
-  MRI::Parser parser;
+  P<TAST::Crate> tast;
 
-  TASTDRiver(Scanner *scanner);
+  TASTDriver(P<TAST::Crate> tast);
 
-  void parse();
-  void nameResolution();
+  void print();
+  void typecheck();
 
   P<Driver> execute() override;
   std::string name() override { return "TAST Driver"; }
-
-  AST::NodeId create_node() {
-    return curr_id++;
-  }
 };

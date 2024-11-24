@@ -1,4 +1,5 @@
 #include "ast_driver.h"
+#include "tast_driver.h"
 #include "visitors/lower_ast_visitor.h"
 #include "visitors/name_resolution_visitor.h"
 #include "visitors/print_visitor.h"
@@ -27,8 +28,8 @@ P<Driver> ASTDriver::execute()
 {
   parse();
   nameResolution();
-  lower();
-  return nullptr;
+  auto crate = lower();
+  return P<TASTDriver>(new TASTDriver(std::move(crate)));
 }
 
 AST::NodeId ASTDriver::create_node() {

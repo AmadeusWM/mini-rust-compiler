@@ -4,9 +4,6 @@
 #include "nodes/expr.h"
 
 namespace TAST {
-  struct FnDef;
-  struct Item;
-
   /*
   * namespace for bodies
   */

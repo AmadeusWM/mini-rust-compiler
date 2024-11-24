@@ -6,7 +6,6 @@
 namespace TAST {
   struct Let;
   struct Expr;
-  struct Item;
 
   typedef std::variant<
       P<Let>,
