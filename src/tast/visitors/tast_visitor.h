@@ -36,7 +36,8 @@ class WalkVisitor : public Visitor<void> {
   void visit(const Stmt& stmt) override {
     std::visit(overloaded {
       [this](const P<Let>& let) { visit(*let); },
-      [this](const P<Expr>& expr) { visit(*expr); }
+      [this](const P<Expr>& expr) { visit(*expr); },
+      [this](const P<Semi>& semi) { visit(*semi->expr); }
     }, stmt.kind);
   }
   void visit(const Let& let) override {

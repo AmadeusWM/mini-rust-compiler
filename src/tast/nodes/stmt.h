@@ -6,11 +6,12 @@
 namespace TAST {
   struct Let;
   struct Expr;
+  struct Semi;
 
   typedef std::variant<
       P<Let>,
-      P<Expr>
-      // Semi
+      P<Expr>,
+      P<Semi>
       // Empty
       >
       StmtKind;
@@ -18,6 +19,10 @@ namespace TAST {
   struct Stmt {
     NodeId id;
     StmtKind kind;
+  };
+
+  struct Semi {
+    P<Expr> expr;
   };
 
   struct Decl { };

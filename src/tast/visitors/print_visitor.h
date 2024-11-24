@@ -71,6 +71,9 @@ public:
     print("Block");
     wrap([&] {
       WalkVisitor::visit(block);
+      if (block.expr.has_value()){
+        WalkVisitor::visit(*block.expr.value());
+      }
     });
   }
   void visit(const Stmt& stmt) {

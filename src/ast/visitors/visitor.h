@@ -1,5 +1,6 @@
 #pragma once
 #include "../ast_node.h"
+#include "nodes/expr.h"
 
 namespace AST {
   class Visitor {
@@ -32,7 +33,8 @@ namespace AST {
           overloaded {
               [this](const P<Expr>& expr) { visit(*expr); },
               [this](const P<Let>& let) { visit(*let); },
-              [this](const P<Item>& item) { visit(*item); }
+              [this](const P<Item>& item) { visit(*item); },
+              [this](const P<Semi>& semi) { visit(*semi->expr); }
           }, node.kind);
     }
 
@@ -59,7 +61,11 @@ namespace AST {
         overloaded {
           [this](const Lit& lit) { visit(lit); },
           [this](const P<Block>& block) { visit(*block); },
-          [this](const Path& path) { }
+          [this](const Path& path) { },
+          [this](const P<Binary>& binary) {
+            visit(*binary->left);
+            visit(*binary->right);
+          }
       }, expr.kind);
     }
 

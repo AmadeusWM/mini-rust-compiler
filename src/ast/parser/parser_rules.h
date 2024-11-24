@@ -23,8 +23,10 @@ class ParserRules {
     P<AST::FnDef> functionDefinition(AST::Ident $1, P<AST::Block> $2);
 
     P<AST::Block> initStatements(P<AST::Stmt> $1);
+    P<AST::Block> initStatements();
     P<AST::Block> addStatement(P<AST::Block> $1, P<AST::Stmt> $2);
     P<AST::Stmt> statement(AST::StmtKind $1);
+    P<AST::Semi> semi(P<AST::Expr> $1);
 
     P<AST::Let> let(AST::Ident $1, AST::LocalKind $2);
 

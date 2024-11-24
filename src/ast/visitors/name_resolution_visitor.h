@@ -217,6 +217,9 @@ class NameResolutionVisitor : public Visitor {
           [this, &stmt](const P<Item>& item) {
             Visitor::visit(*item);
           },
+          [this, &stmt](const P<Semi>& semi) {
+            Visitor::visit(*semi->expr);
+          },
         }, stmt.kind);
       }
     );

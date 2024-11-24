@@ -1,8 +1,10 @@
 #pragma once
 #include "ast_node.h"
+#include "nodes/expr.h"
 #include "spdlog/spdlog.h"
 #include "util.h"
 #include "visitor.h"
+#include <fmt/core.h>
 #include <string>
 #include <variant>
 
@@ -69,6 +71,18 @@ class PrintVisitor : public AST::Visitor {
             [this](const Path& path) {
               wrap([this, &path]() { visit(path); });
             },
+            [this](const P<Binary>& binary) {
+              wrap([&]{
+                visit(*binary->left);
+                print(fmt::format("BinOp: {}",
+                  std::visit(overloaded {
+                    [](const Bin::Add) { return "Add"; },
+                    [](const Bin::Sub) { return "Sub"; }
+                  }, binary->op))
+                );
+                visit(*binary->right);
+              });
+            }
         },
         expr.kind);
   }
@@ -85,12 +99,17 @@ class PrintVisitor : public AST::Visitor {
         },
         [this](const P<Expr>& expr) {
           wrap([this, &expr]() {
-            Visitor::visit(*expr);
+            visit(*expr);
           });
         },
         [this](const P<Item>& item) {
           visit(*item);
         },
+        [this](const P<Semi>& semi) {
+          wrap([&]() {
+            visit(*semi->expr);
+          });
+        }
       },
       stmt.kind);
   }

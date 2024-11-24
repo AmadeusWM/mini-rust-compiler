@@ -38,11 +38,16 @@ P<AST::FnDef> ParserRules::functionDefinition(AST::Ident $1, P<AST::Block> $2) {
 }
 
 P<AST::Block> ParserRules::initStatements(P<AST::Stmt> $1) {
+  auto $$ = initStatements();
+  $$->statements.push_back(std::move($1));
+  return std::move($$);
+}
+
+P<AST::Block> ParserRules::initStatements() {
   auto $$ = P<AST::Block>(new AST::Block {
     .id = driver.create_node(),
     .statements{}
   });
-  $$->statements.push_back(std::move($1));
   return std::move($$);
 }
 
@@ -55,6 +60,12 @@ P<AST::Stmt> ParserRules::statement(AST::StmtKind $1) {
   return P<AST::Stmt>(new AST::Stmt{
     .id = driver.create_node(),
     .kind = std::move($1)
+  });
+}
+
+P<AST::Semi> ParserRules::semi(P<AST::Expr> $1) {
+  return P<AST::Semi>(new AST::Semi{
+    .expr = std::move($1)
   });
 }
 

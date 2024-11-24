@@ -5,17 +5,34 @@
 
 namespace AST {
   struct Block;
+  struct Binary;
 
   typedef std::variant<
-    // Path,
     Lit,
     Path,
-    P<Block>
+    P<Block>,
+    P<Binary>
   > ExprKind;
 
   struct Expr {
     NodeId id;
     ExprKind kind;
+  };
+
+  namespace Bin {
+    struct Add{};
+    struct Sub{};
+  }
+
+  typedef std::variant<
+    Bin::Add,
+    Bin::Sub
+  > BinOp;
+
+  struct Binary {
+    BinOp op;
+    P<Expr> left;
+    P<Expr> right;
   };
 
   struct Block {

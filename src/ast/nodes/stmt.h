@@ -7,12 +7,13 @@ namespace AST {
   struct Let;
   struct Expr;
   struct Item;
+  struct Semi;
 
   typedef std::variant<
       P<Let>,
       P<Expr>,
-      P<Item>
-      // Semi
+      P<Item>,
+      P<Semi>
       // Empty
       >
       StmtKind;
@@ -20,6 +21,10 @@ namespace AST {
   struct Stmt {
     NodeId id;
     StmtKind kind;
+  };
+
+  struct Semi {
+    P<Expr> expr;
   };
 
   struct Decl { };

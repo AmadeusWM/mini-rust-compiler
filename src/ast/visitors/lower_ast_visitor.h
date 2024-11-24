@@ -9,6 +9,7 @@
 #include "util.h"
 #include "visitors/visitor.h"
 #include <memory>
+#include <spdlog/spdlog.h>
 #include <variant>
 #include <vector>
 
@@ -90,6 +91,7 @@ public:
 
     // when the last statement is an expression, we can move it to the expr field
     if (std::holds_alternative<P<Expr>>(last->kind)) {
+      spdlog::warn("last statement is an expression");
       const auto& expr = std::get<P<Expr>>(last->kind);
       lowered_block->expr = Opt<P<TAST::Expr>>(lower_expr(*expr));
       length--;
@@ -115,7 +117,13 @@ public:
             .id = stmt->id,
             .kind = lower_let(*let)
           }));
-        }
+        },
+        [this, &lowered_block, &stmt](const P<Semi>& semi) {
+          lowered_block->statements.push_back(P<TAST::Stmt>(new TAST::Stmt{
+            .id = stmt->id,
+            .kind = P<TAST::Semi>(new TAST::Semi { lower_expr(*semi->expr) })
+          }));
+        },
       }, stmt->kind);
     }
     return lowered_block;
