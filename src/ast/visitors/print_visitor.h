@@ -105,7 +105,7 @@ class PrintVisitor : public AST::Visitor {
   {
     print("Let");
     wrap([this, &let]() {
-      visit(let.pat);
+      visit(*let.pat);
       std::visit(
           overloaded {
               [this](const Decl& decl) { print("Decl"); },
@@ -130,7 +130,7 @@ class PrintVisitor : public AST::Visitor {
       [&](const Ident& ident) {
         print(fmt::format("Ident: {}", ident.identifier));
       }
-    }, pat);
+    }, pat.kind);
   }
 };
 } // namespace AST

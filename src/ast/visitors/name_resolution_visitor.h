@@ -233,10 +233,10 @@ class NameResolutionVisitor : public Visitor {
   {
     scopes.push_back({ .id = let.id, .kind = Scope::Normal {} });
     std::visit(overloaded {
-      [this, &let](const Ident ident) {
+      [this, &let](const Ident& ident) {
         insert_binding(ident.identifier, Res::Res(Res::Local { .id = let.id }));
       }
-    }, let.pat);
+    }, let.pat->kind);
     std::visit(overloaded {
       [this](const Decl& decl) {
       },

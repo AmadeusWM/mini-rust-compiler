@@ -106,17 +106,31 @@ crate:
 items:
     items item { $$ = driver.rules->addItem(std::move($1), std::move($2)); }
     | item { $$ = driver.rules->initItems(std::move($1)); }
+    | { $$ = driver.rules->initItems(); }
     ;
 
 
 item:
     function_definition { $$ = driver.rules->item(std::move($1)); }
+    ;
 
 function_definition:
-    KW_FN ident L_PAREN R_PAREN block {
+    KW_FN ident L_PAREN params R_PAREN block R_ARROW type {
         $$ = driver.rules->functionDefinition(std::move($2), std::move($5));
     }
     ;
+
+params:
+    params COMMA param { $$ = driver.rules->addParam(std::move($1), std::move($3)); }
+    | param { $$ = driver.rules->initParams(std::move($1)); }
+    | { $$ = driver.rules->initParams(); }
+    ;
+
+param:
+  pat COLON type { $$ = driver.rules->param(std::move($1), std::move($3)); }
+
+type:
+    path { $$ = driver.rules->type(std::move($1)); }
 
 block:
     L_BRACE statements R_BRACE { $$ = std::move($2); }
@@ -148,13 +162,18 @@ bin_op:
 
 
 let:
-    KW_LET ident local SEMI { $$ = driver.rules->let($2, std::move($3)); }
+    KW_LET ident let_type local SEMI { $$ = driver.rules->let($2, std::move($3)); }
     ;
 
 local:
     EQ expr { $$ = std::move($2); }
     | { $$ = AST::Decl {}; }
     ;
+
+let_type:
+    COLON type { $$ = std::move($2); }
+    | { $$ = AST::Type {}; }
+
 
 expr:
     expr_without_block { $$ = std::move($1); }
@@ -172,6 +191,9 @@ expr_with_block:
     block { $$ = driver.rules->expr(std::move($1)); }
     ;
 ;
+
+pat:
+    ident { $$ = driver.rules->pat(std::move($1)); }
 
 ident:
     IDENTIFIER { $$ = driver.rules->ident($1); }

@@ -5,6 +5,7 @@
 #include "nodes/expr.h"
 #include "nodes/item.h"
 #include "nodes/stmt.h"
+#include "nodes/type.h"
 #include "util.h"
 #include <vector>
 
@@ -17,6 +18,7 @@ class ParserRules {
     ParserRules(ASTDriver& driver);
 
     P<AST::Crate> initItems(P<AST::Item> $1);
+    P<AST::Crate> initItems();
     P<AST::Crate> addItem(P<AST::Crate> $1, P<AST::Item> $2);
     P<AST::Item> item(AST::ItemKind $1);
 
@@ -38,4 +40,10 @@ class ParserRules {
     AST::Lit lit(AST::LitKind $1);
 
     P<AST::Binary> binary(P<AST::Expr> $1, AST::BinOp $2, P<AST::Expr> $3);
+
+    P<AST::Ty> ty(AST::TyKind $1);
+
+    P<AST::Param> param(P<AST::Pat> $1, P<AST::Ty> $2);
+
+    P<AST::Pat> pat(AST::PatKind pat);
 };

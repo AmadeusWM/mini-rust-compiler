@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../ast_node.h"
+#include "nodes/type.h"
 #include "util.h"
 #include <variant>
 namespace AST {
@@ -36,9 +37,10 @@ namespace AST {
       >
       LocalKind;
 
-      struct Let {
-        NodeId id;
-        Pat pat;
-        LocalKind kind;
-      };
+  struct Let {
+    NodeId id;
+    P<Pat> pat;
+    P<Ty> ty;
+    LocalKind kind;
+  };
 }

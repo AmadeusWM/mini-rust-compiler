@@ -132,7 +132,7 @@ public:
   P<TAST::Let> lower_let(const Let& let) {
     return P<TAST::Let>(new TAST::Let {
       .id = let.id,
-      .pat = lower_pat(let.pat),
+      .pat = lower_pat(*let.pat),
       .initializer = std::visit(overloaded {
         [this, &let](const Decl& decl) {
           return Opt<P<TAST::Expr>>();
@@ -213,12 +213,14 @@ public:
     };
   }
 
-  TAST::Pat lower_pat(const AST::Pat& pat) {
-    return TAST::Pat(std::visit(overloaded {
-      [this](const Ident& ident) {
-        return TAST::Ident(lower_ident(ident));
-      }
-    }, pat));
+  P<TAST::Pat> lower_pat(const AST::Pat& pat) {
+    return P<TAST::Pat>(new TAST::Pat{
+      .kind = std::visit(overloaded {
+        [this](const Ident& ident) {
+          return TAST::Ident(lower_ident(ident));
+        }
+      }, pat.kind)
+    });
   }
 
   TAST::Path lower_path(const AST::Path& path){

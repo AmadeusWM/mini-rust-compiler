@@ -30,7 +30,7 @@ namespace TAST {
   struct Let {
     NodeId id;
     // let <PAT> = 5;
-    Pat pat;
+    P<Pat> pat;
     // let x: i32 = <INIT>;
     Opt<P<Expr>> initializer;
   };

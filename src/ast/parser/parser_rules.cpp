@@ -3,19 +3,24 @@
 #include "nodes/expr.h"
 #include "nodes/item.h"
 #include "nodes/stmt.h"
+#include "nodes/type.h"
 #include <spdlog/spdlog.h>
 
 ParserRules::ParserRules(ASTDriver& driver) : driver{driver} {
 }
 
 P<AST::Crate> ParserRules::initItems(P<AST::Item> $1) {
-    auto $$ = P<AST::Crate>(new AST::Crate{
-      .id = driver.create_node(),
-    });
+    auto $$ = initItems();
     $$->items.push_back(std::move($1));
     return $$;
 }
 
+P<AST::Crate> ParserRules::initItems() {
+    auto $$ = P<AST::Crate>(new AST::Crate{
+      .id = driver.create_node(),
+    });
+    return $$;
+}
 
 P<AST::Crate> ParserRules::addItem(P<AST::Crate> $1, P<AST::Item> $2) {
   $1->items.push_back(std::move($2));
@@ -72,7 +77,7 @@ P<AST::Semi> ParserRules::semi(P<AST::Expr> $1) {
 P<AST::Let> ParserRules::let(AST::Ident $1, AST::LocalKind $2) {
   return P<AST::Let>(new AST::Let {
       .id = driver.create_node(),
-      .pat = AST::Pat($1),
+      .pat = AST::PatKind($1),
       .kind = std::move($2)
   });
 }
@@ -115,5 +120,12 @@ P<AST::Binary> ParserRules::binary(P<AST::Expr> $1, AST::BinOp $2, P<AST::Expr> 
     .op = $2,
     .lhs = std::move($1),
     .rhs = std::move($3)
+  });
+}
+
+P<AST::Ty> ParserRules::ty(AST::TyKind $1) {
+  return P<AST::Ty>(new AST::Ty {
+    .id = driver.create_node(),
+    .kind = std::move($1)
   });
 }

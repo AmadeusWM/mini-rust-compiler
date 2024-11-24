@@ -32,6 +32,10 @@ struct Path {
 };
 
 typedef std::variant<
-    Ident>
-    Pat;
+  Ident>
+  PatKind;
+
+struct Pat {
+  PatKind kind;
+};
 }
