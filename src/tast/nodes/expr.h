@@ -1,6 +1,7 @@
 #pragma once
 #include "util/util.h"
 #include "../tast_node.h"
+#include "../../ast/ast_node.h"
 #include "type.h"
 
 namespace TAST {

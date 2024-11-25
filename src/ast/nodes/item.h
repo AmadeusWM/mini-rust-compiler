@@ -27,12 +27,12 @@ namespace AST {
 
   struct Param {
     NodeId id;
-    P<PatKind> pat;
+    P<Pat> pat;
     P<Ty> ty;
   };
 
   struct FnSig {
-    std::vector<P<Ty>> inputs;
+    std::vector<P<Param>> inputs;
     P<Ty> output;
   };
 

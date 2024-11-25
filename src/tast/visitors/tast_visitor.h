@@ -18,6 +18,22 @@ template <class T> class Visitor {
   virtual T visit(const Lit& lit) = 0;
 };
 
+/**
+* allows a visitor to change nodes
+*/
+template <class T> class MutVisitor {
+  public:
+  virtual T visit(Crate& crate) = 0;
+  virtual T visit(Body& body) = 0;
+  virtual T visit(Block& block) = 0;
+  virtual T visit(Stmt& stmt) = 0;
+  virtual T visit(Let& let) = 0;
+  virtual T visit(Path& path) = 0;
+  virtual T visit(PathSegment& segment) = 0;
+  virtual T visit(Expr& expr) = 0;
+  virtual T visit(Lit& lit) = 0;
+};
+
 class WalkVisitor : public Visitor<void> {
   public:
   void visit(const Crate& crate) override {

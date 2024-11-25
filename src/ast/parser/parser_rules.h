@@ -22,15 +22,18 @@ class ParserRules {
     P<AST::Crate> addItem(P<AST::Crate> $1, P<AST::Item> $2);
     P<AST::Item> item(AST::ItemKind $1);
 
-    P<AST::FnDef> functionDefinition(AST::Ident $1, P<AST::Block> $2);
+    P<AST::FnDef> functionDefinition(AST::Ident $1, P<AST::FnSig> $2, P<AST::Block> $3);
+
+    P<AST::FnSig> functionSignature(Vec<P<AST::Param>> $1, P<AST::Ty> $2);
 
     P<AST::Block> initStatements(P<AST::Stmt> $1);
     P<AST::Block> initStatements();
     P<AST::Block> addStatement(P<AST::Block> $1, P<AST::Stmt> $2);
     P<AST::Stmt> statement(AST::StmtKind $1);
+
     P<AST::Semi> semi(P<AST::Expr> $1);
 
-    P<AST::Let> let(AST::Ident $1, AST::LocalKind $2);
+    P<AST::Let> let(P<AST::Pat> $1, P<AST::Ty> $2, AST::LocalKind $3);
 
     AST::Ident ident(std::string $1);
     AST::Path path(AST::Ident $1);
@@ -42,6 +45,10 @@ class ParserRules {
     P<AST::Binary> binary(P<AST::Expr> $1, AST::BinOp $2, P<AST::Expr> $3);
 
     P<AST::Ty> ty(AST::TyKind $1);
+
+    Vec<P<AST::Param>> initParams(P<AST::Param> $1);
+    Vec<P<AST::Param>> initParams();
+    Vec<P<AST::Param>> addParam(Vec<P<AST::Param>> $1, P<AST::Param> $2);
 
     P<AST::Param> param(P<AST::Pat> $1, P<AST::Ty> $2);
 

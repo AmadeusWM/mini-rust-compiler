@@ -1,4 +1,16 @@
 # mini-rust-compiler
+## TODO !!!
+1. Make a nested map datastructure (NSTree) for Body tree and Types tree, it will have a template type T (for body, or type)
+  - Tree structure:
+    - SetPosition: sets current position in tree
+    - Lookup: looks up a value by NS: `lookup("a::b::c")`
+    - Insert: inserts a value by NS: `insert("b::c", value)` => inserts `a::b::c` if current pos is `a`
+2. Make a visitor to generate the expanded types tree (every typename points to its actual type value, and not to another typename)
+3. make a tree for all the bodies, every leaf will have the bodyId, which will point to a body in a body table
+5. create TAST
+  - expand all function calls to their body ID (from body tree)
+  - expand all type names to their actual type (from types tree)
+
 # Ideas
 - Symbol table:
   - Will consist of a stack of scopes, each scope has a lookup table for the scope's symbols

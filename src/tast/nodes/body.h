@@ -7,21 +7,15 @@ namespace TAST {
   /*
   * namespace for bodies
   */
-  struct NS {
-    std::vector<AST::Ident> segments;
-    // TODO: implement < and == operators
-    bool operator<(const NS &o)  const {
-      for (size_t i = 0; i < segments.size(); i++) {
-        if (segments[i].identifier != o.segments[i].identifier) {
-          return false;
-        }
-      }
-      return true;
-    }
+
+  struct Param {
+    NodeId id;
+    P<Pat> pat;
+    P<Ty> ty;
   };
 
   struct Body {
-    std::vector<P<Expr>> params;
+    std::vector<P<Param>> params;
     P<Expr> expr;
   };
 

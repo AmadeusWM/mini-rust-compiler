@@ -22,7 +22,7 @@
             # get ast: cargo rustc -- -Z unpretty=ast-tree
             # get hir: cargo rustc -- -Z unpretty=hir-tree
             # get typed: cargo rustc -- -Z unpretty=thir-tree
-            rust-bin.nightly."2024-01-01".default
+            rust-bin.nightly."2024-10-01".default
             spdlog
             clang-tools
         ];

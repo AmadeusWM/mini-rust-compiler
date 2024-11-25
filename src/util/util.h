@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include <optional>
+#include <vector>
 
 /**
 * P is a shorthand for std::unique_ptr
@@ -8,6 +9,8 @@
 template <typename T> using P = std::unique_ptr<T>;
 
 template <typename T> using Opt = std::optional<T>;
+
+template <typename T> using Vec = std::vector<T>;
 
 /**
  * overloaded operator() for std::visit

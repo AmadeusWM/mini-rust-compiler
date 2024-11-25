@@ -90,7 +90,7 @@ public:
   void visit(const Let& let) {
     print("Let");
     wrap([&] {
-      visit(let.pat);
+      visit(*let.pat);
       WalkVisitor::visit(let);
     });
   }
@@ -142,7 +142,7 @@ public:
       [&](const Ident& ident) {
         print(fmt::format("Ident: {}", ident.identifier));
       }
-    }, pat);
+    }, pat.kind);
   }
 };
 }

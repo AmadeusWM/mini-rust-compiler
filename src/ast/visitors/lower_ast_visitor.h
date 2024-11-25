@@ -17,6 +17,7 @@
 * TODO:
 * - Prefix Call paths with the current Namespace (so we can immediately query the correct body)
 */
+// I AM TRYING TO DO TO MUCH => SPLIT UP INTO: resolve_bodies, resolve_types, lower_ast(resolved_bodies, resolved_types)
 namespace AST {
 class LowerAstVisitor : public Visitor {
 private:
@@ -72,6 +73,27 @@ public:
         }
       );
     });
+  }
+
+  Vec<P<TAST::Param>> lower_params(const Vec<Param>& params) {
+    Vec<P<TAST::Param>> lowered_params;
+    for (const auto& param : params) {
+      lowered_params.push_back(P<TAST::Param>(new TAST::Param{
+        .id = param.id,
+        .pat = lower_pat(*param.pat),
+        .ty = lower_ty(*param.ty)
+      }));
+    }
+    return lowered_params;
+  }
+
+  P<TAST::Ty> lower_ty(const Ty& ty) {
+    std::visit(overloaded {
+      [&](const Infer& infer) { return TAST::InferTy(TAST::TyVar{}); },
+      [&](const Path& path) {
+
+      }
+    }, ty.kind);
   }
 
   P<TAST::Block> lower_block(const Block& block) {
@@ -161,6 +183,17 @@ public:
           .ty = {TAST::InferTy{}}
         });
       },
+      [this, &expr](const P<Binary>& binary) {
+        return P<TAST::Expr>(new TAST::Expr {
+          .id = expr.id,
+          .kind = P<TAST::Binary>(new TAST::Binary {
+            .op = binary->op,
+            .lhs = lower_expr(*binary->lhs),
+            .rhs = lower_expr(*binary->rhs)
+          }),
+          .ty = {TAST::InferTy{}}
+        });
+      },
       [this, &expr](const P<Block>& block){
         auto lowered_block = lower_block(*block);
         TAST::Ty ty = lowered_block->expr.has_value()
@@ -172,17 +205,6 @@ public:
           .ty = ty
         });
       },
-      [this, &expr](const P<Binary>& binary) {
-        return P<TAST::Expr>(new TAST::Expr {
-          .id = expr.id,
-          .kind = P<TAST::Binary>(new TAST::Binary {
-            .op = binary->op,
-            .lhs = lower_expr(*binary->lhs),
-            .rhs = lower_expr(*binary->rhs)
-          }),
-          .ty = {TAST::InferTy{}}
-        });
-      }
     }, expr.kind);
   }
 

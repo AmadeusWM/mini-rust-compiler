@@ -71,11 +71,14 @@
 %type <P<AST::Crate>> items
 %type <P<AST::Item>> item
 %type <P<AST::FnDef>> function_definition
+%type <P<AST::FnSig>> function_signature
+%type <Vec<P<AST::Param>>> params
+%type <P<AST::Param>> param
 %type <P<AST::Block>> block
 %type <P<AST::Block>> statements
 %type <P<AST::Stmt>> statement
 %type <P<AST::Let>> let
-%type <AST::LocalKind> local;
+%type <AST::LocalKind> local_kind;
 %type <P<AST::Expr>> expr
 %type <P<AST::Expr>> expr_with_block
 %type <P<AST::Expr>> expr_without_block
@@ -84,6 +87,9 @@
 %type <AST::Path> path
 %type <P<AST::Binary>> binary
 %type <AST::BinOp> bin_op
+%type <P<AST::Pat>> pat
+%type <P<AST::Ty>> type
+%type <P<AST::Ty>> local_type
 
 
 // custom
@@ -115,11 +121,14 @@ item:
     ;
 
 function_definition:
-    KW_FN ident L_PAREN params R_PAREN block R_ARROW type {
-        $$ = driver.rules->functionDefinition(std::move($2), std::move($5));
+    KW_FN ident function_signature block {
+        $$ = driver.rules->functionDefinition(std::move($2), std::move($3), std::move($4));
     }
     ;
 
+function_signature:
+  L_PAREN params R_PAREN R_ARROW type { $$ = driver.rules->functionSignature(std::move($2), std::move($5)); }
+  ;
 params:
     params COMMA param { $$ = driver.rules->addParam(std::move($1), std::move($3)); }
     | param { $$ = driver.rules->initParams(std::move($1)); }
@@ -128,9 +137,11 @@ params:
 
 param:
   pat COLON type { $$ = driver.rules->param(std::move($1), std::move($3)); }
+  ;
 
 type:
-    path { $$ = driver.rules->type(std::move($1)); }
+    path { $$ = driver.rules->ty(std::move($1)); }
+    ;
 
 block:
     L_BRACE statements R_BRACE { $$ = std::move($2); }
@@ -162,17 +173,17 @@ bin_op:
 
 
 let:
-    KW_LET ident let_type local SEMI { $$ = driver.rules->let($2, std::move($3)); }
+    KW_LET pat local_type local_kind SEMI { $$ = driver.rules->let(std::move($2), std::move($3), std::move($4)); }
     ;
 
-local:
+local_kind:
     EQ expr { $$ = std::move($2); }
     | { $$ = AST::Decl {}; }
     ;
 
-let_type:
+local_type:
     COLON type { $$ = std::move($2); }
-    | { $$ = AST::Type {}; }
+    | { $$ = driver.rules->ty(AST::TyKind(AST::Infer {})); }
 
 
 expr:

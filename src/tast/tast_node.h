@@ -15,6 +15,7 @@ namespace TAST {
 struct Block;
 struct Stmt;
 struct Lit;
+struct Expr;
 }
 
 #include "nodes/expr.h"

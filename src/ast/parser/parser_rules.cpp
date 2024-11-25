@@ -34,11 +34,18 @@ P<AST::Item> ParserRules::item(AST::ItemKind $1) {
   });
 }
 
-P<AST::FnDef> ParserRules::functionDefinition(AST::Ident $1, P<AST::Block> $2) {
+P<AST::FnDef> ParserRules::functionDefinition(AST::Ident $1, P<AST::FnSig> $2,  P<AST::Block> $3) {
   return P<AST::FnDef>(new AST::FnDef{
       .id = driver.create_node(),
       .ident = $1,
-      .body = std::move($2)
+      .body = std::move($3)
+  });
+}
+
+P<AST::FnSig> ParserRules::functionSignature(Vec<P<AST::Param>> $1, P<AST::Ty> $2) {
+  return P<AST::FnSig>(new AST::FnSig{
+    .inputs = std::move($1),
+    .output = std::move($2)
   });
 }
 
@@ -74,11 +81,12 @@ P<AST::Semi> ParserRules::semi(P<AST::Expr> $1) {
   });
 }
 
-P<AST::Let> ParserRules::let(AST::Ident $1, AST::LocalKind $2) {
+P<AST::Let> ParserRules::let(P<AST::Pat> $1, P<AST::Ty> $2, AST::LocalKind $3) {
   return P<AST::Let>(new AST::Let {
       .id = driver.create_node(),
-      .pat = AST::PatKind($1),
-      .kind = std::move($2)
+      .pat = std::move($1),
+      .ty = std::move($2),
+      .kind = std::move($3)
   });
 }
 
@@ -127,5 +135,32 @@ P<AST::Ty> ParserRules::ty(AST::TyKind $1) {
   return P<AST::Ty>(new AST::Ty {
     .id = driver.create_node(),
     .kind = std::move($1)
+  });
+}
+
+Vec<P<AST::Param>> ParserRules::initParams(P<AST::Param> $1){
+  auto $$ = initParams();
+  $$.push_back(std::move($1));
+  return $$;
+}
+Vec<P<AST::Param>> ParserRules::initParams(){
+  auto $$ = Vec<P<AST::Param>>();
+  return $$;
+}
+Vec<P<AST::Param>> ParserRules::addParam(Vec<P<AST::Param>> $1, P<AST::Param> $2){
+  $1.push_back(std::move($2));
+  return $1;
+}
+P<AST::Param> ParserRules::param(P<AST::Pat> $1, P<AST::Ty> $2){
+  return P<AST::Param>(new AST::Param {
+    .id = driver.create_node(),
+    .pat = std::move($1),
+    .ty = std::move($2)
+  });
+}
+
+P<AST::Pat> ParserRules::pat(AST::PatKind pat){
+  return P<AST::Pat>(new AST::Pat {
+    .kind = std::move(pat)
   });
 }
