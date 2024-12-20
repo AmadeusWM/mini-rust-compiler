@@ -128,6 +128,7 @@ function_definition:
 
 function_signature:
   L_PAREN params R_PAREN R_ARROW type { $$ = driver.rules->functionSignature(std::move($2), std::move($5)); }
+  | L_PAREN params R_PAREN { $$ = driver.rules->functionSignature(std::move($2), P<AST::Ty>(new AST::Ty{AST::Unit{}})); }
   ;
 params:
     params COMMA param { $$ = driver.rules->addParam(std::move($1), std::move($3)); }

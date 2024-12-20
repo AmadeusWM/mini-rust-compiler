@@ -133,7 +133,6 @@ P<AST::Binary> ParserRules::binary(P<AST::Expr> $1, AST::BinOp $2, P<AST::Expr> 
 
 P<AST::Ty> ParserRules::ty(AST::TyKind $1) {
   return P<AST::Ty>(new AST::Ty {
-    .id = driver.create_node(),
     .kind = std::move($1)
   });
 }

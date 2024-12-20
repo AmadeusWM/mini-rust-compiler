@@ -2,6 +2,7 @@
 #include "tast_driver.h"
 #include "visitors/lower_ast_visitor.h"
 #include "visitors/name_resolution_visitor.h"
+#include "visitors/namespace_tree_builder.h"
 #include "visitors/print_visitor.h"
 
 ASTDriver::ASTDriver(Scanner* scanner)
@@ -20,16 +21,19 @@ void ASTDriver::parse()
 
 void ASTDriver::nameResolution() {
   spdlog::info("Name resolution...");
-  AST::NameResolutionVisitor visitor;
-  visitor.visit(*this->ast.value());
 }
 
 P<Driver> ASTDriver::execute()
 {
   parse();
-  nameResolution();
-  auto crate = lower();
-  return P<TASTDriver>(new TASTDriver(std::move(crate)));
+  AST::NamespaceTreeBuilder ns_builder;
+  ns_builder.visit(*this->ast.value());
+
+  AST::NameResolutionVisitor visitor{ns_builder.root};
+  visitor.visit(*this->ast.value());
+  // auto crate = lower();
+  return nullptr;
+  // return P<TASTDriver>(new TASTDriver(std::move(crate)));
 }
 
 AST::NodeId ASTDriver::create_node() {

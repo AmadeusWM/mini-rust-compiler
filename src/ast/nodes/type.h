@@ -5,14 +5,15 @@
 
 namespace AST {
   struct Infer{};
+  struct Unit{};
 
   typedef std::variant<
     Path,
-    Infer
+    Infer,
+    Unit
   > TyKind;
 
   struct Ty {
-    NodeId id;
     TyKind kind;
   };
 }

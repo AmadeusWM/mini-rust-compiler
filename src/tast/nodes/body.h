@@ -1,5 +1,6 @@
 #pragma once
 #include "../tast_node.h"
+#include "namespace_tree.h"
 #include "nodes/core.h"
 #include "nodes/expr.h"
 
@@ -24,6 +25,6 @@ namespace TAST {
   * global path (e.g. for a function inside `main`: `main::function`)
   */
   struct Crate {
-    std::map<NS, P<Body>> bodies;
+    std::map<std::string, P<Body>> bodies;
   };
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "namespace_tree.h"
 #include "nodes/body.h"
 #include "nodes/core.h"
 #include "nodes/expr.h"
@@ -24,13 +25,15 @@ private:
   TAST::Crate crate{
     .bodies = {}
   };
-  TAST::NS current_ns{};
+  Namespace current_ns = {
+    .path = {}
+  };
 
   void ns(Ident ident, std::function<void()> func)
   {
-    current_ns.segments.push_back(ident);
+    current_ns.path.push_back(ident.identifier);
     func();
-    current_ns.segments.pop_back();
+    current_ns.path.pop_back();
   }
 
   /**
@@ -38,7 +41,7 @@ private:
   */
   void insert_body(TAST::Body body)
   {
-    crate.bodies.insert({current_ns, std::make_unique<TAST::Body>(std::move(body))});
+    // crate.bodies.insert({current_ns, std::make_unique<TAST::Body>(std::move(body))});
   }
 public:
   P<TAST::Crate> lower_crate(const Crate& crate) {
@@ -88,12 +91,12 @@ public:
   }
 
   P<TAST::Ty> lower_ty(const Ty& ty) {
-    std::visit(overloaded {
-      [&](const Infer& infer) { return TAST::InferTy(TAST::TyVar{}); },
-      [&](const Path& path) {
+    // std::visit(overloaded {
+    //   [&](const Infer& infer) { return TAST::InferTy(TAST::TyVar{}); },
+    //   [&](const Path& path) {
 
-      }
-    }, ty.kind);
+    //   }
+    // }, ty.kind);
   }
 
   P<TAST::Block> lower_block(const Block& block) {

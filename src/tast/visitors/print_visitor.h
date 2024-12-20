@@ -58,8 +58,8 @@ public:
     wrap([&] {
       for (const auto& [key, body] : crate.bodies) {
         std::string key_str = "";
-        for (const auto& ident : key.segments) {
-          key_str += ident.identifier + "::";
+        for (const auto& ident : key) {
+          // key_str += ident.identifier + "::";
         }
         print("NS: " + key_str);
         WalkVisitor::visit(*body);

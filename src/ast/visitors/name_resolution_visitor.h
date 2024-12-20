@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../ast_node.h"
+#include "namespace_tree.h"
 #include "visitors/visitor.h"
 #include <exception>
 #include <fmt/core.h>
@@ -71,6 +72,7 @@ namespace Scope {
     ScopeId id;
     ScopeKind kind;
     std::map<std::string, Res::Res> bindings;
+    std::string segment;
   };
 }
 
@@ -81,6 +83,7 @@ namespace Scope {
 class NameResolutionVisitor : public Visitor {
   private:
   std::vector<Scope::Scope> scopes{};
+  NamespaceNode root;
 
   void with_scope(Scope::ScopeKind scope_kind, NodeId id, std::function<void()> body)
   {
@@ -149,6 +152,10 @@ class NameResolutionVisitor : public Visitor {
   }
 
   public:
+  NameResolutionVisitor(NamespaceNode root)
+    : root(root) {
+  }
+
   void visit(const Crate& crate) override
   {
     with_scope(Scope::Module{}, crate.id,
