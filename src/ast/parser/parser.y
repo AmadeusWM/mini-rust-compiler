@@ -90,6 +90,7 @@
 %type <P<AST::Pat>> pat
 %type <P<AST::Ty>> type
 %type <P<AST::Ty>> local_type
+%type <P<AST::Call>> call
 
 
 // custom
@@ -196,13 +197,17 @@ expr_without_block:
     binary { $$ = driver.rules->expr(std::move($1)); }
     | literal { $$ = driver.rules->expr(std::move($1)); }
     | path { $$ = driver.rules->expr(std::move($1)); }
+    | call { $$ = driver.rules->expr(std::move($1)); }
     ;
-
 
 expr_with_block:
     block { $$ = driver.rules->expr(std::move($1)); }
     ;
 ;
+
+call:
+    path L_PAREN R_PAREN { $$ = driver.rules->call(std::move($1), std::vector<P<AST::Expr>>{}); }
+    ;
 
 pat:
     ident { $$ = driver.rules->pat(std::move($1)); }

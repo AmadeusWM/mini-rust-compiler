@@ -3,6 +3,7 @@
 #include "../ast_node.h"
 #include "namespace_tree.h"
 #include "visitors/visitor.h"
+#include <algorithm>
 #include <exception>
 #include <fmt/core.h>
 #include <fmt/format.h>
@@ -72,7 +73,58 @@ namespace Scope {
     ScopeId id;
     ScopeKind kind;
     std::map<std::string, Res::Res> bindings;
-    std::string segment;
+    Opt<std::string> segment; // Optional, because some scopes don't have a segment identifier, such as a block scope
+  };
+
+  struct Scopes {
+    std::vector<Scope> scopes;
+    Scopes(): scopes{} {}
+    void push(Scope scope) {
+      scopes.push_back(scope);
+    }
+
+    // pop until the scope with the given id is reached
+    void pop(const Scope& scope) {
+      Scope last = scopes.back();
+      while (last.id != scope.id) {
+        scopes.pop_back();
+        last = scopes.back();
+      }
+      scopes.pop_back();
+    }
+
+    Namespace get_namespace(ScopeKind kind) {
+      int i = scopes.size() - 1;
+      for (; i >= 0; i--) {
+        if (scopes[i].kind.index() == kind.index()) {
+          break;
+        }
+      }
+      std::vector<std::string> path;
+      for (int j = 0; j < i; j++) {
+        path.push_back(scopes[j].segment.value());
+      }
+      return Namespace{ .path = path };
+    }
+
+    Opt<Res::Res> lookup(std::string iden) {
+      spdlog::debug("looking up identifier \"{}\"", iden);
+      for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
+        auto scope = *it;
+        auto binding = scope.bindings.find(iden);
+        if (binding != scope.bindings.end()) {
+          return Opt<Res::Res>(binding->second);
+        }
+      }
+      return Opt<Res::Res>{};
+    }
+
+    void insert_binding(std::string name, Res::Res res) {
+      if (scopes.size() == 0) {
+        throw NameResolutionException(fmt::format("no scope to insert identifier \"{}\"", name));
+      }
+      scopes.back().bindings.insert({ name, res });
+    }
   };
 }
 
@@ -82,7 +134,7 @@ namespace Scope {
  */
 class NameResolutionVisitor : public Visitor {
   private:
-  std::vector<Scope::Scope> scopes{};
+  Scope::Scopes scopes{};
   NamespaceNode root;
 
   void with_scope(Scope::ScopeKind scope_kind, NodeId id, std::function<void()> body)
@@ -92,46 +144,13 @@ class NameResolutionVisitor : public Visitor {
       .id = id,
       .kind = scope_kind
     };
-    scopes.push_back(scope);
+    scopes.push(scope);
     body();
-    Scope::Scope last = scopes.back();
-    while (last.id != scope.id) {
-      scopes.pop_back();
-      last = scopes.back();
-    }
-    spdlog::debug("leaving scope: {}", id);
-    scopes.pop_back();
-  }
-
-  /**
-  * add all items to the current scope
-  */
-  void resolve_item(const Item& item)  {
-    std::visit(overloaded {
-      [this](const P<FnDef>& fn) {
-        auto res = lookup_ident(fn->ident.identifier);
-        if (res.has_value()) {
-          throw NameResolutionException("fn not found");
-        }
-        insert_binding(fn->ident.identifier,
-          Res::Res(Res::Def {
-            .kind = Res::Fn {}
-          })
-        );
-      }
-    }, item.kind);
+    scopes.pop(scope);
   }
 
   Opt<Res::Res> lookup_ident(std::string iden) {
-    spdlog::debug("looking up identifier \"{}\"", iden);
-    for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
-      auto scope = *it;
-      auto binding = scope.bindings.find(iden);
-      if (binding != scope.bindings.end()) {
-        return Opt<Res::Res>(binding->second);
-      }
-    }
-    return Opt<Res::Res>{};
+    return scopes.lookup(iden);
   }
 
   Res::Res lookup_ident_or_throw(std::string iden) {
@@ -144,11 +163,7 @@ class NameResolutionVisitor : public Visitor {
 
   void insert_binding(std::string name, Res::Res res)
   {
-    spdlog::debug("inserting identifier \"{}\"", name);
-    if (scopes.size() == 0) {
-      throw NameResolutionException(fmt::format("no scope to insert identifier \"{}\"", name));
-    }
-    scopes.back().bindings.insert({ name, res });
+    scopes.insert_binding(name, res);
   }
 
   public:
@@ -160,9 +175,6 @@ class NameResolutionVisitor : public Visitor {
   {
     with_scope(Scope::Module{}, crate.id,
       [this, &crate]() {
-        for (const auto& item : crate.items) {
-          resolve_item(*item);
-        }
         for (const auto& item : crate.items) {
           Visitor::visit(*item);
         }
@@ -238,7 +250,7 @@ class NameResolutionVisitor : public Visitor {
 
   void visit(const Let& let) override
   {
-    scopes.push_back({ .id = let.id, .kind = Scope::Normal {} });
+    scopes.push({ .id = let.id, .kind = Scope::Normal {} });
     std::visit(overloaded {
       [this, &let](const Ident& ident) {
         insert_binding(ident.identifier, Res::Res(Res::Local { .id = let.id }));

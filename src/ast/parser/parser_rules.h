@@ -53,4 +53,6 @@ class ParserRules {
     P<AST::Param> param(P<AST::Pat> $1, P<AST::Ty> $2);
 
     P<AST::Pat> pat(AST::PatKind pat);
+
+    P<AST::Call> call(AST::Path $1, Vec<P<AST::Expr>> $2);
 };
