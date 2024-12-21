@@ -1,10 +1,12 @@
 #pragma once
 
+#include "namespace_tree.h"
 #include "nodes/body.h"
 #include "nodes/core.h"
 #include "nodes/expr.h"
 #include "nodes/stmt.h"
 #include "nodes/type.h"
+#include "visitors/namespace_tree_builder.h"
 #include "visitors/visitor.h"
 #include <algorithm>
 #include <memory>
@@ -12,7 +14,11 @@
 
 namespace AST{
 class LowerAstVisitor : public Visitor {
+  NamespaceNode namespace_tree;
   TAST::Crate crate;
+
+  public:
+  LowerAstVisitor(NamespaceNode namespace_tree) : namespace_tree(namespace_tree) {}
 
   void visit(const Crate& crate) override {
     for (const auto& item : crate.items) {
