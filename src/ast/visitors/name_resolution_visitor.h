@@ -3,12 +3,9 @@
 #include "../ast_node.h"
 #include "namespace_tree.h"
 #include "visitors/visitor.h"
-#include <algorithm>
-#include <exception>
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <map>
-#include <numeric>
 #include <optional>
 #include <spdlog/common.h>
 #include <spdlog/spdlog.h>
@@ -93,7 +90,7 @@ namespace Scope {
       scopes.pop_back();
     }
 
-    Namespace get_namespace(ScopeKind kind) {
+    Namespace get_scope_namespace(ScopeKind kind) {
       int i = scopes.size() - 1;
       for (; i >= 0; i--) {
         if (scopes[i].kind.index() == kind.index()) {
@@ -103,6 +100,16 @@ namespace Scope {
       std::vector<std::string> path;
       for (int j = 0; j < i; j++) {
         path.push_back(scopes[j].segment.value());
+      }
+      return Namespace{ .path = path };
+    }
+
+    Namespace get_namespace(){
+      std::vector<std::string> path;
+      for (const auto& scope : scopes){
+        if (scope.segment.has_value()){
+          path.push_back(scope.segment.value());
+        }
       }
       return Namespace{ .path = path };
     }
@@ -146,6 +153,7 @@ class NameResolutionVisitor : public Visitor {
     };
     scopes.push(scope);
     body();
+    spdlog::debug("exiting scope: {}", id);
     scopes.pop(scope);
   }
 
@@ -192,13 +200,6 @@ class NameResolutionVisitor : public Visitor {
 
   void visit(const Block& block) override
   {
-    for (const auto& stmt : block.statements) {
-      if (std::holds_alternative<P<Item>>(stmt->kind)) {
-        const auto& item = std::get<P<Item>>(stmt->kind);
-        resolve_item(*item);
-      }
-    }
-
     with_scope(Scope::Normal {}, block.id, [this, &block]() {
       for (const auto& stmt : block.statements) {
         visit(*stmt);
@@ -209,20 +210,45 @@ class NameResolutionVisitor : public Visitor {
   void visit(const Expr& expr) override
   {
     std::visit(overloaded {
-        [this, &expr](const Lit& lit) {
+        [&](const Lit& lit) {
         },
-        [this, &expr](const P<Block>& block) {
+        [&](const P<Block>& block) {
           visit(*block);
         },
-        [this, &expr](const Path& path) {
+        [&](const Path& path) {
           // TODO: we should probably
           auto res = lookup_ident_or_throw(path.segments.back().ident.identifier);
         },
-        [this, &expr](const P<Binary>& binary) {
+        [&](const P<Binary>& binary) {
           visit(*binary->lhs);
           visit(*binary->rhs);
+        },
+        [&](const P<Call>& call) {
+          visit(*call);
         }
     }, expr.kind);
+  }
+
+  void visit(const Call& call) override {
+    const Namespace scope_barrier = scopes.get_scope_namespace(Scope::Module{});
+    const Namespace ns = Namespace { call.path.to_vec() };
+    const Namespace root_path = scopes.get_namespace();
+    spdlog::debug("before");
+    auto value = root.get(root_path, ns, scope_barrier);
+    spdlog::debug("after");
+    if (value.has_value()) {
+      std::string result = "";
+      if (std::holds_alternative<Namespace>(value.value())) {
+        result += std::string("Namespace");
+      }
+      else if (std::holds_alternative<PrimitiveType>(value.value())) {
+        result += std::string("PrimitiveType");
+      }
+      else {
+        result += std::string("NodeId") + std::to_string(std::get<NodeId>(value.value()));
+      }
+      spdlog::debug("after: {}", result);
+    }
   }
 
   void visit(const Stmt& stmt) override

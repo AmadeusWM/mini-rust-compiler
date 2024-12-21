@@ -88,6 +88,15 @@ class PrintVisitor : public AST::Visitor {
             }, binary->op))
           );
           visit(*binary->rhs);
+        },
+        [this](const P<Call>& call) {
+          print("Call");
+          wrap([this, &call]() {
+            visit(call->path);
+            for (const auto& param : call->params) {
+              visit(*param);
+            }
+          });
         }
       }, expr.kind);
     });

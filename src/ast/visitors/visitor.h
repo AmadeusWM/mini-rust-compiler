@@ -65,8 +65,15 @@ namespace AST {
           [this](const P<Binary>& binary) {
             visit(*binary->lhs);
             visit(*binary->rhs);
-          }
+          },
+          [this](const P<Call>& call) { visit(*call); }
       }, expr.kind);
+    }
+
+    virtual void visit(const Call& call) {
+      for (const auto& param : call.params) {
+        visit(*param);
+      }
     }
 
     virtual void visit(const Lit& lit) {

@@ -26,6 +26,7 @@ struct Namespace{
     if (path.size() == 0) {
       throw std::runtime_error("Cannot split empty namespace");
     }
+    spdlog::debug("split_first: {}", path[0]);
     return {
       path[0],
       Namespace{ .path = std::vector<std::string>(path.begin() + 1, path.end()) },
@@ -37,12 +38,18 @@ struct Namespace{
     return Namespace{ .path = result };
   }
   bool equals(Namespace other) const {
+    if (path.size() != other.path.size()) {
+      return false;
+    }
     for (size_t i = 0; i < path.size(); i++) {
       if (path[i] != other.path[i]) {
         return false;
       }
     }
     return true;
+  }
+  std::string to_string() const {
+    return fmt::format("{}", fmt::join(path, "::"));
   }
 };
 
@@ -99,9 +106,9 @@ public:
       if (second.equals(scope)) {
         break;
       }
-      auto resutl = this->get(Namespace::concat(first, ns));
-      if (resutl.has_value()) {
-        return resutl.value();
+      auto result = this->get(Namespace::concat(first, ns));
+      if (result.has_value()) {
+        return result.value();
       }
     }
     return std::nullopt;

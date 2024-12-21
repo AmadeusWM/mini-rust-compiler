@@ -16,6 +16,7 @@
     {
       devShells.default = pkgs.mkShell rec {
         packages = with pkgs; [
+            gdb
             flex
             bison
             cmake
