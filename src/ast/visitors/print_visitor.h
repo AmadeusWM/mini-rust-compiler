@@ -1,5 +1,6 @@
 #pragma once
 #include "ast_node.h"
+#include "nodes/core.h"
 #include "nodes/expr.h"
 #include "spdlog/spdlog.h"
 #include "util.h"
@@ -12,13 +13,18 @@ namespace AST {
 class PrintVisitor : public AST::Visitor {
   private:
   int indent = 0;
-  void print(std::string str)
+  void print(std::string str, Opt<NodeId> id = std::nullopt)
   {
     std::string ind = "";
     for (int i = 0; i < indent; i++) {
       ind += "  ";
     }
-    spdlog::debug("{}|-{}", ind, str);
+    if (id.has_value()) {
+      spdlog::debug("{}|-{} ({})", ind, str, id.value());
+    }
+    else {
+      spdlog::debug("{}|-{}", ind, str);
+    }
   }
   void wrap(std::function<void()> func)
   {
@@ -30,7 +36,7 @@ class PrintVisitor : public AST::Visitor {
   public:
   void visit(const Crate& crate) override
   {
-    print("Crate");
+    print("Crate", crate.id);
     wrap([&] {
       for (const auto& child : crate.items) {
         visit(*child);
@@ -40,11 +46,11 @@ class PrintVisitor : public AST::Visitor {
 
   void visit(const Item& item) override
   {
-    print("Item");
+    print("Item", item.id);
     wrap([&] {
       std::visit(
           overloaded { [this](const P<FnDef>& fn) {
-            print("FnDef: " + fn->ident.identifier);
+            print("FnDef: " + fn->ident.identifier, fn->id);
             wrap([this, &fn]() { visit(*(fn.get()->body)); });
           }
       }, item.kind);
@@ -53,7 +59,7 @@ class PrintVisitor : public AST::Visitor {
 
   void visit(const Block& node) override
   {
-    print("Block");
+    print("Block", node.id);
     wrap([&]() {
       for (const auto& child : node.statements) {
         visit(*child);
@@ -63,15 +69,15 @@ class PrintVisitor : public AST::Visitor {
 
   void visit(const Expr& expr) override
   {
-    print("Expr");
+    print("Expr", expr.id);
     wrap([&]() {
       std::visit(overloaded {
         [this](const Lit& lit) {
           std::visit(
-              overloaded {
-                  [this](const int i) { print("Lit Int: " + std::to_string(i)); },
-                  [this](const std::string& s) { print("Lit String: " + s); } },
-              lit.kind);
+            overloaded {
+                [&](const int i) { print("Lit Int: " + std::to_string(i), lit.id); },
+                [&](const std::string& s) { print("Lit String: " + s, lit.id); }
+            }, lit.kind);
         },
         [this](const P<Block>& block) {
           visit(*block);
@@ -90,7 +96,7 @@ class PrintVisitor : public AST::Visitor {
           visit(*binary->rhs);
         },
         [this](const P<Call>& call) {
-          print("Call");
+          print("Call", call->id);
           wrap([this, &call]() {
             visit(call->path);
             for (const auto& param : call->params) {
@@ -104,7 +110,7 @@ class PrintVisitor : public AST::Visitor {
 
   void visit(const Stmt& stmt) override
   {
-    print("Stmt");
+    print("Stmt", stmt.id);
     wrap([&]() {
       Visitor::visit(stmt);
     });
@@ -112,7 +118,7 @@ class PrintVisitor : public AST::Visitor {
 
   void visit(const Let& let) override
   {
-    print("Let");
+    print("Let", let.id);
     wrap([this, &let]() {
       visit(*let.pat);
       std::visit(

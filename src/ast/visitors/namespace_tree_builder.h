@@ -8,7 +8,7 @@
 namespace AST {
 class NamespaceTreeBuilder : public AST::Visitor {
   public:
-  NamespaceNode root;
+  NamespaceNode namespace_tree;
   private:
   Namespace ns{.path = {}};
 
@@ -26,13 +26,13 @@ class NamespaceTreeBuilder : public AST::Visitor {
   void visit(const Crate& crate) override
   {
     Visitor::visit(crate);
-    spdlog::debug("Namespace Tree: \n{}", this->root.to_string());
+    spdlog::debug("Namespace Tree: \n{}", this->namespace_tree.to_string());
   }
 
   void visit(const FnDef& fn) override {
     spdlog::debug("visiting fn: {}", fn.ident.identifier);
     wrap(fn.ident.identifier, [&]() {
-      root.set(this->ns, NamespaceValue(fn.id));
+      namespace_tree.set(this->ns, NamespaceValue(fn.id));
       Visitor::visit(fn);
     });
   }

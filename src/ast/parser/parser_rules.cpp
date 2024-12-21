@@ -166,6 +166,7 @@ P<AST::Pat> ParserRules::pat(AST::PatKind pat){
 
 P<AST::Call> ParserRules::call(AST::Path $1, Vec<P<AST::Expr>> $2){
   return P<AST::Call>(new AST::Call {
+    .id = driver.create_node(),
     .path = std::move($1),
     .params = std::move($2)
   });

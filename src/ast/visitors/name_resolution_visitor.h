@@ -2,6 +2,7 @@
 
 #include "../ast_node.h"
 #include "namespace_tree.h"
+#include "nodes/core.h"
 #include "visitors/visitor.h"
 #include <fmt/core.h>
 #include <fmt/format.h>
@@ -142,7 +143,7 @@ namespace Scope {
 class NameResolutionVisitor : public Visitor {
   private:
   Scope::Scopes scopes{};
-  NamespaceNode root;
+  NamespaceNode namespace_tree;
 
   void with_scope(Scope::ScopeKind scope_kind, NodeId id, std::function<void()> body)
   {
@@ -169,6 +170,29 @@ class NameResolutionVisitor : public Visitor {
     throw NameResolutionException(fmt::format("identifier \"{}\" not found", iden));
   }
 
+  NamespaceValue lookup_namespace(Namespace ns) {
+    const Namespace scope_barrier = scopes.get_scope_namespace(Scope::Module{});
+    const Namespace root_path = scopes.get_namespace();
+    auto value = namespace_tree.get(root_path, ns, scope_barrier);
+    if (value.has_value()) {
+      std::string result = "";
+      if (std::holds_alternative<Namespace>(value.value())) {
+        result += std::string("Namespace");
+      }
+      else if (std::holds_alternative<PrimitiveType>(value.value())) {
+        result += std::string("PrimitiveType");
+      }
+      else {
+        result += std::string("NodeId: ") + std::to_string(std::get<NodeId>(value.value()));
+      }
+      spdlog::debug("found: {}", result);
+      return value.value();
+    }
+    else {
+      throw NameResolutionException(fmt::format("node not found: {}", ns.to_string()));
+    }
+  }
+
   void insert_binding(std::string name, Res::Res res)
   {
     scopes.insert_binding(name, res);
@@ -176,7 +200,7 @@ class NameResolutionVisitor : public Visitor {
 
   public:
   NameResolutionVisitor(NamespaceNode root)
-    : root(root) {
+    : namespace_tree(root) {
   }
 
   void visit(const Crate& crate) override
@@ -230,25 +254,7 @@ class NameResolutionVisitor : public Visitor {
   }
 
   void visit(const Call& call) override {
-    const Namespace scope_barrier = scopes.get_scope_namespace(Scope::Module{});
-    const Namespace ns = Namespace { call.path.to_vec() };
-    const Namespace root_path = scopes.get_namespace();
-    spdlog::debug("before");
-    auto value = root.get(root_path, ns, scope_barrier);
-    spdlog::debug("after");
-    if (value.has_value()) {
-      std::string result = "";
-      if (std::holds_alternative<Namespace>(value.value())) {
-        result += std::string("Namespace");
-      }
-      else if (std::holds_alternative<PrimitiveType>(value.value())) {
-        result += std::string("PrimitiveType");
-      }
-      else {
-        result += std::string("NodeId") + std::to_string(std::get<NodeId>(value.value()));
-      }
-      spdlog::debug("after: {}", result);
-    }
+    lookup_namespace(Namespace {call.path.to_vec()});
   }
 
   void visit(const Stmt& stmt) override

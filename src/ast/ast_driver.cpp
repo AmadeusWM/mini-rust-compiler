@@ -27,7 +27,7 @@ P<Driver> ASTDriver::execute()
   AST::NamespaceTreeBuilder ns_builder;
   ns_builder.visit(*this->ast.value());
 
-  AST::NameResolutionVisitor visitor{ns_builder.root};
+  AST::NameResolutionVisitor visitor(ns_builder.namespace_tree);
   visitor.visit(*this->ast.value());
   // auto crate = lower();
   return nullptr;

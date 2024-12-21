@@ -25,6 +25,6 @@ namespace TAST {
   * global path (e.g. for a function inside `main`: `main::function`)
   */
   struct Crate {
-    std::map<std::string, P<Body>> bodies;
+    std::map<NodeId, P<Body>> bodies;
   };
 }

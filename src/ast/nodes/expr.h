@@ -44,6 +44,7 @@ namespace AST {
   };
 
   struct Call {
+    NodeId id;
     Path path;
     std::vector<P<Expr>>params;
   };

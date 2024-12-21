@@ -13,6 +13,7 @@
 
 struct Namespace{
   std::vector<std::string> path;
+
   std::pair<Namespace, Namespace> split(size_t i) const {
     if (i >= path.size()) {
       throw std::runtime_error("Index out of bounds");
