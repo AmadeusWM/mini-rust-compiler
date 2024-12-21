@@ -25,8 +25,6 @@ namespace TAST {
     P<Expr> expr;
   };
 
-  struct Decl { };
-
   struct Let {
     NodeId id;
     // let <PAT> = 5;

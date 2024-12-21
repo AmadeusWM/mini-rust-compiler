@@ -100,7 +100,7 @@ public:
       WalkVisitor::visit(path);
     });
   }
-  void visit(const PathSegment& segment) {
+  void visit(const AST::PathSegment& segment) {
     print("Segment: " + segment.ident.identifier);
     wrap([&] {
       WalkVisitor::visit(segment);
@@ -139,7 +139,7 @@ public:
 
   void visit(const Pat& pat) {
     std::visit(overloaded {
-      [&](const Ident& ident) {
+      [&](const AST::Ident& ident) {
         print(fmt::format("Ident: {}", ident.identifier));
       }
     }, pat.kind);

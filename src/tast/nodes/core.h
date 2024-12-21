@@ -1,5 +1,6 @@
 #pragma once
 
+#include "nodes/core.h"
 #include <cstdint>
 #include <string>
 #include <variant>
@@ -18,21 +19,8 @@ struct Lit {
   LitKind kind;
 };
 
-struct Ident {
-  std::string identifier;
-};
-
-struct PathSegment {
-  NodeId id;
-  Ident ident;
-};
-
-struct Path {
-  std::vector<PathSegment> segments;
-};
-
 typedef std::variant<
-    Ident>
+    AST::Ident>
     PatKind;
 
 struct Pat {

@@ -13,7 +13,7 @@ template <class T> class Visitor {
   virtual T visit(const Stmt& stmt) = 0;
   virtual T visit(const Let& let) = 0;
   virtual T visit(const Path& path) = 0;
-  virtual T visit(const PathSegment& segment) = 0;
+  virtual T visit(const AST::PathSegment& segment) = 0;
   virtual T visit(const Expr& expr) = 0;
   virtual T visit(const Lit& lit) = 0;
 };
@@ -29,7 +29,7 @@ template <class T> class MutVisitor {
   virtual T visit(Stmt& stmt) = 0;
   virtual T visit(Let& let) = 0;
   virtual T visit(Path& path) = 0;
-  virtual T visit(PathSegment& segment) = 0;
+  virtual T visit(AST::PathSegment& segment) = 0;
   virtual T visit(Expr& expr) = 0;
   virtual T visit(Lit& lit) = 0;
 };
@@ -66,7 +66,7 @@ class WalkVisitor : public Visitor<void> {
       visit(segment);
     }
   }
-  void visit(const PathSegment& segment) override {
+  void visit(const AST::PathSegment& segment) override {
   }
   void visit(const Expr& expr) override {
     std::visit(overloaded {

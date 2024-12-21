@@ -6,13 +6,15 @@
 
 namespace TAST {
   struct Binary;
+  struct Call;
 
   typedef std::variant<
     // Path,
     Lit,
-    Path,
+    AST::Path,
     P<Block>,
-    P<Binary>
+    P<Binary>,
+    P<Call>
   > ExprKind;
 
   struct Expr {
@@ -25,6 +27,12 @@ namespace TAST {
     AST::BinOp op;
     P<Expr> lhs;
     P<Expr> rhs;
+  };
+
+  struct Call {
+    NodeId id;
+    NodeId callee;
+    std::vector<P<Expr>> params;
   };
 
   struct Block {
