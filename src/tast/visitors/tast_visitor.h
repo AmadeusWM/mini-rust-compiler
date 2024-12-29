@@ -12,10 +12,11 @@ template <class T> class Visitor {
   virtual T visit(const Block& block) = 0;
   virtual T visit(const Stmt& stmt) = 0;
   virtual T visit(const Let& let) = 0;
-  virtual T visit(const Path& path) = 0;
+  virtual T visit(const AST::Path& path) = 0;
   virtual T visit(const AST::PathSegment& segment) = 0;
   virtual T visit(const Expr& expr) = 0;
   virtual T visit(const Lit& lit) = 0;
+  virtual T visit(const Call& call) = 0;
 };
 
 /**
@@ -28,10 +29,11 @@ template <class T> class MutVisitor {
   virtual T visit(Block& block) = 0;
   virtual T visit(Stmt& stmt) = 0;
   virtual T visit(Let& let) = 0;
-  virtual T visit(Path& path) = 0;
+  virtual T visit(AST::Path& path) = 0;
   virtual T visit(AST::PathSegment& segment) = 0;
   virtual T visit(Expr& expr) = 0;
   virtual T visit(Lit& lit) = 0;
+  virtual T visit(Call& call) = 0;
 };
 
 class WalkVisitor : public Visitor<void> {
@@ -61,7 +63,7 @@ class WalkVisitor : public Visitor<void> {
       visit(*let.initializer.value());
     }
   }
-  void visit(const Path& path) override {
+  void visit(const AST::Path& path) override {
     for (const auto& segment : path.segments) {
       visit(segment);
     }
@@ -73,10 +75,15 @@ class WalkVisitor : public Visitor<void> {
       [this](const P<Block>& block) { visit(*block); },
       [this](const Lit& lit) { visit(lit); },
       [this](const P<Binary>& binary) { visit(*binary->lhs); visit(*binary->rhs); },
-      [this](const Path& path) { visit(path); },
+      [this](const AST::Path& path) { visit(path); },
+      [this](const P<Call>& call) { visit(*call); },
     }, expr.kind);
   }
   void visit(const Lit& lit) override {
+
+  }
+
+  void visit(const Call& call) override {
 
   }
 };

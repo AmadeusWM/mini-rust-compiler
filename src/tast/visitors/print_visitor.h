@@ -58,9 +58,6 @@ public:
     wrap([&] {
       for (const auto& [key, body] : crate.bodies) {
         std::string key_str = "";
-        for (const auto& ident : key) {
-          // key_str += ident.identifier + "::";
-        }
         print("NS: " + key_str);
         WalkVisitor::visit(*body);
       }
@@ -94,7 +91,7 @@ public:
       WalkVisitor::visit(let);
     });
   }
-  void visit(const Path& path) {
+  void visit(const AST::Path& path) {
     print("Path");
     wrap([&] {
       WalkVisitor::visit(path);
@@ -122,7 +119,8 @@ public:
           );
           visit(*binary->rhs);
         },
-        [this](const Path& path) { visit(path); },
+        [this](const AST::Path& path) { visit(path); },
+        [this](const P<Call>& call) { visit(*call); }
       }, expr.kind);
     });
   }
@@ -134,6 +132,16 @@ public:
     }, lit.kind);
     wrap([&] {
       WalkVisitor::visit(lit);
+    });
+  }
+
+  void visit(const Call& call) {
+    print("Call");
+    wrap([&] {
+      print(fmt::format("Callee: {}", call.callee));
+      for (const auto& arg : call.params) {
+        visit(*arg);
+      }
     });
   }
 

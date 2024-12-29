@@ -24,7 +24,6 @@ public:
 
   void parse();
   void nameResolution();
-  P<TAST::Crate> lower();
 
   P<Driver> execute() override;
   std::string name() override { return "AST Driver"; }

@@ -141,9 +141,10 @@ namespace Scope {
  * rust source: https://doc.rust-lang.org/nightly/nightly-rustc/rustc_resolve/late/struct.LateResolutionVisitor.html
  */
 class NameResolutionVisitor : public Visitor {
+  public:
+  NamespaceNode namespace_tree;
   private:
   Scope::Scopes scopes{};
-  NamespaceNode namespace_tree;
 
   void with_scope(Scope::ScopeKind scope_kind, NodeId id, std::function<void()> body)
   {

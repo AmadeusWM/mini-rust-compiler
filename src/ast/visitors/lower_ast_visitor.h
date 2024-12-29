@@ -12,7 +12,7 @@
 #include <memory>
 #include <variant>
 
-namespace AST{
+namespace AST {
 class LowerAstVisitor : public Visitor {
   NamespaceNode namespace_tree;
   TAST::Crate crate;
@@ -149,4 +149,5 @@ class LowerAstVisitor : public Visitor {
       .params = std::vector<P<TAST::Expr>>{}
     });
   }
+};
 }

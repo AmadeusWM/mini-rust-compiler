@@ -1,4 +1,5 @@
 #include "ast_driver.h"
+#include "visitors/lower_ast_visitor.h"
 #include "visitors/name_resolution_visitor.h"
 #include "visitors/namespace_tree_builder.h"
 #include "visitors/print_visitor.h"
@@ -29,6 +30,9 @@ P<Driver> ASTDriver::execute()
 
   AST::NameResolutionVisitor visitor(ns_builder.namespace_tree);
   visitor.visit(*this->ast.value());
+
+  AST::LowerAstVisitor lowerer(visitor.namespace_tree);
+  lowerer.visit(*this->ast.value());
   // auto crate = lower();
   return nullptr;
   // return P<TASTDriver>(new TASTDriver(std::move(crate)));
@@ -36,9 +40,4 @@ P<Driver> ASTDriver::execute()
 
 AST::NodeId ASTDriver::create_node() {
   return this->curr_id++;
-}
-
-P<TAST::Crate> ASTDriver::lower() {
-  // spdlog::info("Lowering to TAST...");
-  // return visitor.lower_crate(*this->ast.value());
 }
