@@ -9,6 +9,9 @@ public:
         : std::runtime_error("(Type Check Error) " + message) {}
 };
 
+/**
+* inferencing: https://rustc-dev-guide.rust-lang.org/type-inference.html
+*/
 class TypecheckVisitor : public MutWalkVisitor {
   private:
   Crate& crate;
