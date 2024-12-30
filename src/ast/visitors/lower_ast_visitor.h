@@ -5,8 +5,6 @@
 #include "nodes/core.h"
 #include "nodes/expr.h"
 #include "nodes/stmt.h"
-#include "nodes/type.h"
-#include "visitors/namespace_tree_builder.h"
 #include "visitors/visitor.h"
 #include <algorithm>
 #include <memory>

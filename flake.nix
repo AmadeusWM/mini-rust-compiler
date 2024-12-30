@@ -29,6 +29,34 @@
         ];
         buildInputs = packages;
       };
-    }
-    );
+
+      packages = rec {
+      default = mini-rust-compiler;
+      mini-rust-compiler = pkgs.stdenv.mkDerivation {
+        pname = "mini-rust-compiler";
+        version = "0.1.0";
+        src = ./.;
+        nativeBuildInputs = [
+            pkgs.cmake
+            pkgs.flex
+            pkgs.bison
+            pkgs.spdlog
+        ];
+        buildPhase = ''
+            cmake .
+            make -j$(nproc)
+        '';
+        installPhase = ''
+            mkdir -p $out/bin
+            cp mini-rust $out/bin/
+        '';
+        meta = with pkgs.lib; {
+            description = "A mini Rust compiler written in C++";
+            license = licenses.mit;
+            maintainers = [ maintainers.your-github-username ];
+            platforms = platforms.linux;
+        };
+      };
+    };
+  });
 }

@@ -87,4 +87,57 @@ class WalkVisitor : public Visitor<void> {
 
   }
 };
+
+class MutWalkVisitor : public MutVisitor<void> {
+  public:
+  void visit(Crate& crate) override {
+    for (const auto& [key, body] : crate.bodies) {
+      visit(*body);
+    }
+  }
+  void visit(Body& body) override {
+   visit(*body.expr);
+  }
+  void visit(Block& block) override {
+    for (const auto& stmt : block.statements) {
+      visit(*stmt);
+    }
+  }
+
+  void visit(Stmt& stmt) override {
+    std::visit(overloaded {
+      [this](const P<Let>& let) { visit(*let); },
+      [this](const P<Expr>& expr) { visit(*expr); },
+      [this](const P<Semi>& semi) { visit(*semi->expr); }
+    }, stmt.kind);
+  }
+  void visit(Let& let) override {
+    if (let.initializer.has_value()) {
+      visit(*let.initializer.value());
+    }
+  }
+  void visit(AST::Path& path) override {
+    for (auto& segment : path.segments) {
+      visit(segment);
+    }
+  }
+  void visit(AST::PathSegment& segment) override {
+  }
+  void visit(Expr& expr) override {
+    std::visit(overloaded {
+      [this](P<Block>& block) { visit(*block); },
+      [this](Lit& lit) { visit(lit); },
+      [this](P<Binary>& binary) { visit(*binary->lhs); visit(*binary->rhs); },
+      [this](AST::Path& path) { visit(path); },
+      [this](P<Call>& call) { visit(*call); },
+    }, expr.kind);
+  }
+  void visit(Lit& lit) override {
+
+  }
+
+  void visit(Call& call) override {
+
+  }
+};
 }
