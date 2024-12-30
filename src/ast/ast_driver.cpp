@@ -1,8 +1,10 @@
 #include "ast_driver.h"
+#include "tast_driver.h"
 #include "visitors/lower_ast_visitor.h"
 #include "visitors/name_resolution_visitor.h"
 #include "visitors/namespace_tree_builder.h"
 #include "visitors/print_visitor.h"
+#include <spdlog/spdlog.h>
 
 ASTDriver::ASTDriver(Scanner* scanner)
     : scanner(scanner)
@@ -33,9 +35,10 @@ P<Driver> ASTDriver::execute()
 
   AST::LowerAstVisitor lowerer(visitor.namespace_tree);
   lowerer.visit(*this->ast.value());
-  // auto crate = lower();
-  return nullptr;
-  // return P<TASTDriver>(new TASTDriver(std::move(crate)));
+
+  spdlog::debug("Done lowering");
+
+  return P<TASTDriver>(new TASTDriver(std::move(lowerer.crate)));
 }
 
 AST::NodeId ASTDriver::create_node() {

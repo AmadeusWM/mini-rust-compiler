@@ -241,7 +241,9 @@ class NameResolutionVisitor : public Visitor {
           visit(*block);
         },
         [&](const Path& path) {
-          // TODO: we should probably
+          if (path.segments.size() > 1) {
+            throw NameResolutionException(fmt::format("Cannot look up a local identifier consisting of multiple segments: {}", path.to_string()));
+          }
           auto res = lookup_ident_or_throw(path.segments.back().ident.identifier);
         },
         [&](const P<Binary>& binary) {
@@ -260,25 +262,20 @@ class NameResolutionVisitor : public Visitor {
 
   void visit(const Stmt& stmt) override
   {
-    with_scope(Scope::Fn {},
-      stmt.id,
-      [this, &stmt]() {
-        std::visit(overloaded {
-          [this, &stmt](const P<Expr>& expr) {
-            visit(*expr);
-          },
-          [this, &stmt](const P<Let>& let) {
-            visit(*let);
-          },
-          [this, &stmt](const P<Item>& item) {
-            Visitor::visit(*item);
-          },
-          [this, &stmt](const P<Semi>& semi) {
-            Visitor::visit(*semi->expr);
-          },
-        }, stmt.kind);
-      }
-    );
+    std::visit(overloaded {
+      [this, &stmt](const P<Expr>& expr) {
+        visit(*expr);
+      },
+      [this, &stmt](const P<Let>& let) {
+        visit(*let);
+      },
+      [this, &stmt](const P<Item>& item) {
+        Visitor::visit(*item);
+      },
+      [this, &stmt](const P<Semi>& semi) {
+        Visitor::visit(*semi->expr);
+      },
+    }, stmt.kind);
   }
 
   void visit(const Let& let) override

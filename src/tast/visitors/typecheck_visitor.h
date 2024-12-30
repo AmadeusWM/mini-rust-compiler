@@ -3,25 +3,33 @@
 #include "nodes/type.h"
 #include "visitors/tast_visitor.h"
 namespace TAST {
-
+class TypecheckException : public std::runtime_error {
+public:
+    TypecheckException(const std::string& message)
+        : std::runtime_error("(Type Check Error) " + message) {}
+};
 
 class TypecheckVisitor : public MutWalkVisitor {
-  class TypecheckException : public std::runtime_error {
-  public:
-      TypecheckException(const std::string& message)
-          : std::runtime_error("(Type Check Error) " + message) {}
-  };
-
+  private:
+  Crate& crate;
 
   public:
+  TypecheckVisitor(Crate& crate) : crate{crate}{}
+
+  void typecheck() {
+    this->visit(crate);
+  }
+    
   void visit(Crate& crate) override {
     for (const auto& [key, body] : crate.bodies) {
       visit(*body);
     }
   }
+
   void visit(Body& body) override {
    visit(*body.expr);
   }
+
   void visit(Block& block) override {
     for (const auto& stmt : block.statements) {
       visit(*stmt);
@@ -40,22 +48,24 @@ class TypecheckVisitor : public MutWalkVisitor {
       visit(*let.initializer.value());
     }
   }
-  void visit(AST::Path& path) override {
-    for (auto& segment : path.segments) {
-      visit(segment);
-    }
-  }
-  void visit(AST::PathSegment& segment) override {
-  }
+
   void visit(Expr& expr) override {
     std::visit(overloaded {
       [&](P<Block>& block) { visit(*block); },
       [&](Lit& lit) { expr.ty = resolve_lit(lit); },
+      [&](AST::Ident& ident) {
+        // TODO: resolve idetifier
+        throw std::runtime_error("cannot resolve identifier type yet, TODO: we need to keep track of the bindings per scope and then lookup the types in this table");
+      },
       [&](P<Binary>& binary) { expr.ty = resolve_binary(*binary); },
-      [&](AST::Path& path) { visit(path); },
-      [&](P<Call>& call) { visit(*call); },
+      [&](P<Call>& call) { resolve_call(*call); },
     }, expr.kind);
 
+  }
+
+  Ty resolve_call(Call& call) {
+    // this->crate.bodies;
+    return {};
   }
 
   Ty resolve_binary(Binary& bin) {
@@ -67,7 +77,7 @@ class TypecheckVisitor : public MutWalkVisitor {
       return ty.value();
     }
     else {
-      throw TypecheckException(fmt::format("Binary operation between different types at nodes: {} and {}", bin.lhs->id, bin.rhs->id));
+      throw TypecheckException(fmt::format("Binary operation between incompattible types '{}' and '{}' at nodes: {} and {}", bin.lhs->ty.to_string(), bin.rhs->ty.to_string(), bin.lhs->id, bin.rhs->id));
     }
   }
 

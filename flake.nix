@@ -31,9 +31,9 @@
       };
 
       packages = rec {
-      default = mini-rust-compiler;
-      mini-rust-compiler = pkgs.stdenv.mkDerivation {
-        pname = "mini-rust-compiler";
+      default = mini-rust;
+      mini-rust = pkgs.stdenv.mkDerivation {
+        pname = "mini-rust";
         version = "0.1.0";
         src = ./.;
         nativeBuildInputs = [

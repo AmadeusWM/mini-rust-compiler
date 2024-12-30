@@ -19,7 +19,7 @@ private:
   }
 
   void print(std::string str, Ty ty) {
-    print(str + " -> " + type(ty));
+    print(str + " -> " + ty.to_string());
   }
 
   void wrap(std::function<void()> func)
@@ -28,30 +28,6 @@ private:
     func();
     indent -= 1;
   }
-  std::string type(Ty ty) {
-    return std::visit(overloaded {
-      [](const Unit&) { return "Unit"; },
-      [](const IntTy& intTy) {
-        return std::visit(overloaded {
-          [](const I8&) { return "I8"; }
-        }, intTy);
-      },
-      [](const FloatTy& floatTy) {
-        return std::visit(overloaded {
-          [](const F8&) { return "F8"; }
-        }, floatTy);
-      },
-      [](const StrTy&) { return "StrTy"; },
-      [](const FnDefTy&) { return "FnDefTy"; },
-      [](const InferTy& inferTy) {
-        return std::visit(overloaded {
-          [](const TyVar&) { return "TyVar"; },
-          [](const IntVar&) { return "IntVar"; },
-          [](const FloatVar&) { return "FloatVar"; }
-        }, inferTy);
-      }
-    }, ty.kind);
-  }
 public:
   void visit(const Crate& crate) {
     print("Crate");
@@ -59,23 +35,24 @@ public:
       for (const auto& [key, body] : crate.bodies) {
         std::string key_str = "";
         print("NS: " + key_str);
-        WalkVisitor::visit(*body);
+        visit(*body);
       }
     });
   }
   void visit(const Body& body) {
     print("Body");
     wrap([&] {
-      WalkVisitor::visit(body);
+      visit(*body.expr);
     });
   }
   void visit(const Block& block) {
     print("Block");
     wrap([&] {
-      WalkVisitor::visit(block);
+      spdlog::debug("visiting children, {}", block.statements.size());
       if (block.expr.has_value()){
-        WalkVisitor::visit(*block.expr.value());
+        visit(*block.expr.value());
       }
+      WalkVisitor::visit(block);
     });
   }
   void visit(const Stmt& stmt) {
@@ -91,24 +68,13 @@ public:
       WalkVisitor::visit(let);
     });
   }
-  void visit(const AST::Path& path) {
-    print("Path");
-    wrap([&] {
-      WalkVisitor::visit(path);
-    });
-  }
-  void visit(const AST::PathSegment& segment) {
-    print("Segment: " + segment.ident.identifier);
-    wrap([&] {
-      WalkVisitor::visit(segment);
-    });
-  }
   void visit(const Expr& expr) {
     print("Expr", expr.ty);
     wrap([&] {
       std::visit(overloaded {
         [this](const P<Block>& block) { visit(*block); },
         [this](const Lit& lit) { visit(lit); },
+        [this](const AST::Ident& ident) { print(fmt::format("Ident: {}", ident.identifier)); },
         [this](const P<Binary>& binary) {
           visit(*binary->lhs);
           print(fmt::format("BinOp: {}",
@@ -119,7 +85,6 @@ public:
           );
           visit(*binary->rhs);
         },
-        [this](const AST::Path& path) { visit(path); },
         [this](const P<Call>& call) { visit(*call); }
       }, expr.kind);
     });
@@ -130,9 +95,6 @@ public:
         print("Lit: " + fmt::format("{}", v));
       }
     }, lit.kind);
-    wrap([&] {
-      WalkVisitor::visit(lit);
-    });
   }
 
   void visit(const Call& call) {

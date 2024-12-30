@@ -13,9 +13,10 @@
 namespace AST {
 class LowerAstVisitor : public Visitor {
   NamespaceNode namespace_tree;
-  TAST::Crate crate;
 
   public:
+  P<TAST::Crate> crate = P<TAST::Crate>{new TAST::Crate{}};
+
   LowerAstVisitor(NamespaceNode namespace_tree) : namespace_tree(namespace_tree) {}
 
   void visit(const Crate& crate) override {
@@ -28,7 +29,7 @@ class LowerAstVisitor : public Visitor {
     std::visit(
       overloaded {
         [&](const P<FnDef>& fn) {
-          this->crate.bodies.insert({
+          this->crate->bodies.insert({
             item.id,
             std::make_unique<TAST::Body>( TAST::Body {
               .expr = P<TAST::Expr>(new TAST::Expr {
@@ -58,6 +59,11 @@ class LowerAstVisitor : public Visitor {
     if (std::holds_alternative<P<Expr>>(last->kind)) {
       const auto& value = std::get<P<Expr>>(last->kind);
       expr = this->resolve_expr(*value);
+    } else {
+      auto tast_statement = this->resolve_statement(*last);
+      if (tast_statement.has_value()) {
+        statements.push_back(std::move(tast_statement.value()));
+      }
     }
 
     return std::make_unique<TAST::Block>(TAST::Block {
@@ -78,7 +84,7 @@ class LowerAstVisitor : public Visitor {
           return TAST::ExprKind{resolve_block(*block)};
         },
         [this](const Path& path) {
-          return TAST::ExprKind{AST::Path{path}};
+          return TAST::ExprKind{AST::Ident{path.segments[0].ident}};
         },
         [this](const P<Binary>& binary) {
           return TAST::ExprKind{resolve_binary(*binary)};

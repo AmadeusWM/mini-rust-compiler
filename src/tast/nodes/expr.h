@@ -11,7 +11,7 @@ namespace TAST {
   typedef std::variant<
     // Path,
     Lit,
-    AST::Path,
+    AST::Ident,
     P<Block>,
     P<Binary>,
     P<Call>

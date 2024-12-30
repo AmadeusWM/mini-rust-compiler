@@ -37,6 +37,16 @@ struct Path {
     }
     return path;
   }
+  std::string to_string() const {
+    std::string s = "";
+    for (int i = 0; i < segments.size(); i++) {
+      s += segments[i].ident.identifier;
+      if (i < segments.size() - 1) {
+        s += "::";
+      }
+    }
+    return s;
+  }
 };
 
 typedef std::variant<

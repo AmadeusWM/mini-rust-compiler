@@ -4,7 +4,6 @@
 #include "tast_node.h"
 #include "parser/parser.h"
 #include "../driver.h"
-#include <optional>
 
 class TASTDriver : public Driver {
 private:
