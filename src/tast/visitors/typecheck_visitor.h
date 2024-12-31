@@ -2,8 +2,9 @@
 
 #include "infer_ctx.h"
 #include "nodes/core.h"
-#include "nodes/type.h"
+#include "visitors/apply_infererence_visitor.h"
 #include "visitors/tast_visitor.h"
+#include <spdlog/spdlog.h>
 namespace TAST {
 class TypecheckException : public std::runtime_error {
 public:
@@ -103,6 +104,8 @@ class TypecheckVisitor : public MutWalkVisitor {
       // reset the inference context for each body
       infer_ctx = InferCtx();
       visit(*body);
+      // resolve all the types
+      ApplyInferenceVisitor(infer_ctx).visit(*body);
     }
   }
 
@@ -118,6 +121,8 @@ class TypecheckVisitor : public MutWalkVisitor {
       if (block.expr.has_value()) {
         visit(*block.expr.value());
         infer_ctx.eq(block.id, block.expr.value()->id);
+      } else {
+        infer_ctx.add(block.id, Ty{Unit{}});
       }
     });
   }
@@ -135,9 +140,14 @@ class TypecheckVisitor : public MutWalkVisitor {
       visit(*let.initializer.value());
       std::visit(overloaded {
         [this, &let](const AST::Ident& ident) {
+          spdlog::debug("1");
           scopes.insert_binding(ident.identifier, let.id);
+          spdlog::debug("2");
+
           infer_ctx.add(let.id, let.ty);
+          spdlog::debug("3");
           infer_ctx.eq(let.id, let.initializer.value()->id);
+          spdlog::debug("4");
         }
       }, let.pat->kind);
     }
@@ -152,8 +162,8 @@ class TypecheckVisitor : public MutWalkVisitor {
   }
 
   void visit(Expr& expr) override {
+    spdlog::debug("visiting: {}", expr.id);
     std::visit(overloaded {
-      // TODO: handle block implicit return type
       [&](P<Block>& block) {
         visit(*block);
         infer_ctx.eq(expr.id, block->id);

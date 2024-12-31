@@ -62,7 +62,7 @@ public:
     });
   }
   void visit(const Let& let) {
-    print("Let");
+    print(fmt::format("Let: {}", let.ty.to_string()));
     wrap([&] {
       visit(*let.pat);
       WalkVisitor::visit(let);

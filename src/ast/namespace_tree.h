@@ -158,7 +158,7 @@ public:
       auto [segment, remaining] = ns.split_first();
       auto it = children.find(segment);
       if (it == children.end()) {
-        throw std::runtime_error("Namespace not found");
+        throw std::runtime_error(fmt::format("Namespace {} not found", ns.to_string()));
       }
       return it->second.get(remaining);
     }

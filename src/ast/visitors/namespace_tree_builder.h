@@ -26,8 +26,14 @@ class NamespaceTreeBuilder : public AST::Visitor {
   void visit(const Crate& crate) override
   {
     Visitor::visit(crate);
-    namespace_tree.resolve_types();
+    add_primitives();
+    // namespace_tree.resolve_types();
     spdlog::debug("Namespace Tree: \n{}", this->namespace_tree.to_string());
+  }
+
+  void add_primitives(){
+    namespace_tree.set(Namespace{{"i8"}}, PrimitiveType{Primitive::I8{}});
+    namespace_tree.set(Namespace{{"f8"}}, PrimitiveType{Primitive::F8{}});
   }
 
   void visit(const FnDef& fn) override {
