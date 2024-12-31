@@ -49,19 +49,15 @@ public:
     }
     // if one of them is not in the context, add it to the other's set
     if (rank1_it == nodesToRank.end()) {
-      spdlog::debug("Rank1 end, Adding {} to the context", id1);
       nodesToRank[id1] = rank2_it->second;
       rank1 = rank2_it->second;
     } else {
-      spdlog::debug("Rank1 not end");
       rank1 = rank1_it->second;
     }
     if (rank2_it == nodesToRank.end()) {
-      spdlog::debug("Rank2 end, Adding {} to the context", id1);
       nodesToRank[id2] = rank1_it->second;
       rank2 = rank1_it->second;
     } else {
-      spdlog::debug("Rank2 not end");
       rank2 = rank2_it->second;
     }
 
@@ -69,11 +65,8 @@ public:
       return;
     }
 
-    spdlog::debug("looking up rank1: {}", rank1);
     auto type1 = rankTypes.at(rank1);
-    spdlog::debug("looking up rank2: {}", rank2);
     auto type2 = rankTypes.at(rank2);
-    spdlog::debug("Done looking up");
     auto resolved = type1.resolve(type2);
     if (!resolved.has_value()) {
       throw std::runtime_error(fmt::format("Type mismatch between {} and {}", type1.to_string(), type2.to_string()));

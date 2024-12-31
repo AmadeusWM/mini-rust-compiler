@@ -33,6 +33,7 @@ class NamespaceTreeBuilder : public AST::Visitor {
 
   void add_primitives(){
     namespace_tree.set(Namespace{{"i8"}}, PrimitiveType{Primitive::I8{}});
+    namespace_tree.set(Namespace{{"i32"}}, PrimitiveType{Primitive::I32{}});
     namespace_tree.set(Namespace{{"f8"}}, PrimitiveType{Primitive::F8{}});
   }
 

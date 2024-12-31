@@ -56,12 +56,14 @@ struct Namespace{
 
 namespace Primitive{
   struct I8{};
+  struct I32{};
   struct F8{};
   struct Str{};
 }
 
 typedef std::variant<
   Primitive::I8,
+  Primitive::I32,
   Primitive::F8,
   Primitive::Str
 > PrimitiveKind;
@@ -71,6 +73,8 @@ struct PrimitiveType {
   static Opt<PrimitiveType> from(std::string identifier) {
     if (identifier == "i8") {
       return PrimitiveType{ .kind = Primitive::I8{} };
+    } else if (identifier == "i32") {
+      return PrimitiveType{ .kind = Primitive::I32{} };
     } else if (identifier == "f8") {
       return PrimitiveType{ .kind = Primitive::F8{} };
     } else if (identifier == "str") {

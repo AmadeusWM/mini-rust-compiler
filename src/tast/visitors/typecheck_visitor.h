@@ -140,14 +140,10 @@ class TypecheckVisitor : public MutWalkVisitor {
       visit(*let.initializer.value());
       std::visit(overloaded {
         [this, &let](const AST::Ident& ident) {
-          spdlog::debug("1");
           scopes.insert_binding(ident.identifier, let.id);
-          spdlog::debug("2");
 
           infer_ctx.add(let.id, let.ty);
-          spdlog::debug("3");
           infer_ctx.eq(let.id, let.initializer.value()->id);
-          spdlog::debug("4");
         }
       }, let.pat->kind);
     }
