@@ -45,7 +45,7 @@ namespace AST {
 
   struct Call {
     NodeId id;
-    Path path;
+    Path path; // NOTE: no support for calling functions that are stored in variables etc.
     std::vector<P<Expr>>params;
   };
 }

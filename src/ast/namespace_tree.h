@@ -54,10 +54,42 @@ struct Namespace{
   }
 };
 
+namespace Primitive{
+  struct I8{};
+  struct F8{};
+  struct Str{};
+}
+
+typedef std::variant<
+  Primitive::I8,
+  Primitive::F8,
+  Primitive::Str
+> PrimitiveKind;
+
 struct PrimitiveType {
+  PrimitiveKind kind;
+  static Opt<PrimitiveType> from(std::string identifier) {
+    if (identifier == "i8") {
+      return PrimitiveType{ .kind = Primitive::I8{} };
+    } else if (identifier == "f8") {
+      return PrimitiveType{ .kind = Primitive::F8{} };
+    } else if (identifier == "str") {
+      return PrimitiveType{ .kind = Primitive::Str{} };
+    }
+    else {
+      return std::nullopt;
+    }
+  }
 };
 
-using NamespaceValue = std::variant<Namespace, PrimitiveType, AST::NodeId>;
+using NamespaceValue = std::variant<
+  // Namespace: used for e.g. `type x = X::A`
+  Namespace,
+  // PrimitiveTypes are i32, etc.
+  PrimitiveType,
+  // Used to describe a node in the AST
+  AST::NodeId
+>;
 
 class NamespaceNode {
 private:
@@ -89,7 +121,7 @@ public:
 
   /**
   * @brief Find a value for this namespace within the span `root` -> `scope`
-  *   For example, if there is a namspace `X::main::a::b`, and we want to find `a::b`, we would call
+  *   For example, if there is a namespace `X::main::a::b`, and we want to find `a::b` from `X::main::a`, we would call
   *   `get(X::main::a, X::main::a::b, X)`
   *   This would return the value of `a::b`
   *   And it would only look up till the namespace `X` is reached
@@ -149,5 +181,28 @@ public:
       result += fmt::format("\t{}:{}", key, value.to_string());
     }
     return result;
+  }
+
+  void resolve_types(NamespaceNode* root = nullptr) {
+    if (root == nullptr) {
+      root = this;
+    }
+    for (auto& child : children) {
+      if (std::holds_alternative<Namespace>(child.second.value.value())) {
+        auto ns = std::get<Namespace>(child.second.value.value());
+
+        if (ns.path.size() == 1) {
+          child.second.value = PrimitiveType::from(ns.path[0]);
+        } else {
+          throw std::runtime_error("Not a primitive: " + ns.to_string());
+          // auto value = root->get(ns);
+          // if (!value.has_value()) {
+          //   throw std::runtime_error("Namespace not found");
+          // }
+          // child.second.value = value.value();
+        }
+      }
+      child.second.resolve_types(root);
+    }
   }
 };

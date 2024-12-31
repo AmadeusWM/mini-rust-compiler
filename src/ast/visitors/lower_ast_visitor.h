@@ -5,6 +5,7 @@
 #include "nodes/core.h"
 #include "nodes/expr.h"
 #include "nodes/stmt.h"
+#include "nodes/type.h"
 #include "visitors/visitor.h"
 #include <algorithm>
 #include <memory>
@@ -120,12 +121,34 @@ class LowerAstVisitor : public Visitor {
       .pat = std::make_unique<TAST::Pat>(std::visit(overloaded {
         [](const Ident& ident) { return TAST::Pat{.kind = TAST::PatKind{ident}}; }
       }, let.pat->kind)),
+      .ty = resolve_ty(*let.ty),
       .initializer = std::visit(
         overloaded {
           [this](const Decl& decl) { return Opt<P<TAST::Expr>>{}; },
           [this](const P<Expr>& expr) { return Opt<P<TAST::Expr>> { resolve_expr(*expr) }; }
         }, let.kind)
     });
+  }
+
+  TAST::Ty resolve_ty(const Ty& ty) {
+    return std::visit(overloaded {
+      [&](const Path& path) {
+        auto value = namespace_tree.get(Namespace{path.to_vec()});
+        if (value.has_value() && std::holds_alternative<PrimitiveType>(value.value())) {
+          auto primitive = std::get<PrimitiveType>(value.value());
+          return std::visit(overloaded {
+            [&](const Primitive::I8& i8){ return TAST::Ty{ TAST::IntTy{TAST::I8{}}}; },
+            [&](const Primitive::F8& f8){ return TAST::Ty{ TAST::FloatTy{TAST::F8{}}}; },
+            [&](const Primitive::Str& str){ return TAST::Ty{ TAST::StrTy{}}; }
+          }, primitive.kind);
+        }
+        else {
+          throw std::runtime_error("Could not resolve path to primitive:" + path.to_string());
+        }
+      },
+      [&](const Infer& infer) { return TAST::Ty{TAST::InferTy{}}; },
+      [&](const Unit& unit) { return TAST::Ty{TAST::Unit{}}; }
+    }, ty.kind);
   }
 
   TAST::Lit resolve_lit(const Lit& lit) {

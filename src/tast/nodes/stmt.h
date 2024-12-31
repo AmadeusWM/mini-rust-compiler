@@ -29,6 +29,7 @@ namespace TAST {
     NodeId id;
     // let <PAT> = 5;
     P<Pat> pat;
+    Ty ty;
     // let x: i32 = <INIT>;
     Opt<P<Expr>> initializer;
   };

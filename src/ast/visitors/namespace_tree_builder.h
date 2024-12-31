@@ -26,6 +26,7 @@ class NamespaceTreeBuilder : public AST::Visitor {
   void visit(const Crate& crate) override
   {
     Visitor::visit(crate);
+    namespace_tree.resolve_types();
     spdlog::debug("Namespace Tree: \n{}", this->namespace_tree.to_string());
   }
 
