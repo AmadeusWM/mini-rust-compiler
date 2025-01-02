@@ -255,6 +255,9 @@ class NameResolutionVisitor : public Visitor {
     std::visit(overloaded {
         [&](const Lit& lit) {
         },
+        [&](const P<Ret>& ret) {
+          visit(*ret);
+        },
         [&](const P<Block>& block) {
           visit(*block);
         },
@@ -294,6 +297,11 @@ class NameResolutionVisitor : public Visitor {
         Visitor::visit(*semi->expr);
       },
     }, stmt.kind);
+  }
+
+  void visit(const Ret& ret) override
+  {
+    visit(*ret.expr);
   }
 
   void visit(const Let& let) override

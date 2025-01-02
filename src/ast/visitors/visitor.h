@@ -38,6 +38,10 @@ namespace AST {
           }, node.kind);
     }
 
+    virtual void visit(const Ret& ret) {
+      visit(*ret.expr);
+    }
+
     virtual void visit(const Let& let) {
       std::visit(
           overloaded {
@@ -60,6 +64,7 @@ namespace AST {
       std::visit(
         overloaded {
           [this](const Lit& lit) { visit(lit); },
+          [this](const P<Ret>& ret) { visit(*ret); },
           [this](const P<Block>& block) { visit(*block); },
           [this](const Path& path) { },
           [this](const P<Binary>& binary) {

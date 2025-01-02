@@ -12,7 +12,7 @@ namespace TAST {
     public:
       SymbolValue value;
       ReturnException(SymbolValue value): value{value} {}
-  }
+  };
 
   class InterpeterException : public std::runtime_error {
   public:
@@ -130,6 +130,7 @@ namespace TAST {
     SymbolValue visit(const Expr& expr) override {
       auto result = std::visit(overloaded {
         [&](const P<Block>& block) { return visit(*block); },
+        [&](const P<Ret>& ret) { return visit(*ret); },
         [&](const Lit& lit) { return visit(lit); },
         [&](const AST::Ident& ident) { return visit(ident); },
         [&](const P<Binary>& binary) { return visit(*binary); },
@@ -137,6 +138,10 @@ namespace TAST {
       }, expr.kind);
       spdlog::debug("node {}: {}", expr.id, result.to_string());
       return result;
+    }
+
+    SymbolValue visit(const Ret& ret) override {
+      throw ReturnException(visit(*ret.expr));
     }
 
     SymbolValue visit(const Lit& lit) override {

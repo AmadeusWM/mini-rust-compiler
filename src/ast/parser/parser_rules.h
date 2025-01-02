@@ -35,6 +35,8 @@ class ParserRules {
 
     P<AST::Let> let(P<AST::Pat> $1, P<AST::Ty> $2, AST::LocalKind $3);
 
+    P<AST::Ret> ret(P<AST::Expr> $1);
+
     AST::Ident ident(std::string $1);
     AST::Path path(AST::Ident $1);
 

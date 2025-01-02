@@ -75,6 +75,12 @@ P<AST::Stmt> ParserRules::statement(AST::StmtKind $1) {
   });
 }
 
+P<AST::Ret> ParserRules::ret(P<AST::Expr> $1) {
+  return P<AST::Ret>(new AST::Ret{
+    .expr = std::move($1)
+  });
+}
+
 P<AST::Semi> ParserRules::semi(P<AST::Expr> $1) {
   return P<AST::Semi>(new AST::Semi{
     .expr = std::move($1)

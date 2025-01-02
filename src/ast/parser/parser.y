@@ -77,6 +77,7 @@
 %type <P<AST::Block>> block
 %type <P<AST::Block>> statements
 %type <P<AST::Stmt>> statement
+%type <P<AST::Ret>> ret
 %type <P<AST::Let>> let
 %type <AST::LocalKind> local_kind;
 %type <P<AST::Expr>> expr
@@ -164,6 +165,10 @@ statement:
     | expr_with_block { $$ = driver.rules->statement(std::move($1)); }
     ;
 
+ret:
+    KW_RETURN expr SEMI { $$ = driver.rules->ret(std::move($2)); }
+    ;
+
 binary:
     expr bin_op expr { $$ = driver.rules->binary(std::move($1), $2, std::move($3)); }
     ;
@@ -198,6 +203,7 @@ expr_without_block:
     | literal { $$ = driver.rules->expr(std::move($1)); }
     | path { $$ = driver.rules->expr(std::move($1)); }
     | call { $$ = driver.rules->expr(std::move($1)); }
+    | ret { $$ = driver.rules->expr(std::move($1)); }
     ;
 
 expr_with_block:

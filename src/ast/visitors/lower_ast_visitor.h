@@ -94,6 +94,9 @@ class LowerAstVisitor : public Visitor {
         [this](const Lit& lit) {
           return TAST::ExprKind{resolve_lit(lit)};
         },
+        [this](const P<Ret>& ret) {
+          return TAST::ExprKind{resolve_ret(*ret)};
+        },
         [this](const P<Block>& block) {
           return TAST::ExprKind{resolve_block(*block)};
         },
@@ -111,14 +114,20 @@ class LowerAstVisitor : public Visitor {
     });
   }
 
+  P<TAST::Ret> resolve_ret(const Ret& ret) {
+    return std::make_unique<TAST::Ret>(TAST::Ret {
+      .id = ret.id,
+      .expr = resolve_expr(*ret.expr)
+    });
+  }
+
   Opt<P<TAST::Stmt>> resolve_statement(const Stmt& stmt) {
-    Opt<TAST::StmtKind> kind = std::visit(
-      overloaded {
-        [this](const P<Expr>& expr) { return Opt<TAST::StmtKind> { TAST::StmtKind { resolve_expr(*expr) } }; },
-        [this](const P<Let>& let) { return Opt<TAST::StmtKind> { TAST::StmtKind { resolve_let(*let) } }; },
-        [this](const P<Item>& item) { visit(*item); return Opt<TAST::StmtKind>{}; },
-        [this](const P<Semi>& semi) { return Opt<TAST::StmtKind>({ resolve_expr(*semi->expr) }); }
-      }, stmt.kind);
+    Opt<TAST::StmtKind> kind = std::visit(overloaded {
+      [this](const P<Expr>& expr) { return Opt<TAST::StmtKind> { TAST::StmtKind { resolve_expr(*expr) } }; },
+      [this](const P<Let>& let) { return Opt<TAST::StmtKind> { TAST::StmtKind { resolve_let(*let) } }; },
+      [this](const P<Item>& item) { visit(*item); return Opt<TAST::StmtKind>{}; },
+      [this](const P<Semi>& semi) { return Opt<TAST::StmtKind>({ resolve_expr(*semi->expr) }); }
+    }, stmt.kind);
     if (kind.has_value()) {
       return std::make_unique<TAST::Stmt>(TAST::Stmt {
         .id = stmt.id,

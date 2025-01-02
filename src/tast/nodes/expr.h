@@ -7,6 +7,7 @@
 namespace TAST {
   struct Binary;
   struct Call;
+  struct Ret;
 
   struct Lit {
     NodeId id;
@@ -21,10 +22,16 @@ namespace TAST {
     // Path,
     Lit,
     AST::Ident,
+    P<Ret>,
     P<Block>,
     P<Binary>,
     P<Call>
   > ExprKind;
+
+  struct Ret {
+    NodeId id;
+    P<Expr> expr;
+  };
 
   struct Expr {
     NodeId id;

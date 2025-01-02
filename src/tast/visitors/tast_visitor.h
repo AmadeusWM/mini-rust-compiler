@@ -16,6 +16,7 @@ template <class T> class Visitor {
   virtual T visit(const Expr& expr) = 0;
   virtual T visit(const Lit& lit) = 0;
   virtual T visit(const Call& call) = 0;
+  virtual T visit(const Ret& ret) = 0;
 };
 
 /**
@@ -31,6 +32,7 @@ template <class T> class MutVisitor {
   virtual T visit(Expr& expr) = 0;
   virtual T visit(Lit& lit) = 0;
   virtual T visit(Call& call) = 0;
+  virtual T visit(Ret& ret) = 0;
 };
 
 class WalkVisitor : public Visitor<void> {
@@ -66,12 +68,18 @@ class WalkVisitor : public Visitor<void> {
   void visit(const Expr& expr) override {
     std::visit(overloaded {
       [this](const P<Block>& block) { visit(*block); },
+      [this](const P<Ret>& ret) { visit(*ret); },
       [this](const Lit& lit) { visit(lit); },
       [this](const AST::Ident& ident) { },
       [this](const P<Binary>& binary) { visit(*binary->lhs); visit(*binary->rhs); },
       [this](const P<Call>& call) { visit(*call); },
     }, expr.kind);
   }
+
+  void visit(const Ret& ret) override {
+    visit(*ret.expr);
+  }
+
   void visit(const Lit& lit) override {
 
   }
@@ -112,12 +120,18 @@ class MutWalkVisitor : public MutVisitor<void> {
   void visit(Expr& expr) override {
     std::visit(overloaded {
       [this](P<Block>& block) { visit(*block); },
+      [this](P<Ret>& ret) { visit(*ret); },
       [this](Lit& lit) { visit(lit); },
       [this](AST::Ident& ident ) {},
       [this](P<Binary>& binary) { visit(*binary->lhs); visit(*binary->rhs); },
       [this](P<Call>& call) { visit(*call); },
     }, expr.kind);
   }
+
+  void visit(Ret& ret) override {
+    visit(*ret.expr);
+  }
+
   void visit(Lit& lit) override {
 
   }

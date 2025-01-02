@@ -1,6 +1,7 @@
 fn x() {
     let a = 3;
     let b = 4;
+    return 3;
     let c = a + b;
 }
 

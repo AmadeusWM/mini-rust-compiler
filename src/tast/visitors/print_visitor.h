@@ -69,6 +69,7 @@ public:
     wrap([&] {
       std::visit(overloaded {
         [this](const P<Block>& block) { visit(*block); },
+        [this](const P<Ret>& ret) { visit(*ret); },
         [this](const Lit& lit) { visit(lit); },
         [this](const AST::Ident& ident) { print(fmt::format("Ident: {}", ident.identifier)); },
         [this](const P<Binary>& binary) {
@@ -85,6 +86,14 @@ public:
       }, expr.kind);
     });
   }
+
+  void visit(const Ret& ret) {
+    print("Ret");
+    wrap([&] {
+      visit(*ret.expr);
+    });
+  }
+
   void visit(const Lit& lit) {
     std::visit(overloaded {
       [&](const auto& v) {

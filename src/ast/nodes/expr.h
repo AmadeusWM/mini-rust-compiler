@@ -8,14 +8,21 @@ namespace AST {
   struct Block;
   struct Binary;
   struct Call;
+  struct Ret;
 
   typedef std::variant<
     Lit,
     Path,
     P<Block>,
     P<Binary>,
+    P<Ret>,
     P<Call>
   > ExprKind;
+
+  struct Ret {
+    NodeId id;
+    P<Expr> expr;
+  };
 
   struct Expr {
     NodeId id;

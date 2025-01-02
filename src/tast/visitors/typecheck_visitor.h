@@ -170,6 +170,11 @@ class TypecheckVisitor : public MutWalkVisitor {
         visit(*block);
         infer_ctx.eq(expr.id, block->id);
       },
+      [&](P<Ret>& ret) {
+        visit(*ret);
+        // TODO: also equal to function body's type?
+        infer_ctx.eq(expr.id, ret->id);
+      },
       [&](Lit& lit) {
         visit(lit);
         infer_ctx.eq(expr.id, lit.id);
@@ -188,6 +193,11 @@ class TypecheckVisitor : public MutWalkVisitor {
         infer_ctx.eq(expr.id, call->id);
       },
     }, expr.kind);
+  }
+
+  void visit(Ret& ret) override {
+    visit(*ret.expr);
+    infer_ctx.eq(ret.id, ret.expr->id);
   }
 
   void visit(Lit& lit) override {

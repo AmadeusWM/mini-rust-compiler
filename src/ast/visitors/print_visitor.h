@@ -72,6 +72,9 @@ class PrintVisitor : public AST::Visitor {
     print("Expr", expr.id);
     wrap([&]() {
       std::visit(overloaded {
+        [this](const P<Ret>& ret) {
+          visit(*ret->expr);
+        },
         [this](const Lit& lit) {
           std::visit(
             overloaded {
