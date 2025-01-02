@@ -57,8 +57,12 @@ namespace Res {
 namespace Scope {
 
   struct Normal { };
-  struct Fn { };
-  struct Module { };
+  struct Fn {
+    std::string segment;
+  };
+  struct Module {
+    std::string segment;
+  };
 
   typedef std::variant<
       Normal,
@@ -71,7 +75,6 @@ namespace Scope {
     ScopeId id;
     ScopeKind kind;
     std::map<std::string, Res::Res> bindings;
-    Opt<std::string> segment; // Optional, because some scopes don't have a segment identifier, such as a block scope
   };
 
   struct Scopes {
@@ -100,7 +103,17 @@ namespace Scope {
       }
       std::vector<std::string> path;
       for (int j = 0; j < i; j++) {
-        path.push_back(scopes[j].segment.value());
+        std::visit(overloaded {
+          [&](const Module& mod) {
+            path.push_back(mod.segment);
+          },
+          [&](const Fn& fn) {
+            path.push_back(fn.segment);
+          },
+          [&](const auto&) {
+            // Do nothing for other scope kinds
+          }
+        }, scopes[j].kind);
       }
       return Namespace{ .path = path };
     }
@@ -108,9 +121,17 @@ namespace Scope {
     Namespace get_namespace(){
       std::vector<std::string> path;
       for (const auto& scope : scopes){
-        if (scope.segment.has_value()){
-          path.push_back(scope.segment.value());
-        }
+        std::visit(overloaded {
+          [&](const Module& mod) {
+            path.push_back(mod.segment);
+          },
+          [&](const Fn& fn) {
+            path.push_back(fn.segment);
+          },
+          [&](const auto&) {
+            // Do nothing for other scope kinds
+          }
+        }, scope.kind);
       }
       return Namespace{ .path = path };
     }
@@ -206,17 +227,14 @@ class NameResolutionVisitor : public Visitor {
 
   void visit(const Crate& crate) override
   {
-    with_scope(Scope::Module{}, crate.id,
-      [this, &crate]() {
-        for (const auto& item : crate.items) {
-          Visitor::visit(*item);
-        }
-      });
+    for (const auto& item : crate.items) {
+      Visitor::visit(*item);
+    }
   }
 
   void visit(const FnDef& fn) override
   {
-    with_scope(Scope::Fn {}, fn.id,
+    with_scope(Scope::Fn { .segment = fn.ident.identifier }, fn.id,
       [this, &fn]() {
         visit(*fn.body);
       }

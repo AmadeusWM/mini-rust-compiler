@@ -34,15 +34,18 @@ class NamespaceTreeBuilder : public AST::Visitor {
   void add_primitives(){
     namespace_tree.set(Namespace{{"i8"}}, PrimitiveType{Primitive::I8{}});
     namespace_tree.set(Namespace{{"i32"}}, PrimitiveType{Primitive::I32{}});
-    namespace_tree.set(Namespace{{"f8"}}, PrimitiveType{Primitive::F8{}});
+    namespace_tree.set(Namespace{{"f32"}}, PrimitiveType{Primitive::F32{}});
   }
 
-  void visit(const FnDef& fn) override {
-    spdlog::debug("visiting fn: {}", fn.ident.identifier);
-    wrap(fn.ident.identifier, [&]() {
-      namespace_tree.set(this->ns, NamespaceValue(fn.id));
-      Visitor::visit(fn);
-    });
+  void visit(const Item& item) override {
+    std::visit(overloaded {
+      [&](const P<FnDef>& fn) {
+        wrap(fn->ident.identifier, [&]() {
+          namespace_tree.set(this->ns, NamespaceValue(item.id));
+          Visitor::visit(*fn);
+        });
+      }
+    }, item.kind);
   }
 };
 };

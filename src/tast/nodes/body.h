@@ -1,5 +1,6 @@
 #pragma once
 #include "../tast_node.h"
+#include "namespace_tree.h"
 #include "nodes/type.h"
 
 namespace TAST {
@@ -14,8 +15,10 @@ namespace TAST {
   };
 
   struct Body {
+    NodeId id;
     std::vector<P<Param>> params;
     P<Expr> expr;
+    Namespace ns;
   };
 
   /**

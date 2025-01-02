@@ -9,11 +9,22 @@
 #include "visitors/visitor.h"
 #include <algorithm>
 #include <memory>
+#include <spdlog/spdlog.h>
 #include <variant>
 
 namespace AST {
+
 class LowerAstVisitor : public Visitor {
+  private:
   NamespaceNode namespace_tree;
+  Namespace mod_ns{.path = {}};
+
+  void with_module(std::string segment, std::function<void()> func)
+  {
+    mod_ns.path.push_back(segment);
+    func();
+    mod_ns.path.pop_back();
+  }
 
   public:
   P<TAST::Crate> crate = P<TAST::Crate>{new TAST::Crate{}};
@@ -33,11 +44,13 @@ class LowerAstVisitor : public Visitor {
           this->crate->bodies.insert({
             item.id,
             std::make_unique<TAST::Body>( TAST::Body {
+              .id = item.id,
               .expr = P<TAST::Expr>(new TAST::Expr {
                 .id = fn->id,
                 .kind = TAST::ExprKind {this->resolve_block(*fn->body)},
                 .ty = {TAST::InferTy{}}
-              })
+              }),
+              .ns = this->namespace_tree.find_namespace(item.id).value()
             })
           });
         }
@@ -139,7 +152,7 @@ class LowerAstVisitor : public Visitor {
           return std::visit(overloaded {
             [&](const Primitive::I8& i8){ return TAST::Ty{ TAST::IntTy{TAST::I8{}}}; },
             [&](const Primitive::I32& i32){ return TAST::Ty{ TAST::IntTy{TAST::I32{}}}; },
-            [&](const Primitive::F8& f8){ return TAST::Ty{ TAST::FloatTy{TAST::F8{}}}; },
+            [&](const Primitive::F32& f32){ return TAST::Ty{ TAST::FloatTy{TAST::F32{}}}; },
             [&](const Primitive::Str& str){ return TAST::Ty{ TAST::StrTy{}}; }
           }, primitive.kind);
         }
@@ -155,10 +168,8 @@ class LowerAstVisitor : public Visitor {
   TAST::Lit resolve_lit(const Lit& lit) {
     return TAST::Lit {
       .id = lit.id,
-      .kind = std::visit(overloaded {
-        [](const int i) { return TAST::LitKind{i}; },
-        [](const std::string& s) { return TAST::LitKind{s}; }
-      }, lit.kind)
+      .ty = TAST::Ty{TAST::InferTy{}}, // initialize with infer type, will be inferred during typechecking
+      .kind = lit.kind
     };
   }
 
@@ -171,9 +182,13 @@ class LowerAstVisitor : public Visitor {
   }
 
   P<TAST::Call> resolve_call(const Call& call) {
+    Namespace call_ns = Namespace{call.path.to_vec()};
+    spdlog::debug("looking up {}", call_ns.to_string());
+    auto callee = namespace_tree.get(mod_ns, call_ns);
+    spdlog::debug("Callee: {}", std::get<NodeId>(callee.value()));
     return std::make_unique<TAST::Call>( TAST::Call {
       .id = call.id,
-      .callee = call.id,
+      .callee = std::get<NodeId>(callee.value()),
       .params = std::vector<P<TAST::Expr>>{}
     });
   }

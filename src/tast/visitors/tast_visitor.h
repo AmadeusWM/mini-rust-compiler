@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../tast_node.h"
+#include "nodes/core.h"
 #include <spdlog/spdlog.h>
 #include <variant>
 
@@ -46,6 +47,9 @@ class WalkVisitor : public Visitor<void> {
     for (const auto& stmt : block.statements) {
       visit(*stmt);
     }
+    if (block.expr.has_value()) {
+      visit(*block.expr.value());
+    }
   }
   void visit(const Stmt& stmt) override {
     std::visit(overloaded {
@@ -63,7 +67,7 @@ class WalkVisitor : public Visitor<void> {
     std::visit(overloaded {
       [this](const P<Block>& block) { visit(*block); },
       [this](const Lit& lit) { visit(lit); },
-      [this](const AST::Ident& lit) { },
+      [this](const AST::Ident& ident) { },
       [this](const P<Binary>& binary) { visit(*binary->lhs); visit(*binary->rhs); },
       [this](const P<Call>& call) { visit(*call); },
     }, expr.kind);

@@ -57,14 +57,14 @@ struct Namespace{
 namespace Primitive{
   struct I8{};
   struct I32{};
-  struct F8{};
+  struct F32{};
   struct Str{};
 }
 
 typedef std::variant<
   Primitive::I8,
   Primitive::I32,
-  Primitive::F8,
+  Primitive::F32,
   Primitive::Str
 > PrimitiveKind;
 
@@ -75,8 +75,8 @@ struct PrimitiveType {
       return PrimitiveType{ .kind = Primitive::I8{} };
     } else if (identifier == "i32") {
       return PrimitiveType{ .kind = Primitive::I32{} };
-    } else if (identifier == "f8") {
-      return PrimitiveType{ .kind = Primitive::F8{} };
+    } else if (identifier == "f32") {
+      return PrimitiveType{ .kind = Primitive::F32{} };
     } else if (identifier == "str") {
       return PrimitiveType{ .kind = Primitive::Str{} };
     }
@@ -148,7 +148,7 @@ public:
         return result.value();
       }
     }
-    return std::nullopt;
+    return value.value();
   }
 
   Opt<NamespaceValue> get(const Namespace& ns) const {
@@ -168,21 +168,39 @@ public:
     }
   }
 
+  Opt<Namespace> find_namespace(AST::NodeId id) const {
+    spdlog::debug("children: {}", children.size());
+    for (const auto& [key, child] : children) {
+      spdlog::debug("find_namespace: {}", key);
+      if (child.value.has_value() && std::holds_alternative<AST::NodeId>(child.value.value())) {
+        if (std::get<AST::NodeId>(child.value.value()) == id) {
+          return Namespace{ .path = {key} };
+        }
+      }
+      auto result = child.find_namespace(id);
+      if (result.has_value() && !result.value().path.empty()) {
+        Namespace ns = Namespace{ .path = {key} };
+        return {Namespace::concat(ns, result.value())};
+      }
+    }
+    return std::nullopt;
+  }
+
   std::string to_string() const {
     std::string result = "";
     if (value.has_value()) {
       if (std::holds_alternative<Namespace>(value.value())) {
-        result += std::string("Namespace");
+        result += fmt::format("Namespace: {}", std::get<Namespace>(value.value()).to_string());
       }
       else if (std::holds_alternative<PrimitiveType>(value.value())) {
         result += std::string("PrimitiveType");
       }
       else {
-        result += std::string("NodeId");
+        result += fmt::format("NodeId: {}", std::get<AST::NodeId>(value.value()));
       }
     }
     for (const auto& [key, value] : this->children) {
-      result += fmt::format("\t{}:{}", key, value.to_string());
+      result += fmt::format("->{}:{}", key, value.to_string());
     }
     return result;
   }

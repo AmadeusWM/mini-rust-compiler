@@ -21,11 +21,15 @@ class ApplyInferenceVisitor: public MutWalkVisitor {
     expr.ty = ctx.getType(expr.id);
     std::visit(overloaded {
       [this](P<Block>& block) { MutWalkVisitor::visit(*block); },
-      [this](Lit& lit) { MutWalkVisitor::visit(lit); },
+      [this](Lit& lit) { visit(lit); },
       [this](AST::Ident& ident ) {},
       [this](P<Binary>& binary) { visit(*binary->lhs); visit(*binary->rhs); },
       [this](P<Call>& call) {MutWalkVisitor::visit(*call); },
     }, expr.kind);
+  }
+
+  void visit(Lit& lit) override {
+    lit.ty = ctx.getType(lit.id);
   }
 };
 }

@@ -8,6 +8,15 @@ namespace TAST {
   struct Binary;
   struct Call;
 
+  struct Lit {
+    NodeId id;
+    // potentially add:
+    // - suffix
+    // - symbol
+    Ty ty;
+    AST::LitKind kind;
+  };
+
   typedef std::variant<
     // Path,
     Lit,

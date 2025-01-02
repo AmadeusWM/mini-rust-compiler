@@ -2,6 +2,7 @@
 
 #include "infer_ctx.h"
 #include "nodes/core.h"
+#include "nodes/type.h"
 #include "visitors/apply_infererence_visitor.h"
 #include "visitors/tast_visitor.h"
 #include <spdlog/spdlog.h>
@@ -14,9 +15,14 @@ public:
 
 typedef uint64_t ScopeId;
 
+struct Binding {
+  NodeId id;
+  bool mut;
+};
+
 struct TypeScope {
   ScopeId id;
-  std::map<std::string, NodeId> bindings;
+  std::map<std::string, Binding> bindings;
 };
 
 struct TypeScopes {
@@ -36,18 +42,18 @@ struct TypeScopes {
     scopes.pop_back();
   }
 
-  Opt<NodeId> lookup(std::string iden) {
+  Opt<Binding> lookup(std::string iden) {
     for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
       auto scope = *it;
       auto binding = scope.bindings.find(iden);
       if (binding != scope.bindings.end()) {
-        return Opt<NodeId>(binding->second);
+        return Opt<Binding>(binding->second);
       }
     }
-    return Opt<NodeId>{};
+    return Opt<Binding>{};
   }
 
-  NodeId lookup_or_throw(std::string iden) {
+  Binding lookup_or_throw(std::string iden) {
     auto id = lookup(iden);
     if (!id.has_value()) {
       throw TypecheckException(fmt::format("cannot find identifier \"{}\"", iden));
@@ -55,11 +61,11 @@ struct TypeScopes {
     return id.value();
   }
 
-  void insert_binding(std::string name, NodeId id) {
+  void insert_binding(std::string name, Binding binding) {
     if (scopes.size() == 0) {
       throw TypecheckException(fmt::format("no scope to insert identifier \"{}\"", name));
     }
-    scopes.back().bindings.insert({ name, id });
+    scopes.back().bindings.insert({ name, binding });
   }
 };
 
@@ -85,11 +91,11 @@ class TypecheckVisitor : public MutWalkVisitor {
   }
 
   Ty lookup_type(std::string name) {
-    auto id = scopes.lookup(name);
-    if (!id.has_value()) {
+    auto binding = scopes.lookup(name);
+    if (!binding.has_value()) {
       throw TypecheckException(fmt::format("cannot find identifier \"{}\"", name));
     }
-    return infer_ctx.getType(id.value());
+    return infer_ctx.getType(binding.value().id);
   }
 
   public:
@@ -140,7 +146,7 @@ class TypecheckVisitor : public MutWalkVisitor {
       visit(*let.initializer.value());
       std::visit(overloaded {
         [this, &let](const AST::Ident& ident) {
-          scopes.insert_binding(ident.identifier, let.id);
+          scopes.insert_binding(ident.identifier, {.id = let.id, .mut = true } ); // todo: set mutability
 
           infer_ctx.add(let.id, let.ty);
           infer_ctx.eq(let.id, let.initializer.value()->id);
@@ -150,7 +156,7 @@ class TypecheckVisitor : public MutWalkVisitor {
     else {
       std::visit(overloaded {
         [this, &let](const AST::Ident& ident) {
-          scopes.insert_binding(ident.identifier, let.id);
+          scopes.insert_binding(ident.identifier, { .id = let.id, .mut = true });
           infer_ctx.add(let.id, let.ty);
         }
       }, let.pat->kind);
@@ -164,10 +170,13 @@ class TypecheckVisitor : public MutWalkVisitor {
         visit(*block);
         infer_ctx.eq(expr.id, block->id);
       },
-      [&](Lit& lit) { infer_ctx.add(expr.id, resolve_lit(lit)); },
+      [&](Lit& lit) {
+        visit(lit);
+        infer_ctx.eq(expr.id, lit.id);
+      },
       [&](AST::Ident& ident) {
-        auto id = scopes.lookup_or_throw(ident.identifier);
-        infer_ctx.eq(expr.id, id);
+        auto binding = scopes.lookup_or_throw(ident.identifier);
+        infer_ctx.eq(expr.id, binding.id);
       },
       [&](P<Binary>& binary) {
         resolve_binary(*binary);
@@ -181,9 +190,14 @@ class TypecheckVisitor : public MutWalkVisitor {
     }, expr.kind);
   }
 
-  Ty resolve_call(Call& call) {
-    // this->crate.bodies;
-    return {};
+  void visit(Lit& lit) override {
+    infer_ctx.add(lit.id, resolve_lit(lit));
+  }
+
+  void resolve_call(Call& call) {
+    // TODO add a type to the body!
+    // this->crate.bodies.t;
+    infer_ctx.add(call.id, Ty{InferTy{TyVar{}}});
   }
 
   Ty resolve_binary(Binary& bin) {

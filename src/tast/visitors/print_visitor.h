@@ -1,6 +1,5 @@
 #pragma once
 
-#include "nodes/type.h"
 #include "util.h"
 #include "visitors/tast_visitor.h"
 #include <variant>
@@ -33,8 +32,9 @@ public:
     print("Crate");
     wrap([&] {
       for (const auto& [key, body] : crate.bodies) {
-        std::string key_str = "";
+        std::string key_str = body->ns.to_string();
         print("NS: " + key_str);
+        print("ID: " + std::to_string(key));
         visit(*body);
       }
     });
@@ -48,10 +48,6 @@ public:
   void visit(const Block& block) {
     print("Block");
     wrap([&] {
-      spdlog::debug("visiting children, {}", block.statements.size());
-      if (block.expr.has_value()){
-        visit(*block.expr.value());
-      }
       WalkVisitor::visit(block);
     });
   }

@@ -13,11 +13,11 @@ namespace TAST {
     I32
   > IntTy;
 
-  struct F8 {
+  struct F32 {
   };
 
   typedef std::variant<
-    F8
+    F32
   > FloatTy;
 
   struct StrTy{};
@@ -100,7 +100,7 @@ namespace TAST {
         },
         [](const FloatTy& floatTy) {
           return std::visit(overloaded {
-            [](const F8&) { return "F8"; }
+            [](const F32&) { return "F32"; }
           }, floatTy);
         },
         [](const StrTy&) { return "StrTy"; },

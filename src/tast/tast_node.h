@@ -14,7 +14,6 @@
 namespace TAST {
 struct Block;
 struct Stmt;
-struct Lit;
 struct Expr;
 }
 
