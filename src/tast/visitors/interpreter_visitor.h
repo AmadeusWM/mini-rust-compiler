@@ -5,8 +5,15 @@
 #include "nodes/type.h"
 #include "visitors/tast_visitor.h"
 #include <cstdint>
+#include <exception>
 #include <variant>
 namespace TAST {
+  class ReturnException : public std::exception {
+    public:
+      SymbolValue value;
+      ReturnException(SymbolValue value): value{value} {}
+  }
+
   class InterpeterException : public std::runtime_error {
   public:
       InterpeterException(const std::string& message)
@@ -110,10 +117,14 @@ namespace TAST {
     }
 
     SymbolValue visit(const Body& body) override{
-      return with_scope(body.id, [&]{
-        // todo: put the function arguments in the scope
-        return visit(*body.expr);
-      });
+      try {
+        return with_scope(body.id, [&]{
+          // todo: put the function arguments in the scope
+          return visit(*body.expr);
+        });
+      } catch (const ReturnException& e) {
+        return e.value;
+      }
     }
 
     SymbolValue visit(const Expr& expr) override {
