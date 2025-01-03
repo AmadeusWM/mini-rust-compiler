@@ -1,7 +1,6 @@
 fn main() {
     let x = 3;
-    let y = false;
-    while y {
+    while x < 100 {
         x = x + 4;
     }
 }

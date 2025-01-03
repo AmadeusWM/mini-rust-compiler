@@ -20,13 +20,10 @@ struct Pat {
 typedef std::variant<
   int8_t,
   int16_t,
-  int32_t
-> IntValue;
-
-typedef std::variant<
-  float, // f32
-  double // f64
-> FloatValue;
+  int32_t,
+  float,
+  double
+> NumberValue;
 
 typedef std::variant<
   std::string
@@ -37,8 +34,7 @@ struct UnitValue{};
 typedef std::variant<bool> BoolValue;
 
 typedef std::variant<
-  IntValue,
-  FloatValue,
+  NumberValue,
   StrValue,
   BoolValue,
   UnitValue
@@ -57,15 +53,10 @@ struct SymbolValue {
 
   std::string to_string() {
     return std::visit(overloaded{
-      [](const IntValue& intVal) -> std::string {
+      [](const NumberValue& numVal) -> std::string {
         return std::visit([](auto&& arg) -> std::string {
           return std::to_string(arg);
-        }, intVal);
-      },
-      [](const FloatValue& floatVal) -> std::string {
-        return std::visit([](auto&& arg) -> std::string {
-          return std::to_string(arg);
-        }, floatVal);
+        }, numVal);
       },
       [](const StrValue& strVal) -> std::string {
         return std::visit([](auto&& arg) -> std::string {

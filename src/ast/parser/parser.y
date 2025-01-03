@@ -184,6 +184,17 @@ binary:
 bin_op:
     PLUS { $$ = AST::Bin::Add{}; }
     | MIN { $$ = AST::Bin::Sub{}; }
+    | STAR { $$ = AST::Bin::Mul{}; }
+    | SLASH { $$ = AST::Bin::Div{}; }
+    | PERCENT { $$ = AST::Bin::Mod{}; }
+    | AND { $$ = AST::Bin::And{}; }
+    | OR { $$ = AST::Bin::Or{}; }
+    | EQ_EQ { $$ = AST::Bin::Eq{}; }
+    | NE { $$ = AST::Bin::Ne{}; }
+    | LT { $$ = AST::Bin::Lt{}; }
+    | LE { $$ = AST::Bin::Le{}; }
+    | GT { $$ = AST::Bin::Gt{}; }
+    | GE { $$ = AST::Bin::Ge{}; }
     ;
 
 

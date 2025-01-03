@@ -302,9 +302,11 @@ class LowerAstVisitor : public Visitor {
 
   P<TAST::Binary> resolve_binary(const Binary& binary) {
     return std::make_unique<TAST::Binary>(TAST::Binary {
+      .id = binary.id,
       .op = binary.op,
       .lhs = resolve_expr(*binary.lhs),
       .rhs = resolve_expr(*binary.rhs),
+      .ty = TAST::Ty{TAST::InferTy{}}
     });
   }
 

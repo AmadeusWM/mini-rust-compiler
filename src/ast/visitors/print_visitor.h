@@ -156,7 +156,18 @@ class PrintVisitor : public AST::Visitor {
           print(fmt::format("BinOp: {}",
             std::visit(overloaded {
               [](const Bin::Add) { return "Add"; },
-              [](const Bin::Sub) { return "Sub"; }
+              [](const Bin::Sub) { return "Sub"; },
+              [](const Bin::Mul) { return "Mul"; },
+              [](const Bin::Div) { return "Div"; },
+              [](const Bin::Mod) { return "Mod"; },
+              [](const Bin::And) { return "And"; },
+              [](const Bin::Or) { return "Or"; },
+              [](const Bin::Eq) { return "Eq"; },
+              [](const Bin::Ne) { return "Ne"; },
+              [](const Bin::Lt) { return "Lt"; },
+              [](const Bin::Le) { return "Le"; },
+              [](const Bin::Gt) { return "Gt"; },
+              [](const Bin::Ge) { return "Ge"; }
             }, binary->op))
           );
           visit(*binary->rhs);

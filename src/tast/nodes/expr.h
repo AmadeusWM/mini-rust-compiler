@@ -70,9 +70,11 @@ namespace TAST {
   };
 
   struct Binary {
+    NodeId id;
     AST::BinOp op;
     P<Expr> lhs;
     P<Expr> rhs;
+    Ty ty;
   };
 
   struct Call {

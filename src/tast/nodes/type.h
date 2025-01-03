@@ -92,6 +92,11 @@ namespace TAST {
       return std::holds_alternative<FloatTy>(kind)
         || (std::holds_alternative<InferTy>(kind) && std::holds_alternative<FloatVar>(std::get<InferTy>(kind)));
     }
+
+    bool isBool() {
+      return std::holds_alternative<BoolTy>(kind);
+    }
+
     std::string to_string() const {
       return std::visit(overloaded {
         [](const Unit&) { return "Unit"; },

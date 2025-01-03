@@ -216,8 +216,7 @@ class TypecheckVisitor : public MutWalkVisitor {
       },
       [&](P<Binary>& binary) {
         resolve_binary(*binary);
-        infer_ctx.eq(expr.id, binary->lhs->id);
-        infer_ctx.eq(expr.id, binary->rhs->id);
+        infer_ctx.eq(expr.id, binary->id);
       },
       [&](P<Call>& call) {
         visit(*call);
@@ -261,6 +260,127 @@ class TypecheckVisitor : public MutWalkVisitor {
   void resolve_binary(Binary& bin) {
     visit(*bin.lhs);
     visit(*bin.rhs);
+    // infer types
+    std::visit(overloaded {
+      [&](const AST::Bin::Add& add) {
+        infer_ctx.eq(bin.lhs->id, bin.rhs->id);
+        infer_ctx.add(bin.id, infer_ctx.getType(bin.lhs->id));
+      },
+      [&](const AST::Bin::Sub& sub) {
+        infer_ctx.eq(bin.lhs->id, bin.rhs->id);
+        infer_ctx.add(bin.id, infer_ctx.getType(bin.lhs->id));
+      },
+      [&](const AST::Bin::Mul& mul) {
+        infer_ctx.eq(bin.lhs->id, bin.rhs->id);
+        infer_ctx.add(bin.id, infer_ctx.getType(bin.lhs->id));
+      },
+      [&](const AST::Bin::Div& div) {
+        infer_ctx.eq(bin.lhs->id, bin.rhs->id);
+        infer_ctx.add(bin.id, infer_ctx.getType(bin.lhs->id));
+      },
+      [&](const AST::Bin::Mod& mod) {
+        infer_ctx.eq(bin.lhs->id, bin.rhs->id);
+        infer_ctx.add(bin.id, infer_ctx.getType(bin.lhs->id));
+      },
+      [&](const AST::Bin::And& and_op) {
+        infer_ctx.eq(bin.lhs->id, bin.rhs->id);
+        infer_ctx.add(bin.id, Ty{BoolTy{}});
+      },
+      [&](const AST::Bin::Or& or_op) {
+        infer_ctx.eq(bin.lhs->id, bin.rhs->id);
+        infer_ctx.add(bin.id, Ty{BoolTy{}});
+      },
+      [&](const AST::Bin::Eq& eq) {
+        infer_ctx.eq(bin.lhs->id, bin.rhs->id);
+        infer_ctx.add(bin.id, Ty{BoolTy{}});
+      },
+      [&](const AST::Bin::Ne& ne) {
+        infer_ctx.eq(bin.lhs->id, bin.rhs->id);
+        infer_ctx.add(bin.id, Ty{BoolTy{}});
+      },
+      [&](const AST::Bin::Lt& lt) {
+        infer_ctx.eq(bin.lhs->id, bin.rhs->id);
+        infer_ctx.add(bin.id, Ty{BoolTy{}});
+      },
+      [&](const AST::Bin::Le& le) {
+        infer_ctx.eq(bin.lhs->id, bin.rhs->id);
+        infer_ctx.add(bin.id, Ty{BoolTy{}});
+      },
+      [&](const AST::Bin::Gt& gt) {
+        infer_ctx.eq(bin.lhs->id, bin.rhs->id);
+        infer_ctx.add(bin.id, Ty{BoolTy{}});
+      },
+      [&](const AST::Bin::Ge& ge) {
+        infer_ctx.eq(bin.lhs->id, bin.rhs->id);
+        infer_ctx.add(bin.id, Ty{BoolTy{}});
+      }
+    }, bin.op);
+
+    Ty lhs_ty = infer_ctx.getType(bin.lhs->id);
+    Ty rhs_ty = infer_ctx.getType(bin.rhs->id);
+    Ty ty = lhs_ty.resolve(rhs_ty).value();
+
+    std::visit(overloaded {
+      [&](const AST::Bin::Add& add) {
+        if (!(ty.isInt() || ty.isFloat())) {
+          throw TypecheckException("Invalid types for operator +");
+        }
+      },
+      [&](const AST::Bin::Sub& sub) {
+        if (!(ty.isInt() || ty.isFloat())) {
+          throw TypecheckException("Invalid types for operator -");
+        }
+      },
+      [&](const AST::Bin::Mul& mul) {
+        if (!(ty.isInt() || ty.isFloat())) {
+          throw TypecheckException("Invalid types for operator *");
+        }
+      },
+      [&](const AST::Bin::Div& div) {
+        if (!(ty.isInt() || ty.isFloat())) {
+          throw TypecheckException("Invalid types for operator /");
+        }
+      },
+      [&](const AST::Bin::Mod& mod) {
+        if (!(ty.isInt() || ty.isFloat())) {
+          throw TypecheckException("Invalid types for operator %");
+        }
+      },
+      [&](const AST::Bin::And& and_op) {
+        if (!ty.isBool()) {
+          throw TypecheckException("Invalid types for operator &&");
+        }
+      },
+      [&](const AST::Bin::Or& or_op) {
+        if (!ty.isBool()) {
+          throw TypecheckException("Invalid types for operator ||");
+        }
+      },
+      [&](const AST::Bin::Eq& eq) {
+      },
+      [&](const AST::Bin::Ne& ne) {
+      },
+      [&](const AST::Bin::Lt& lt) {
+        if (!(ty.isInt() || ty.isFloat())) {
+          throw TypecheckException("Invalid types for operator <");
+        }
+      },
+      [&](const AST::Bin::Le& le) {
+        if (!(ty.isInt() || ty.isFloat())) {
+          throw TypecheckException("Invalid types for operator <=");
+        }
+      },
+      [&](const AST::Bin::Gt& gt) {
+        if (!(ty.isInt() || ty.isFloat())) {
+          throw TypecheckException("Invalid types for operator >");
+        }
+      },
+      [&](const AST::Bin::Ge& ge) {
+        if (!(ty.isInt() || ty.isFloat())) {
+          throw TypecheckException("Invalid types for operator >=");
+        }
+      }
+    }, bin.op);
   }
 
   Ty resolve_lit(Lit& lit) {

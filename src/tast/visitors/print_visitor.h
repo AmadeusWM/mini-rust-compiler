@@ -98,7 +98,18 @@ public:
           print(fmt::format("BinOp: {}",
             std::visit(overloaded {
               [](const AST::Bin::Add) { return "Add"; },
-              [](const AST::Bin::Sub) { return "Sub"; }
+              [](const AST::Bin::Sub) { return "Sub"; },
+              [](const AST::Bin::Mul) { return "Mul"; },
+              [](const AST::Bin::Div) { return "Div"; },
+              [](const AST::Bin::Mod) { return "Mod"; },
+              [](const AST::Bin::And) { return "And"; },
+              [](const AST::Bin::Or) { return "Or"; },
+              [](const AST::Bin::Eq) { return "Eq"; },
+              [](const AST::Bin::Ne) { return "Ne"; },
+              [](const AST::Bin::Lt) { return "Lt"; },
+              [](const AST::Bin::Le) { return "Le"; },
+              [](const AST::Bin::Gt) { return "Gt"; },
+              [](const AST::Bin::Ge) { return "Ge"; }
             }, binary->op))
           );
           visit(*binary->rhs);

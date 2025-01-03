@@ -50,22 +50,34 @@ namespace AST {
     struct Mul{};
     struct Div{};
     struct Mod{};
-    struct AndAnd{};
-    struct OrOr{};
-    struct EqEq{};
-    struct NotEq{};
-    struct Less{};
-    struct LessEq{};
-    struct Greater{};
-    struct GreaterEq{};
+    struct And{};
+    struct Or{};
+    struct Eq{};
+    struct Ne{};
+    struct Lt{};
+    struct Le{};
+    struct Gt{};
+    struct Ge{};
   }
 
   typedef std::variant<
     Bin::Add,
-    Bin::Sub
+    Bin::Sub,
+    Bin::Mul,
+    Bin::Div,
+    Bin::Mod,
+    Bin::And,
+    Bin::Or,
+    Bin::Eq,
+    Bin::Ne,
+    Bin::Lt,
+    Bin::Le,
+    Bin::Gt,
+    Bin::Ge
   > BinOp;
 
   struct Binary {
+    NodeId id;
     BinOp op;
     P<Expr> lhs;
     P<Expr> rhs;

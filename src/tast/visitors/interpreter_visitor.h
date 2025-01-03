@@ -226,18 +226,18 @@ namespace TAST {
             const auto& int_ty = std::get<IntTy>(lit.ty.kind);
             std::visit(overloaded {
               [&](const I8) {
-                return SymbolValue(IntValue(static_cast<int8_t>(i)));
+                return SymbolValue(NumberValue(static_cast<int8_t>(i)));
               },
               [&](const I32) {
-                return SymbolValue(IntValue(static_cast<int32_t>(i)));
+                return SymbolValue(NumberValue(static_cast<int32_t>(i)));
               },
             }, int_ty);
-            return SymbolValue(IntValue(i));
+            return SymbolValue(NumberValue(i));
           }
           else {
             throw InterpeterException("Type is not an integer");
           }
-          return SymbolValue(IntValue(i));
+          return SymbolValue(NumberValue(i));
         },
         [&](const bool& b) { return SymbolValue(BoolValue(b)); }
       }, lit.kind);
@@ -250,21 +250,83 @@ namespace TAST {
     SymbolValue visit(const Binary& binary) {
       auto lhs = visit(*binary.lhs);
       auto rhs = visit(*binary.rhs);
-      if (binary.lhs->ty.isInt()) {
-        auto l_int = std::get<IntValue>(lhs.kind);
-        auto r_int = std::get<IntValue>(rhs.kind);
-        return std::visit(overloaded {
-          [&](const auto& l, const auto &r){ return SymbolValue(IntValue(l + r)); }
-        }, l_int, r_int);
-      } else if (binary.lhs->ty.isFloat()) {
-        auto l_float = std::get<FloatValue>(lhs.kind);
-        auto r_float = std::get<FloatValue>(rhs.kind);
-        return std::visit(overloaded {
-          [&](const auto& l, const auto &r){ return SymbolValue(FloatValue(l + r)); }
-        }, l_float, r_float);
-      } else {
-        throw InterpeterException("Cannot add non-numeric types");
-      }
+      return std::visit(overloaded {
+        [&](const NumberValue& l, const NumberValue& r) {
+          return std::visit(overloaded {
+            [&](const auto& l_value, const auto& r_value) {
+              return std::visit(overloaded {
+                [&](const AST::Bin::Add& add) {
+                  return SymbolValue(NumberValue(l_value + r_value));
+                },
+                [&](const AST::Bin::Sub& sub) {
+                  return SymbolValue(NumberValue(l_value - r_value));
+                },
+                [&](const AST::Bin::Mul& mul) {
+                  return SymbolValue(NumberValue(l_value * r_value));
+                },
+                [&](const AST::Bin::Div& div) {
+                  return SymbolValue(NumberValue(l_value / r_value));
+                },
+                [&](const AST::Bin::Mod& mod) {
+                  return SymbolValue(NumberValue(l_value));
+                },
+                [&](const AST::Bin::And& and_op) {
+                  return SymbolValue(BoolValue(l_value && r_value));
+                },
+                [&](const AST::Bin::Or& or_op) {
+                  return SymbolValue(BoolValue(l_value || r_value));
+                },
+                [&](const AST::Bin::Eq& eq) {
+                  return SymbolValue(BoolValue(l_value == r_value));
+                },
+                [&](const AST::Bin::Ne& ne) {
+                  return SymbolValue(BoolValue(l_value != r_value));
+                },
+                [&](const AST::Bin::Lt& lt) {
+                  return SymbolValue(BoolValue(l_value < r_value));
+                },
+                [&](const AST::Bin::Le& le) {
+                  return SymbolValue(BoolValue(l_value <= r_value));
+                },
+                [&](const AST::Bin::Gt& gt) {
+                  return SymbolValue(BoolValue(l_value > r_value));
+                },
+                [&](const AST::Bin::Ge& ge) {
+                  return SymbolValue(BoolValue(l_value >= r_value));
+                }
+              }, binary.op);
+            }
+          }, l, r);
+        },
+        [&](const BoolValue& l, const BoolValue& r) {
+          return std::visit(overloaded {
+            [&](const auto& l_value, const auto& r_value) {
+              return std::visit(overloaded {
+                [&](const AST::Bin::And& and_op) {
+                  return SymbolValue(BoolValue(l_value && r_value));
+                },
+                [&](const AST::Bin::Or& or_op) {
+                  return SymbolValue(BoolValue(l_value || r_value));
+                },
+                [&](const AST::Bin::Eq& eq) {
+                  return SymbolValue(BoolValue(l_value == r_value));
+                },
+                [&](const AST::Bin::Ne& ne) {
+                  return SymbolValue(BoolValue(l_value != r_value));
+                },
+                [&](const auto& op) {
+                  throw InterpeterException("Operator is not implemented for bool");
+                  return SymbolValue{UnitValue{}};
+                }
+              }, binary.op);
+            }
+          }, l, r);
+        },
+        [&](const auto& l, const auto& r) {
+          throw InterpeterException("Type mismatch");
+          return SymbolValue{UnitValue{}};
+        }
+      }, lhs.kind, rhs.kind);
     }
 
     SymbolValue visit(const Block& block) override {
