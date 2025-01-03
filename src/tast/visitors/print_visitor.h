@@ -89,6 +89,7 @@ public:
         [this](const P<Ret>& ret) { visit(*ret); },
         [this](const P<Loop>& loop) { visit(*loop); },
         [this](const P<If>& ifExpr) { visit(*ifExpr); },
+        [this](const P<Assign>& assign) { visit(*assign); },
         [this](const Lit& lit) { visit(lit); },
         [this](const Break& breakExpr) { visit(breakExpr); },
         [this](const AST::Ident& ident) { print(fmt::format("Ident: {}", ident.identifier)); },
@@ -104,6 +105,14 @@ public:
         },
         [this](const P<Call>& call) { visit(*call); }
       }, expr.kind);
+    });
+  }
+
+  void visit(const Assign& assign) {
+    print("Assign", assign.id);
+    wrap([&] {
+      visit(assign.lhs);
+      visit(*assign.rhs);
     });
   }
 
@@ -157,9 +166,12 @@ public:
   void visit(const Pat& pat) {
     std::visit(overloaded {
       [&](const AST::Ident& ident) {
-        print(fmt::format("Ident: {}", ident.identifier));
+        visit(ident);
       }
     }, pat.kind);
+  }
+  void visit(const AST::Ident& ident) {
+    print(fmt::format("Ident: {}", ident.identifier));
   }
 };
 }

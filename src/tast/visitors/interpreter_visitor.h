@@ -7,6 +7,7 @@
 #include "visitors/tast_visitor.h"
 #include <cstdint>
 #include <exception>
+#include <functional>
 #include <variant>
 namespace TAST {
   class ReturnException : public std::exception {
@@ -50,10 +51,10 @@ namespace TAST {
       scopes.pop_back();
     }
 
-    Opt<SymbolValue> lookup(std::string iden) {
+    Opt<SymbolValue> lookup(std::string ident) {
       for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
         auto scope = *it;
-        auto binding = scope.bindings.find(iden);
+        auto binding = scope.bindings.find(ident);
         if (binding != scope.bindings.end()) {
           return SymbolValue(binding->second);
         }
@@ -61,10 +62,32 @@ namespace TAST {
       return Opt<SymbolValue>{};
     }
 
-    SymbolValue lookup_or_throw(std::string iden) {
-      auto id = lookup(iden);
+    Opt<SymbolValue*> lookup_ref(std::string ident) {
+      for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
+        auto& scope = *it;
+        auto binding = scope.bindings.find(ident);
+        if (binding != scope.bindings.end()) {
+          auto& value = binding->second;
+          return {&value};
+        }
+      }
+      return {};
+    }
+
+    SymbolValue* lookup_ref_or_throw(std::string ident) {
+      auto result = lookup_ref(ident);
+      if (!result.has_value()) {
+        throw InterpeterException(fmt::format("cannot find identifier \"{}\"", ident));
+      }
+      else {
+        return result.value();
+      }
+    }
+
+    SymbolValue lookup_or_throw(std::string ident) {
+      auto id = lookup(ident);
       if (!id.has_value()) {
-        throw InterpeterException(fmt::format("cannot find identifier \"{}\"", iden));
+        throw InterpeterException(fmt::format("cannot find identifier \"{}\"", ident));
       }
       return id.value();
     }
@@ -134,6 +157,7 @@ namespace TAST {
       auto result = std::visit(overloaded {
         [&](const P<Block>& block) { return visit(*block); },
         [&](const P<Ret>& ret) { return visit(*ret); },
+        [&](const P<Assign>& assign) { return visit(*assign); },
         [&](const Break& br) { return visit(br); },
         [&](const P<Loop>& loop) { return visit(*loop); },
         [&](const P<If>& ifExpr) { return visit(*ifExpr); },
@@ -144,6 +168,13 @@ namespace TAST {
       }, expr.kind);
       spdlog::debug("node {}: {}", expr.id, result.to_string());
       return result;
+    }
+
+    SymbolValue visit(const Assign& assign) override {
+      SymbolValue value = visit(*assign.rhs);
+      SymbolValue* ref = scopes.lookup_ref_or_throw(assign.lhs.identifier);
+      *ref = value;
+      return SymbolValue{UnitValue{}};
     }
 
     SymbolValue visit(const Break& br) {

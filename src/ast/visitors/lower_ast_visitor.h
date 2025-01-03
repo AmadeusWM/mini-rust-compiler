@@ -112,6 +112,9 @@ class LowerAstVisitor : public Visitor {
         [this](const Lit& lit) {
           return TAST::ExprKind{resolve_lit(lit)};
         },
+        [this](const P<Assign>& assign) {
+          return TAST::ExprKind{resolve_assign(*assign)};
+        },
         [this](const P<Ret>& ret) {
           return TAST::ExprKind{resolve_ret(*ret)};
         },
@@ -144,6 +147,13 @@ class LowerAstVisitor : public Visitor {
     });
   }
 
+  P<TAST::Assign> resolve_assign(const Assign& assign) {
+    return std::make_unique<TAST::Assign>(TAST::Assign {
+      .id = assign.id,
+      .lhs = assign.lhs,
+      .rhs = resolve_expr(*assign.rhs)
+    });
+  }
 
   P<TAST::If> resolve_if(const If& ifExpr) {
     return std::make_unique<TAST::If>(TAST::If {

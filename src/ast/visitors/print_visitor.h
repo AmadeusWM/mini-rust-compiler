@@ -101,7 +101,13 @@ class PrintVisitor : public AST::Visitor {
     wrap([&]() {
       std::visit(overloaded {
         [this](const P<Ret>& ret) {
+          print("Return", ret->id);
           visit(*ret->expr);
+        },
+        [this](const P<Assign>& assign) {
+          print("Assign", assign->id);
+          print(fmt::format("LHS: {}", assign->lhs.identifier));
+          visit(*assign->rhs);
         },
         [this](const Break& br) {
           print("Break", br.id);

@@ -273,6 +273,9 @@ class NameResolutionVisitor : public Visitor {
         [&](const P<Ret>& ret) {
           visit(*ret);
         },
+        [&](const P<Assign>& assign) {
+          visit(*assign);
+        },
         [&](const P<If>& ifExpr) {
           Visitor::visit(*ifExpr);
         },
@@ -299,6 +302,12 @@ class NameResolutionVisitor : public Visitor {
           visit(*call);
         }
     }, expr.kind);
+  }
+
+  void visit(const Assign& assign) override
+  {
+    auto res = lookup_ident_or_throw(assign.lhs.identifier);
+    visit(*assign.rhs);
   }
 
   void visit(const Call& call) override {

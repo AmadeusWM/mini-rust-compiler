@@ -99,6 +99,7 @@
 %type <AST::Break> break
 %type <Vec<P<AST::Expr>>> exprs
 %type <bool> bool
+%type <P<AST::Assign>> assign
 
 
 // custom
@@ -136,9 +137,9 @@ function_definition:
     ;
 
 function_signature:
-  L_PAREN params R_PAREN R_ARROW type { $$ = driver.rules->functionSignature(std::move($2), std::move($5)); }
-  | L_PAREN params R_PAREN { $$ = driver.rules->functionSignature(std::move($2), P<AST::Ty>(new AST::Ty{AST::Unit{}})); }
-  ;
+    L_PAREN params R_PAREN R_ARROW type { $$ = driver.rules->functionSignature(std::move($2), std::move($5)); }
+    | L_PAREN params R_PAREN { $$ = driver.rules->functionSignature(std::move($2), P<AST::Ty>(new AST::Ty{AST::Unit{}})); }
+    ;
 params:
     params COMMA param { $$ = driver.rules->addParam(std::move($1), std::move($3)); }
     | param { $$ = driver.rules->initParams(std::move($1)); }
@@ -217,6 +218,7 @@ expr_without_block:
     | call { $$ = driver.rules->expr(std::move($1)); }
     | ret { $$ = driver.rules->expr(std::move($1)); }
     | break { $$ = driver.rules->expr(std::move($1)); }
+    | assign { $$ = driver.rules->expr(std::move($1)); }
     ;
 
 expr_with_block:
@@ -226,6 +228,9 @@ expr_with_block:
     | loop_expr { $$ = driver.rules->expr(std::move($1)); }
     ;
 ;
+
+assign:
+    ident EQ expr { $$ = driver.rules->assign(std::move($1), std::move($3)); }
 
 break:
     KW_BREAK { $$ = driver.rules->breakExpr(); }

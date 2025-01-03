@@ -13,6 +13,7 @@ template <class T> class Visitor {
   virtual T visit(const Body& body) = 0;
   virtual T visit(const Block& block) = 0;
   virtual T visit(const If& ifExpr) = 0;
+  virtual T visit(const Assign& assign) = 0;
   virtual T visit(const Loop& loopExpr) = 0;
   virtual T visit(const Stmt& stmt) = 0;
   virtual T visit(const Let& let) = 0;
@@ -31,6 +32,7 @@ template <class T> class MutVisitor {
   virtual T visit(Body& body) = 0;
   virtual T visit(Block& block) = 0;
   virtual T visit(If& ifExpr) = 0;
+  virtual T visit(Assign& assign) = 0;
   virtual T visit(Loop& loopExpr) = 0;
   virtual T visit(Stmt& stmt) = 0;
   virtual T visit(Let& let) = 0;
@@ -74,6 +76,7 @@ class WalkVisitor : public Visitor<void> {
     std::visit(overloaded {
       [this](const P<Block>& block) { visit(*block); },
       [this](const P<If>& ifExpr) { visit(*ifExpr); },
+      [this](const P<Assign>& assign) { visit(*assign); },
       [this](const P<Loop>& loopExpr) { visit(*loopExpr); },
       [this](const P<Ret>& ret) { visit(*ret); },
       [this](const Lit& lit) { visit(lit); },
@@ -82,6 +85,10 @@ class WalkVisitor : public Visitor<void> {
       [this](const P<Binary>& binary) { visit(*binary->lhs); visit(*binary->rhs); },
       [this](const P<Call>& call) { visit(*call); },
     }, expr.kind);
+  }
+
+  void visit(const Assign& assign) override {
+    visit(*assign.rhs);
   }
 
   void visit(const If& ifExpr) override {
@@ -145,6 +152,7 @@ class MutWalkVisitor : public MutVisitor<void> {
       [this](P<Block>& block) { visit(*block); },
       [this](Break& breakExpr) { },
       [this](P<If>& ifExpr) { visit(*ifExpr); },
+      [this](P<Assign>& assign) { visit(*assign); },
       [this](P<Loop>& loopExpr) { visit(*loopExpr); },
       [this](P<Ret>& ret) { visit(*ret); },
       [this](Lit& lit) { visit(lit); },
@@ -152,6 +160,10 @@ class MutWalkVisitor : public MutVisitor<void> {
       [this](P<Binary>& binary) { visit(*binary->lhs); visit(*binary->rhs); },
       [this](P<Call>& call) { visit(*call); },
     }, expr.kind);
+  }
+
+  void visit(Assign& assign) override {
+    visit(*assign.rhs);
   }
 
   void visit(If& ifExpr) override {

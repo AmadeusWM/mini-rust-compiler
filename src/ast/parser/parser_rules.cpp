@@ -89,6 +89,14 @@ P<AST::Semi> ParserRules::semi(P<AST::Expr> $1) {
   });
 }
 
+P<AST::Assign> ParserRules::assign(AST::Ident $1, P<AST::Expr> $2) {
+  return P<AST::Assign>(new AST::Assign {
+    .id = driver.create_node(),
+    .lhs = $1,
+    .rhs = std::move($2)
+  });
+}
+
 P<AST::Let> ParserRules::let(P<AST::Pat> $1, P<AST::Ty> $2, AST::LocalKind $3) {
   return P<AST::Let>(new AST::Let {
       .id = driver.create_node(),

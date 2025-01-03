@@ -12,6 +12,7 @@ namespace AST {
   struct If;
   struct Loop;
   struct While;
+  struct Assign;
 
   typedef std::variant<
     Lit,
@@ -23,8 +24,15 @@ namespace AST {
     P<Block>,
     P<Binary>,
     P<Ret>,
+    P<Assign>,
     P<Call>
   > ExprKind;
+
+  struct Assign {
+    NodeId id;
+    Ident lhs;
+    P<Expr> rhs;
+  };
 
   struct Ret {
     NodeId id;
@@ -39,6 +47,17 @@ namespace AST {
   namespace Bin {
     struct Add{};
     struct Sub{};
+    struct Mul{};
+    struct Div{};
+    struct Mod{};
+    struct AndAnd{};
+    struct OrOr{};
+    struct EqEq{};
+    struct NotEq{};
+    struct Less{};
+    struct LessEq{};
+    struct Greater{};
+    struct GreaterEq{};
   }
 
   typedef std::variant<

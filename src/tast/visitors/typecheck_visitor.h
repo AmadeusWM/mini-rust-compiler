@@ -187,6 +187,11 @@ class TypecheckVisitor : public MutWalkVisitor {
         // TODO: also equal to function body's type?
         infer_ctx.eq(expr.id, ret->id);
       },
+      [&](P<Assign>& assign) {
+        visit(*assign);
+        // TODO: also equal to function body's type?
+        infer_ctx.add(expr.id, {InferTy{TyVar{}}});
+      },
       [&](Break& ret) {
         infer_ctx.add(expr.id, {InferTy{TyVar{}}});
       },
@@ -219,6 +224,12 @@ class TypecheckVisitor : public MutWalkVisitor {
         infer_ctx.eq(expr.id, call->id);
       },
     }, expr.kind);
+  }
+
+  void visit(Assign& assign) override {
+    visit(*assign.rhs);
+    Binding binding = scopes.lookup_or_throw(assign.lhs.identifier);
+    infer_ctx.eq(binding.id, assign.rhs->id);
   }
 
   void visit(Loop& loop) override {

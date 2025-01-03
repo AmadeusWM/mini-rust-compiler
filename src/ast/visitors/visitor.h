@@ -79,6 +79,7 @@ namespace AST {
           [this](const P<While>& whileExpr) { visit(*whileExpr); },
           [this](const P<Loop>& loopExpr) { visit(*loopExpr); },
           [this](const P<Block>& block) { visit(*block); },
+          [this](const P<Assign>& assign) { visit(*assign); },
           [this](const Path& path) { },
           [this](const P<Binary>& binary) {
             visit(*binary->lhs);
@@ -86,6 +87,10 @@ namespace AST {
           },
           [this](const P<Call>& call) { visit(*call); }
       }, expr.kind);
+    }
+
+    virtual void visit(const Assign& assign) {
+      visit(*assign.rhs);
     }
 
     virtual void visit(const Loop& loopExpr) {

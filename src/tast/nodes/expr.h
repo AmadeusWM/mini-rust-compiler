@@ -11,6 +11,7 @@ namespace TAST {
   struct Break;
   struct If;
   struct Loop;
+  struct Assign;
 
   struct Lit {
     NodeId id;
@@ -31,6 +32,7 @@ namespace TAST {
     P<Ret>,
     P<Block>,
     P<Binary>,
+    P<Assign>,
     P<Call>
   > ExprKind;
 
@@ -47,6 +49,12 @@ namespace TAST {
     NodeId id;
     ExprKind kind;
     Ty ty;
+  };
+
+  struct Assign {
+    NodeId id;
+    AST::Ident lhs;
+    P<Expr> rhs;
   };
 
   struct If {
