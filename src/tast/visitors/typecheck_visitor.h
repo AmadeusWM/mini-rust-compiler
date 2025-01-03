@@ -81,13 +81,11 @@ class TypecheckVisitor : public MutWalkVisitor {
 
   void with_scope(NodeId id, std::function<void()> body)
   {
-    spdlog::debug("entering scope: {}", id);
     TypeScope scope = {
       .id = id,
     };
     scopes.push(scope);
     body();
-    spdlog::debug("exiting scope: {}", id);
     scopes.pop(scope);
   }
 
@@ -189,7 +187,9 @@ class TypecheckVisitor : public MutWalkVisitor {
         // TODO: also equal to function body's type?
         infer_ctx.eq(expr.id, ret->id);
       },
-      [&](Break& ret) { },
+      [&](Break& ret) {
+        infer_ctx.add(expr.id, {InferTy{TyVar{}}});
+      },
       [&](P<Loop>& loop){
         visit(*loop);
         infer_ctx.eq(expr.id, loop->block->id);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "nodes/core.h"
 #include "util.h"
 #include "visitors/tast_visitor.h"
 #include <variant>
@@ -8,17 +9,22 @@ class PrintVisitor : public WalkVisitor {
 private:
   int indent = 0;
 
-  void print(std::string str)
+  void print(std::string str, Opt<NodeId> id = std::nullopt)
   {
     std::string ind = "";
     for (int i = 0; i < indent; i++) {
       ind += "  ";
     }
-    spdlog::debug("{}|-{}", ind, str);
+    if (id.has_value()) {
+      spdlog::debug("{}|-{} ({})", ind, str, id.value());
+    }
+    else {
+      spdlog::debug("{}|-{}", ind, str);
+    }
   }
 
-  void print(std::string str, Ty ty) {
-    print(str + " -> " + ty.to_string());
+  void print(std::string str, Ty ty, Opt<NodeId> id = std::nullopt) {
+    print(str + " -> " + ty.to_string(), id);
   }
 
   void wrap(std::function<void()> func)
@@ -50,33 +56,33 @@ public:
   }
 
   void visit(const Param& param) {
-    print(fmt::format("Param: {}", param.ty.to_string()));
+    print(fmt::format("Param: {}", param.ty.to_string()), param.id);
     wrap([&] {
       visit(*param.pat);
     });
   }
 
   void visit(const Block& block) {
-    print("Block");
+    print("Block", block.id);
     wrap([&] {
       WalkVisitor::visit(block);
     });
   }
   void visit(const Stmt& stmt) {
-    print("Stmt");
+    print("Stmt", stmt.id);
     wrap([&] {
       WalkVisitor::visit(stmt);
     });
   }
   void visit(const Let& let) {
-    print(fmt::format("Let: {}", let.ty.to_string()));
+    print(fmt::format("Let: {}", let.ty.to_string()), let.id);
     wrap([&] {
       visit(*let.pat);
       WalkVisitor::visit(let);
     });
   }
   void visit(const Expr& expr) {
-    print("Expr", expr.ty);
+    print("Expr", expr.ty, expr.id);
     wrap([&] {
       std::visit(overloaded {
         [this](const P<Block>& block) { visit(*block); },
@@ -102,7 +108,7 @@ public:
   }
 
   void visit(const If& ifExpr) {
-    print("If");
+    print("If", ifExpr.id);
     wrap([&] {
       visit(*ifExpr.cond);
       visit(*ifExpr.then_block);
@@ -113,18 +119,18 @@ public:
   }
 
   void visit(const Loop& loopExpr) {
-    print("Loop");
+    print("Loop", loopExpr.id);
     wrap([&] {
       visit(*loopExpr.block);
     });
   }
 
   void visit(const Break& breakExpr) {
-    print("Break");
+    print("Break", breakExpr.id);
   }
 
   void visit(const Ret& ret) {
-    print("Ret");
+    print("Ret", ret.id);
     wrap([&] {
       visit(*ret.expr);
     });
@@ -133,13 +139,13 @@ public:
   void visit(const Lit& lit) {
     std::visit(overloaded {
       [&](const auto& v) {
-        print(fmt::format("Lit: {} ({})", v, lit.ty.to_string()));
+        print(fmt::format("Lit: {} ({})", v, lit.ty.to_string()), lit.id);
       }
     }, lit.kind);
   }
 
   void visit(const Call& call) {
-    print("Call");
+    print("Call", call.id);
     wrap([&] {
       print(fmt::format("Callee: {}", call.callee));
       for (const auto& arg : call.params) {

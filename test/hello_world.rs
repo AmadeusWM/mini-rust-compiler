@@ -1,6 +1,6 @@
 fn main() {
     let x = 3;
-    let y = true;
+    let y = false;
     while y {
         let z = 4 + x;
     }
