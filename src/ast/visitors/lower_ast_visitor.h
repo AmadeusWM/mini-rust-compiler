@@ -1,9 +1,11 @@
 #pragma once
 
+#include "ast_driver.h"
 #include "namespace_tree.h"
 #include "nodes/body.h"
 #include "nodes/core.h"
 #include "nodes/expr.h"
+#include "nodes/item.h"
 #include "nodes/stmt.h"
 #include "nodes/type.h"
 #include "visitors/visitor.h"
@@ -26,10 +28,12 @@ class LowerAstVisitor : public Visitor {
     mod_ns.path.pop_back();
   }
 
+  ASTDriver& driver; // we need the driver to create new nodes
+
   public:
   P<TAST::Crate> crate = P<TAST::Crate>{new TAST::Crate{}};
 
-  LowerAstVisitor(NamespaceNode namespace_tree) : namespace_tree(namespace_tree) {}
+  LowerAstVisitor(NamespaceNode namespace_tree, ASTDriver& driver) : namespace_tree(namespace_tree), driver(driver) {}
 
   void visit(const Crate& crate) override {
     for (const auto& item : crate.items) {
@@ -45,16 +49,30 @@ class LowerAstVisitor : public Visitor {
             item.id,
             std::make_unique<TAST::Body>( TAST::Body {
               .id = item.id,
+              .params = resolve_params(fn->signature->inputs),
               .expr = P<TAST::Expr>(new TAST::Expr {
                 .id = fn->id,
                 .kind = TAST::ExprKind {this->resolve_block(*fn->body)},
                 .ty = {TAST::InferTy{}}
               }),
+              .ty = this->resolve_ty(*fn->signature->output),
               .ns = this->namespace_tree.find_namespace(item.id).value()
             })
           });
         }
       }, item.kind);
+  }
+
+  Vec<P<TAST::Param>> resolve_params(const Vec<P<Param>>& params) {
+    Vec<P<TAST::Param>> tast_params{};
+    std::transform(params.begin(), params.end(), std::back_inserter(tast_params), [&](const auto& param) {
+      return std::make_unique<TAST::Param>(TAST::Param {
+        .id = param->id,
+        .pat = resolve_pat(*param->pat),
+        .ty = this->resolve_ty(*param->ty)
+      });
+    });
+    return tast_params;
   }
 
   P<TAST::Block> resolve_block(const Block& block) {
@@ -97,6 +115,18 @@ class LowerAstVisitor : public Visitor {
         [this](const P<Ret>& ret) {
           return TAST::ExprKind{resolve_ret(*ret)};
         },
+        [this](const Break& br) {
+          return TAST::ExprKind{TAST::Break{br.id}};
+        },
+        [this](const P<If> ifExpr) {
+          return TAST::ExprKind{resolve_if(*ifExpr)};
+        },
+        [this](const P<Loop> loopExpr) {
+          return TAST::ExprKind{resolve_loop(*loopExpr)};
+        },
+        [this](const P<While> whileExpr) {
+          return TAST::ExprKind{resolve_while(*whileExpr)};
+        },
         [this](const P<Block>& block) {
           return TAST::ExprKind{resolve_block(*block)};
         },
@@ -111,6 +141,76 @@ class LowerAstVisitor : public Visitor {
         }
       }, expr.kind),
       .ty = TAST::Ty {TAST::InferTy{ TAST::TyVar{} }}
+    });
+  }
+
+
+  P<TAST::If> resolve_if(const If& ifExpr) {
+    return std::make_unique<TAST::If>(TAST::If {
+      .id = ifExpr.id,
+      .cond = resolve_expr(*ifExpr.cond),
+      .then_block = resolve_block(*ifExpr.then_block),
+      .else_block = (ifExpr.else_block.has_value() ? std::optional{resolve_expr(*ifExpr.else_block.value())} : std::nullopt)
+    });
+  }
+
+  P<TAST::Loop> resolve_loop(const Loop& loopExpr) {
+    return std::make_unique<TAST::Loop>(TAST::Loop {
+      .id = loopExpr.id,
+      .block = resolve_block(*loopExpr.block)
+    });
+  }
+
+  P<TAST::Loop> resolve_while(const While& whileExpr) {
+    auto block = resolve_block(*whileExpr.block);
+    block->statements.insert(
+      block->statements.begin(),
+      create_if_cond_break(resolve_expr(*whileExpr.cond))
+    );
+    return std::make_unique<TAST::Loop>(TAST::Loop {
+      .id = whileExpr.id,
+      .block = std::move(block)
+    });
+  }
+
+  P<TAST::Stmt> create_if_cond_break(P<TAST::Expr> cond) {
+    return std::make_unique<TAST::Stmt>(TAST::Stmt {
+      .id = driver.create_node(),
+      .kind = TAST::StmtKind {
+        std::make_unique<TAST::Expr>(TAST::Expr {
+          .id = driver.create_node(),
+          .kind = TAST::ExprKind {
+            std::make_unique<TAST::If>(TAST::If {
+              .id = driver.create_node(),
+              .cond = std::move(cond),
+              .then_block = std::make_unique<TAST::Block>(TAST::Block {
+                .id = driver.create_node(),
+                .statements = std::vector<P<TAST::Stmt>>{std::move(create_break_stmt())},
+                .expr = std::nullopt
+              }),
+              .else_block = std::nullopt
+            })
+          },
+          .ty = TAST::Ty {TAST::InferTy{ TAST::TyVar{} }}
+        })
+      }
+    });
+  }
+
+  P<TAST::Stmt> create_break_stmt() {
+    return std::make_unique<TAST::Stmt>(TAST::Stmt {
+      .id = driver.create_node(),
+      .kind = TAST::StmtKind {
+        std::make_unique<TAST::Expr>(TAST::Expr {
+          .id = driver.create_node(),
+          .kind = TAST::ExprKind {
+            TAST::Break {
+              .id = driver.create_node()
+            }
+          },
+          .ty = TAST::Ty {TAST::InferTy{ TAST::TyVar{} }}
+        })
+      }
     });
   }
 
@@ -140,9 +240,7 @@ class LowerAstVisitor : public Visitor {
   P<TAST::Let> resolve_let(const Let& let) {
     return std::make_unique<TAST::Let>(TAST::Let {
       .id = let.id,
-      .pat = std::make_unique<TAST::Pat>(std::visit(overloaded {
-        [](const Ident& ident) { return TAST::Pat{.kind = TAST::PatKind{ident}}; }
-      }, let.pat->kind)),
+      .pat = resolve_pat(*let.pat),
       .ty = resolve_ty(*let.ty),
       .initializer = std::visit(
         overloaded {
@@ -150,6 +248,12 @@ class LowerAstVisitor : public Visitor {
           [this](const P<Expr>& expr) { return Opt<P<TAST::Expr>> { resolve_expr(*expr) }; }
         }, let.kind)
     });
+  }
+
+  P<TAST::Pat> resolve_pat(const AST::Pat pat) {
+    return std::make_unique<TAST::Pat>(std::visit(overloaded {
+      [](const Ident& ident) { return TAST::Pat{.kind = TAST::PatKind{ident}}; }
+    }, pat.kind));
   }
 
   TAST::Ty resolve_ty(const Ty& ty) {
@@ -162,7 +266,8 @@ class LowerAstVisitor : public Visitor {
             [&](const Primitive::I8& i8){ return TAST::Ty{ TAST::IntTy{TAST::I8{}}}; },
             [&](const Primitive::I32& i32){ return TAST::Ty{ TAST::IntTy{TAST::I32{}}}; },
             [&](const Primitive::F32& f32){ return TAST::Ty{ TAST::FloatTy{TAST::F32{}}}; },
-            [&](const Primitive::Str& str){ return TAST::Ty{ TAST::StrTy{}}; }
+            [&](const Primitive::Str& str){ return TAST::Ty{ TAST::StrTy{}}; },
+            [&](const Primitive::Bool& b) { return TAST::Ty{ TAST::BoolTy{}}; },
           }, primitive.kind);
         }
         else {
@@ -192,13 +297,17 @@ class LowerAstVisitor : public Visitor {
 
   P<TAST::Call> resolve_call(const Call& call) {
     Namespace call_ns = Namespace{call.path.to_vec()};
-    spdlog::debug("looking up {}", call_ns.to_string());
     auto callee = namespace_tree.get(mod_ns, call_ns);
-    spdlog::debug("Callee: {}", std::get<NodeId>(callee.value()));
     return std::make_unique<TAST::Call>( TAST::Call {
       .id = call.id,
       .callee = std::get<NodeId>(callee.value()),
-      .params = std::vector<P<TAST::Expr>>{}
+      .params = [&] {
+        Vec<P<TAST::Expr>> transformed_params;
+        std::transform(call.params.begin(), call.params.end(), std::back_inserter(transformed_params), [&](const auto& param) {
+          return resolve_expr(*param);
+        });
+        return transformed_params;
+      }()
     });
   }
 };

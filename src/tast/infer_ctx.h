@@ -65,8 +65,15 @@ public:
       return;
     }
 
-    auto type1 = rankTypes.at(rank1);
-    auto type2 = rankTypes.at(rank2);
+    auto type1_it = rankTypes.find(rank1);
+    auto type2_it = rankTypes.find(rank2);
+
+    if (type1_it == rankTypes.end() || type2_it == rankTypes.end()) {
+      throw std::runtime_error(fmt::format("Both ranks {} and {} are not in the context", rank1, rank2));
+    }
+    auto type1 = type1_it->second;
+    auto type2 = type2_it->second;
+
     auto resolved = type1.resolve(type2);
     if (!resolved.has_value()) {
       throw std::runtime_error(fmt::format("Type mismatch between {} and {}", type1.to_string(), type2.to_string()));
@@ -81,8 +88,15 @@ public:
   }
 
   Ty getType(NodeId id) const {
-    auto rank = nodesToRank.at(id);
-    return rankTypes.at(rank);
+    auto rank = nodesToRank.find(id);
+    if (rank == nodesToRank.end()) {
+      throw std::runtime_error(fmt::format("Node {} is not in the context", id));
+    }
+    auto ty = rankTypes.find(rank->second);
+    if (ty == rankTypes.end()) {
+      throw std::runtime_error(fmt::format("Rank {} is not in the context", rank->second));
+    }
+    return ty->second;
   }
 };
 }

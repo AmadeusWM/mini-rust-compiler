@@ -32,6 +32,7 @@ namespace AST {
   };
 
   struct FnSig {
+    NodeId id;
     std::vector<P<Param>> inputs;
     P<Ty> output;
   };
@@ -39,6 +40,7 @@ namespace AST {
   struct FnDef {
     NodeId id;
     Ident ident;
+    P<FnSig> signature;
     P<AST::Block> body;
   };
 }

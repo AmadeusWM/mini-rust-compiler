@@ -2,6 +2,7 @@
 
 #include "nodes/body.h"
 #include "nodes/core.h"
+#include "nodes/expr.h"
 #include "nodes/type.h"
 #include "visitors/tast_visitor.h"
 #include <cstdint>
@@ -12,6 +13,11 @@ namespace TAST {
     public:
       SymbolValue value;
       ReturnException(SymbolValue value): value{value} {}
+  };
+
+  class BreakException : public std::exception {
+    public:
+      BreakException() {}
   };
 
   class InterpeterException : public std::runtime_error {
@@ -47,7 +53,9 @@ namespace TAST {
     Opt<SymbolValue> lookup(std::string iden) {
       for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
         auto scope = *it;
+        spdlog::debug("binding before");
         auto binding = scope.bindings.find(iden);
+        spdlog::debug("binding after");
         if (binding != scope.bindings.end()) {
           return SymbolValue(binding->second);
         }
@@ -73,19 +81,19 @@ namespace TAST {
 
   class InterpreterVisitor : public Visitor<SymbolValue> {
     private:
-      Scopes scopes;
-      SymbolValue with_scope(NodeId id, std::function<SymbolValue()> body)
-      {
-        spdlog::debug("entering scope: {}", id);
-        Scope scope = {
-          .id = id,
-        };
-        scopes.push(scope);
-        SymbolValue result = body();
-        spdlog::debug("exiting scope: {}", id);
-        scopes.pop(scope);
-        return result;
-      }
+    Scopes scopes;
+    SymbolValue with_scope(NodeId id, std::function<SymbolValue()> body)
+    {
+      spdlog::debug("entering scope: {}", id);
+      Scope scope = {
+        .id = id,
+      };
+      scopes.push(scope);
+      SymbolValue result = body();
+      spdlog::debug("exiting scope: {}", id);
+      scopes.pop(scope);
+      return result;
+    }
 
     const Crate& crate;
     public:
@@ -119,7 +127,6 @@ namespace TAST {
     SymbolValue visit(const Body& body) override{
       try {
         return with_scope(body.id, [&]{
-          // todo: put the function arguments in the scope
           return visit(*body.expr);
         });
       } catch (const ReturnException& e) {
@@ -131,6 +138,8 @@ namespace TAST {
       auto result = std::visit(overloaded {
         [&](const P<Block>& block) { return visit(*block); },
         [&](const P<Ret>& ret) { return visit(*ret); },
+        [&](const Break& br) { return visit(br); },
+        [&](const P<Loop>& loop) { return visit(*loop); },
         [&](const Lit& lit) { return visit(lit); },
         [&](const AST::Ident& ident) { return visit(ident); },
         [&](const P<Binary>& binary) { return visit(*binary); },
@@ -138,6 +147,24 @@ namespace TAST {
       }, expr.kind);
       spdlog::debug("node {}: {}", expr.id, result.to_string());
       return result;
+    }
+
+    SymbolValue visit(const Break& br) {
+      throw BreakException();
+    }
+
+    SymbolValue visit(const Loop& loop) {
+      while (true) {
+        try {
+          visit(*loop.block);
+        } catch (const BreakException& e) {
+          break;
+        }
+      }
+      return {UnitValue{}};
+    }
+
+    SymbolValue visit(const If& ifExpr) {
     }
 
     SymbolValue visit(const Ret& ret) override {
@@ -174,7 +201,8 @@ namespace TAST {
             throw InterpeterException("Type is not an integer");
           }
           return SymbolValue(IntValue(i));
-        }
+        },
+        [&](const bool& b) { return SymbolValue(BoolValue(b)); }
       }, lit.kind);
     }
 
@@ -241,7 +269,20 @@ namespace TAST {
       if (body_it == crate.bodies.end()) {
         throw InterpeterException(fmt::format("No function with id {}", call.callee));
       }
-      return visit(*body_it->second);
+      const auto& body = *body_it->second;
+      return with_scope(call.id, [&]{
+        // todo: put the function arguments in the scope
+        for (int i = 0; i < call.params.size(); i++) {
+          const auto& call_param = call.params[i];
+          const auto& callee_param = body.params[i];
+          std::visit(overloaded {
+           [&](const AST::Ident& ident)  {
+              scopes.insert_binding(ident.identifier, visit(*call_param));
+           }
+          }, callee_param->pat->kind);
+        }
+        return visit(body);
+      });
     }
   };
 }

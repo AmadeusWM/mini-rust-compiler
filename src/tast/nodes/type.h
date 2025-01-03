@@ -21,6 +21,7 @@ namespace TAST {
   > FloatTy;
 
   struct StrTy{};
+  struct BoolTy{};
   struct FnDefTy{};
 
   struct TyVar{};
@@ -40,6 +41,7 @@ namespace TAST {
     IntTy,
     FloatTy,
     StrTy,
+    BoolTy,
     FnDefTy,
     InferTy
   > TyKind;

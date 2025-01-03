@@ -66,6 +66,7 @@
 %token <std::string> IDENTIFIER
 %token <std::string> STRING_LITERAL
 %token <int> INTEGER_LITERAL
+%token <boolean> BOOLEAN_LITERAL
 
 %type <int> crate
 %type <P<AST::Crate>> items
@@ -92,6 +93,7 @@
 %type <P<AST::Ty>> type
 %type <P<AST::Ty>> local_type
 %type <P<AST::Call>> call
+%type <Vec<P<AST::Expr>>> exprs
 
 
 // custom
@@ -192,6 +194,11 @@ local_type:
     COLON type { $$ = std::move($2); }
     | { $$ = driver.rules->ty(AST::TyKind(AST::Infer {})); }
 
+exprs:
+    exprs COMMA expr { $$ = driver.rules->addExpr(std::move($1), std::move($3)); }
+    | expr { $$ = driver.rules->initExprs(std::move($1)); }
+    | { $$ = driver.rules->initExprs(); }
+    ;
 
 expr:
     expr_without_block { $$ = std::move($1); }
@@ -204,15 +211,35 @@ expr_without_block:
     | path { $$ = driver.rules->expr(std::move($1)); }
     | call { $$ = driver.rules->expr(std::move($1)); }
     | ret { $$ = driver.rules->expr(std::move($1)); }
+    | break { $$ = driver.rules->expr(std::move($1)); }
     ;
 
 expr_with_block:
     block { $$ = driver.rules->expr(std::move($1)); }
+    | if_expr { $$ = driver.rules->expr(std::move($1)); }
+    | while_expr { $$ = driver.rules->expr(std::move($1)); }
+    | loop_expr { $$ = driver.rules->expr(std::move($1)); }
     ;
 ;
 
+break: KW_BREAK { $$ = driver.rules->breakExpr(); }
+
+if_expr:
+    IF expr block { $$ = driver.rules->ifExpr(std::move($2), std::move($3), std::nullopt); }
+    IF expr block ELSE block { $$ = driver.rules->ifExpr(std::move($2), std::move($3), std::move($5)); }
+    IF expr block ELSE if_expr { $$ = driver.rules->ifExpr(std::move($2), std::move($3), std::move($5)); }
+    ;
+
+while_expr:
+    KW_WHILE expr block { $$ = driver.rules->whileExpr(std::move($2), std::move($3)); }
+    ;
+
+loop_expr:
+    KW_LOOP block { $$ = driver.rules->loopExpr(std::move($2)); }
+    ;
+
 call:
-    path L_PAREN R_PAREN { $$ = driver.rules->call(std::move($1), std::vector<P<AST::Expr>>{}); }
+    path L_PAREN exprs R_PAREN { $$ = driver.rules->call(std::move($1), std::move($3)); }
     ;
 
 pat:
@@ -228,6 +255,7 @@ path:
 
 literal:
     INTEGER_LITERAL { $$ = driver.rules->lit($1); }
+    BOOLEAN_LITERAL { $$ = driver.rules->lit($1); }
     ;
 
 %%

@@ -42,9 +42,20 @@ public:
   void visit(const Body& body) {
     print("Body");
     wrap([&] {
+      for (const auto& param : body.params) {
+        visit(*param);
+      }
       visit(*body.expr);
     });
   }
+
+  void visit(const Param& param) {
+    print(fmt::format("Param: {}", param.ty.to_string()));
+    wrap([&] {
+      visit(*param.pat);
+    });
+  }
+
   void visit(const Block& block) {
     print("Block");
     wrap([&] {
@@ -71,6 +82,7 @@ public:
         [this](const P<Block>& block) { visit(*block); },
         [this](const P<Ret>& ret) { visit(*ret); },
         [this](const Lit& lit) { visit(lit); },
+        [this](const Break& breakExpr) { visit(breakExpr); },
         [this](const AST::Ident& ident) { print(fmt::format("Ident: {}", ident.identifier)); },
         [this](const P<Binary>& binary) {
           visit(*binary->lhs);
@@ -87,6 +99,28 @@ public:
     });
   }
 
+  void visit(const If& ifExpr) {
+    print("If");
+    wrap([&] {
+      visit(*ifExpr.cond);
+      visit(*ifExpr.then_block);
+      if (ifExpr.else_block.has_value()) {
+        visit(*ifExpr.else_block.value());
+      }
+    });
+  }
+
+  void visit(const Loop& loopExpr) {
+    print("Loop");
+    wrap([&] {
+      visit(*loopExpr.block);
+    });
+  }
+
+  void visit(const Break& breakExpr) {
+    print("Break");
+  }
+
   void visit(const Ret& ret) {
     print("Ret");
     wrap([&] {
@@ -97,7 +131,7 @@ public:
   void visit(const Lit& lit) {
     std::visit(overloaded {
       [&](const auto& v) {
-        print("Lit: " + fmt::format("{}", v));
+        print(fmt::format("Lit: {} ({})", v, lit.ty.to_string()));
       }
     }, lit.kind);
   }

@@ -20,6 +20,15 @@ namespace AST {
 
     virtual void visit(const FnDef& node) { visit(*node.body); }
 
+    virtual void visit(const FnSig& sig) {
+      for (const auto& param : sig.inputs) {
+        visit(*param);
+      }
+    }
+
+    virtual void visit(const Param& param) {
+    }
+
     virtual void visit(const Block& node)
     {
       for (const auto& child : node.statements) {
@@ -64,7 +73,11 @@ namespace AST {
       std::visit(
         overloaded {
           [this](const Lit& lit) { visit(lit); },
+          [this](const Break& lit) { },
           [this](const P<Ret>& ret) { visit(*ret); },
+          [this](const P<If>& ifExpr) { visit(*ifExpr); },
+          [this](const P<While>& whileExpr) { visit(*whileExpr); },
+          [this](const P<Loop>& loopExpr) { visit(*loopExpr); },
           [this](const P<Block>& block) { visit(*block); },
           [this](const Path& path) { },
           [this](const P<Binary>& binary) {
@@ -73,6 +86,10 @@ namespace AST {
           },
           [this](const P<Call>& call) { visit(*call); }
       }, expr.kind);
+    }
+
+    virtual void visit(const Loop& loopExpr) {
+      visit(*loopExpr.block);
     }
 
     virtual void visit(const Call& call) {
@@ -87,6 +104,19 @@ namespace AST {
             [this](const int i) {},
             [this](const std::string& s) {}
         }, lit.kind);
+    }
+
+    virtual void visit(const If& ifExpr) {
+      visit(*ifExpr.cond);
+      visit(*ifExpr.then_block);
+      if (ifExpr.else_block.has_value()){
+        visit(*ifExpr.else_block.value());
+      }
+    }
+
+    virtual void visit(const While& whileExpr) {
+      visit(*whileExpr.cond);
+      visit(*whileExpr.block);
     }
   };
 }

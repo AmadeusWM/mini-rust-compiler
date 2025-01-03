@@ -35,6 +35,7 @@ class NamespaceTreeBuilder : public AST::Visitor {
     namespace_tree.set(Namespace{{"i8"}}, PrimitiveType{Primitive::I8{}});
     namespace_tree.set(Namespace{{"i32"}}, PrimitiveType{Primitive::I32{}});
     namespace_tree.set(Namespace{{"f32"}}, PrimitiveType{Primitive::F32{}});
+    namespace_tree.set(Namespace{{"bool"}}, PrimitiveType{Primitive::Bool{}});
   }
 
   void visit(const Item& item) override {

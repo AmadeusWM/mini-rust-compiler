@@ -6,6 +6,7 @@
 #include "util.h"
 #include "visitor.h"
 #include <fmt/core.h>
+#include <fmt/format.h>
 #include <string>
 #include <variant>
 
@@ -51,9 +52,36 @@ class PrintVisitor : public AST::Visitor {
       std::visit(
           overloaded { [this](const P<FnDef>& fn) {
             print("FnDef: " + fn->ident.identifier, fn->id);
+            visit(*fn->signature);
+
             wrap([this, &fn]() { visit(*(fn.get()->body)); });
           }
       }, item.kind);
+    });
+  }
+
+  void visit(const FnSig& sig) override {
+    print("Signature", sig.id);
+    wrap([&] {
+      for (const auto& param : sig.inputs) {
+        visit(*param);
+      }
+    });
+  }
+
+  void visit(const Param& param) override {
+    print("Param", param.id);
+    wrap([&] {
+      visit(*param.pat);
+    });
+  }
+
+  void visit(const FnDef& fn) override
+  {
+    print("FnDef", fn.id);
+    wrap([&] {
+      visit(*fn.signature);
+      visit(*fn.body);
     });
   }
 
@@ -75,11 +103,31 @@ class PrintVisitor : public AST::Visitor {
         [this](const P<Ret>& ret) {
           visit(*ret->expr);
         },
+        [this](const Break& br) {
+          print("Break", br.id);
+        },
+        [this](const P<If> ifExpr) {
+          print("If");
+          wrap([&]{
+            print("Condition");
+            visit(*ifExpr->cond);
+            print("Then");
+            visit(*ifExpr->then_block);
+            if (ifExpr->else_block.has_value()) {
+              print("Else");
+              visit(*ifExpr->else_block.value());
+            }
+          });
+        },
+        [this](const P<While> whileExpr) {
+          print(std::string str)
+        },
         [this](const Lit& lit) {
           std::visit(
             overloaded {
                 [&](const int i) { print("Lit Int: " + std::to_string(i), lit.id); },
-                [&](const std::string& s) { print("Lit String: " + s, lit.id); }
+                [&](const std::string& s) { print("Lit String: " + s, lit.id); },
+                [&](const bool& b) { print("Lit Bool: " + std::to_string(b), lit.id); }
             }, lit.kind);
         },
         [this](const P<Block>& block) {

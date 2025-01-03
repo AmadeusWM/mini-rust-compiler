@@ -7,17 +7,17 @@ namespace TAST {
   /*
   * namespace for bodies
   */
-
   struct Param {
     NodeId id;
     P<Pat> pat;
-    P<Ty> ty;
+    Ty ty;
   };
 
   struct Body {
     NodeId id;
     std::vector<P<Param>> params;
     P<Expr> expr;
+    Ty ty;
     Namespace ns;
   };
 

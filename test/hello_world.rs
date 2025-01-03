@@ -1,14 +1,8 @@
-fn x() {
-    let a = 3;
-    let b = 4;
-    return 3;
-    let c = a + b;
+fn x(y: i32) -> i32 {
+    let a: i32 = y + 3;
+    return a;
 }
 
 fn main() {
-    let x = 5;
-    let y = 5;
-    let z: i8 = x + y;
-    let q: i8 = x;
-    x();
+    x(5);
 }

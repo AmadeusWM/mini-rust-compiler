@@ -9,10 +9,17 @@ namespace AST {
   struct Binary;
   struct Call;
   struct Ret;
+  struct If;
+  struct Loop;
+  struct While;
 
   typedef std::variant<
     Lit,
     Path,
+    Break,
+    P<If>,
+    P<While>,
+    P<Loop>,
     P<Block>,
     P<Binary>,
     P<Ret>,
@@ -48,6 +55,24 @@ namespace AST {
   struct Block {
     NodeId id;
     std::vector<P<Stmt>> statements;
+  };
+
+  struct While {
+    NodeId id;
+    P<Expr> cond;
+    P<Block> block;
+  };
+
+  struct If {
+    NodeId id;
+    P<Expr> cond;
+    P<Block> then_block;
+    Opt<P<Expr>> else_block;
+  };
+
+  struct Loop {
+    NodeId id;
+    P<Block> block;
   };
 
   struct Call {

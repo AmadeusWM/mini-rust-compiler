@@ -9,7 +9,7 @@
 namespace AST {
 typedef uint64_t NodeId;
 
-typedef std::variant<int, std::string> LitKind;
+typedef std::variant<int, std::string, bool> LitKind;
 
 struct Lit {
   NodeId id;
@@ -21,6 +21,10 @@ struct Lit {
 
 struct Ident {
   std::string identifier;
+};
+
+struct Break {
+  NodeId id;
 };
 
 struct PathSegment {

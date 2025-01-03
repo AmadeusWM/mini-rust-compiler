@@ -6,6 +6,7 @@
 #include "visitors/apply_infererence_visitor.h"
 #include "visitors/tast_visitor.h"
 #include <spdlog/spdlog.h>
+#include <variant>
 namespace TAST {
 class TypecheckException : public std::runtime_error {
 public:
@@ -116,9 +117,22 @@ class TypecheckVisitor : public MutWalkVisitor {
   }
 
   void visit(Body& body) override {
-   visit(*body.expr);
+    with_scope(body.id, [&]{
+      for (const auto& param : body.params) {
+        visit(*param);
+      }
+      visit(*body.expr);
+    });
   }
 
+  void visit(Param& param){
+    std::visit(overloaded {
+      [&](const AST::Ident& ident) {
+        scopes.insert_binding(ident.identifier, { .id = param.id, .mut = false });
+        infer_ctx.add(param.id, param.ty);
+      }
+    }, param.pat->kind);
+  }
   void visit(Block& block) override {
     with_scope(block.id, [&]{
       for (const auto& stmt : block.statements) {
@@ -175,6 +189,18 @@ class TypecheckVisitor : public MutWalkVisitor {
         // TODO: also equal to function body's type?
         infer_ctx.eq(expr.id, ret->id);
       },
+      [&](Break& ret) { },
+      [&](P<Loop>& loop){
+        visit(*loop);
+        infer_ctx.eq(expr.id, loop->block->id);
+      },
+      [&](P<If>& ifExpr){
+        visit(*ifExpr);
+        infer_ctx.eq(ifExpr->id, ifExpr->then_block->id);
+        if (ifExpr->else_block.has_value()) {
+          infer_ctx.eq(ifExpr->id, ifExpr->else_block.value()->id);
+        }
+      },
       [&](Lit& lit) {
         visit(lit);
         infer_ctx.eq(expr.id, lit.id);
@@ -189,10 +215,26 @@ class TypecheckVisitor : public MutWalkVisitor {
         infer_ctx.eq(expr.id, binary->rhs->id);
       },
       [&](P<Call>& call) {
-        resolve_call(*call);
+        visit(*call);
         infer_ctx.eq(expr.id, call->id);
       },
     }, expr.kind);
+  }
+
+  void visit(Loop& loop) override {
+    with_scope(loop.id, [&]{
+      visit(*loop.block);
+      infer_ctx.eq(loop.id, loop.block->id);
+    });
+  }
+
+  void visit(If& ifExpr) override {
+    visit(*ifExpr.cond);
+    visit(*ifExpr.then_block);
+    if (ifExpr.else_block.has_value()) {
+      visit(*ifExpr.else_block.value());
+      infer_ctx.eq(ifExpr.then_block->id, ifExpr.else_block.value()->id);
+    }
   }
 
   void visit(Ret& ret) override {
@@ -204,35 +246,33 @@ class TypecheckVisitor : public MutWalkVisitor {
     infer_ctx.add(lit.id, resolve_lit(lit));
   }
 
-  void resolve_call(Call& call) {
-    // TODO add a type to the body!
-    // this->crate.bodies.t;
-    infer_ctx.add(call.id, Ty{InferTy{TyVar{}}});
-  }
-
-  Ty resolve_binary(Binary& bin) {
+  void resolve_binary(Binary& bin) {
     visit(*bin.lhs);
     visit(*bin.rhs);
-
-    // TODO: proper testing between types (e.g. strings cannot be added)
-    Opt<Ty> ty = bin.lhs->ty.resolve(bin.rhs->ty);
-    if (ty.has_value()) {
-      return ty.value();
-    }
-    else {
-      throw TypecheckException(fmt::format("Binary operation between incompattible types '{}' and '{}' at nodes: {} and {}", bin.lhs->ty.to_string(), bin.rhs->ty.to_string(), bin.lhs->id, bin.rhs->id));
-    }
   }
 
   Ty resolve_lit(Lit& lit) {
     return std::visit(overloaded {
       [&](int i) { return Ty(InferTy(IntVar{})); },
-      [&](std::string s) { return Ty(StrTy{}); }
+      [&](std::string s) { return Ty(StrTy{}); },
+      [&](bool b) { return Ty(BoolTy{}); }
     }, lit.kind);
   }
 
   void visit(Call& call) override {
-
+    const auto& body = crate.bodies[call.callee];
+    if (call.params.size() != body->params.size()) {
+      throw TypecheckException(fmt::format("Function call to '{}' has {} arguments, but expected {}", body->id, call.params.size(), body->params.size()));
+    }
+    for (int i = 0; i < call.params.size(); i++) {
+      const auto& call_param = call.params[i];
+      const auto& callee_param = body->params[i];
+      visit(*call_param);
+      infer_ctx.add(callee_param->id, callee_param->ty);
+      infer_ctx.eq(callee_param->id, call_param->id);
+    }
+    infer_ctx.add(body->id, body->ty);
+    infer_ctx.eq(body->id, call.id);
   }
 };
 }

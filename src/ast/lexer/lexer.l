@@ -132,6 +132,8 @@ try      { return Token::make_KW_TRY(yylloc); }
 
 {identifier}       { return Token::make_IDENTIFIER(yytext, yylloc); }
 {digit}*           { return Token::make_INTEGER_LITERAL(atoi(yytext), yylloc); }
+TRUE               { return Token::make_BOOLEAN_LITERAL(true, yylloc); }
+FALSE              { return Token::make_BOOLEAN_LITERAL(false, yylloc); }
 \"(\\.|[^"\\])*\"  { return Token::make_STRING_LITERAL(yytext, yylloc); }
 
 "println!"         { return Token::make_PRINT(yylloc); }

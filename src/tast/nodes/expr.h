@@ -8,6 +8,9 @@ namespace TAST {
   struct Binary;
   struct Call;
   struct Ret;
+  struct Break;
+  struct If;
+  struct Loop;
 
   struct Lit {
     NodeId id;
@@ -20,8 +23,11 @@ namespace TAST {
 
   typedef std::variant<
     // Path,
+    Break,
     Lit,
     AST::Ident,
+    P<Loop>,
+    P<If>,
     P<Ret>,
     P<Block>,
     P<Binary>,
@@ -33,10 +39,26 @@ namespace TAST {
     P<Expr> expr;
   };
 
+  struct Break{
+    NodeId id;
+  };
+
   struct Expr {
     NodeId id;
     ExprKind kind;
     Ty ty;
+  };
+
+  struct If {
+    NodeId id;
+    P<Expr> cond;
+    P<Block> then_block;
+    Opt<P<Expr>> else_block;
+  };
+
+  struct Loop {
+    NodeId id;
+    P<Block> block;
   };
 
   struct Binary {

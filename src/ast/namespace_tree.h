@@ -59,13 +59,15 @@ namespace Primitive{
   struct I32{};
   struct F32{};
   struct Str{};
+  struct Bool{};
 }
 
 typedef std::variant<
   Primitive::I8,
   Primitive::I32,
   Primitive::F32,
-  Primitive::Str
+  Primitive::Str,
+  Primitive::Bool
 > PrimitiveKind;
 
 struct PrimitiveType {
@@ -79,6 +81,8 @@ struct PrimitiveType {
       return PrimitiveType{ .kind = Primitive::F32{} };
     } else if (identifier == "str") {
       return PrimitiveType{ .kind = Primitive::Str{} };
+    } else if (identifier == "bool") {
+      return PrimitiveType{ .kind = Primitive::Bool{} };
     }
     else {
       return std::nullopt;

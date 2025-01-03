@@ -38,12 +38,14 @@ P<AST::FnDef> ParserRules::functionDefinition(AST::Ident $1, P<AST::FnSig> $2,  
   return P<AST::FnDef>(new AST::FnDef{
       .id = driver.create_node(),
       .ident = $1,
+      .signature  = std::move($2),
       .body = std::move($3)
   });
 }
 
 P<AST::FnSig> ParserRules::functionSignature(Vec<P<AST::Param>> $1, P<AST::Ty> $2) {
-  return P<AST::FnSig>(new AST::FnSig{
+  return P<AST::FnSig>(new AST::FnSig {
+    .id = driver.create_node(),
     .inputs = std::move($1),
     .output = std::move($2)
   });
@@ -111,6 +113,50 @@ AST::Path ParserRules::path(AST::Ident $1) {
       }
     }
   };
+}
+
+AST::Break ParserRules::breakExpr() {
+  return AST::Break {
+    .id = driver.create_node()
+  };
+}
+
+P<AST::If> ParserRules::ifExpr(P<AST::Expr> $1, P<AST::Block> $2, Opt<P<AST::Expr>> $3) {
+  return P<AST::If>(new AST::If {
+    .id = driver.create_node(),
+    .cond = std::move($1),
+    .then_block = std::move($2),
+    .else_block = std::move($3)
+  });
+}
+
+P<AST::While> ParserRules::whileExpr(P<AST::Expr> $1, P<AST::Block> $2) {
+  return P<AST::While>(new AST::While {
+    .id = driver.create_node(),
+    .cond = std::move($1),
+    .block = std::move($2)
+  });
+}
+
+P<AST::Loop> ParserRules::loopExpr(P<AST::Block> $2) {
+  return P<AST::Loop>(new AST::Loop {
+    .id = driver.create_node(),
+    .block = std::move($2)
+  });
+}
+
+Vec<P<AST::Expr>> ParserRules::initExprs(P<AST::Expr> $1) {
+  auto $$ = initExprs();
+  $$.push_back(std::move($1));
+  return std::move($$);
+}
+Vec<P<AST::Expr>> ParserRules::initExprs() {
+  Vec<P<AST::Expr>> $$ = {};
+  return std::move($$);
+}
+Vec<P<AST::Expr>> ParserRules::addExpr(Vec<P<AST::Expr>> $1, P<AST::Expr> $2) {
+  $1.push_back(std::move($2));
+  return std::move($1);
 }
 
 P<AST::Expr> ParserRules::expr(AST::ExprKind $1) {

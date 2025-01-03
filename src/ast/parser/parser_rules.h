@@ -40,6 +40,14 @@ class ParserRules {
     AST::Ident ident(std::string $1);
     AST::Path path(AST::Ident $1);
 
+    AST::Break breakExpr();
+    P<AST::If> ifExpr(P<AST::Expr> $1, P<AST::Block> $2, Opt<P<AST::Expr>> $3);
+    P<AST::While> whileExpr(P<AST::Expr> $1, P<AST::Block> $2);
+    P<AST::Loop> loopExpr(P<AST::Block> $2);
+
+    Vec<P<AST::Expr>> initExprs(P<AST::Expr> $1);
+    Vec<P<AST::Expr>> initExprs();
+    Vec<P<AST::Expr>> addExpr(Vec<P<AST::Expr>> $1, P<AST::Expr> $2);
     P<AST::Expr> expr(AST::ExprKind $1);
 
     AST::Lit lit(AST::LitKind $1);

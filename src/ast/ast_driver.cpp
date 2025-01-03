@@ -33,7 +33,7 @@ P<Driver> ASTDriver::execute()
   AST::NameResolutionVisitor visitor(ns_builder.namespace_tree);
   visitor.visit(*this->ast.value());
 
-  AST::LowerAstVisitor lowerer(visitor.namespace_tree);
+  AST::LowerAstVisitor lowerer(visitor.namespace_tree, *this);
   lowerer.visit(*this->ast.value());
 
   spdlog::debug("Done lowering");

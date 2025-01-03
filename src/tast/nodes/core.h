@@ -34,10 +34,13 @@ typedef std::variant<
 
 struct UnitValue{};
 
+typedef std::variant<bool> BoolValue;
+
 typedef std::variant<
   IntValue,
   FloatValue,
   StrValue,
+  BoolValue,
   UnitValue
 > SymbolValueKind;
 

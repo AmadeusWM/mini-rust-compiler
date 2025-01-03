@@ -3,6 +3,7 @@
 #include "../ast_node.h"
 #include "namespace_tree.h"
 #include "nodes/core.h"
+#include "util.h"
 #include "visitors/visitor.h"
 #include <fmt/core.h>
 #include <fmt/format.h>
@@ -235,10 +236,22 @@ class NameResolutionVisitor : public Visitor {
   void visit(const FnDef& fn) override
   {
     with_scope(Scope::Fn { .segment = fn.ident.identifier }, fn.id,
-      [this, &fn]() {
+      [&]() {
+        visit(*fn.signature);
         visit(*fn.body);
       }
     );
+  }
+
+  void visit(const FnSig& sig) override
+  {
+    for (const auto& param : sig.inputs) {
+      std::visit(overloaded{
+        [&](const Ident& ident) {
+          insert_binding(ident.identifier, Res::Local { .id = param->id });
+        }
+      }, param->pat->kind);
+    }
   }
 
   void visit(const Block& block) override
@@ -307,6 +320,9 @@ class NameResolutionVisitor : public Visitor {
   void visit(const Let& let) override
   {
     scopes.push({ .id = let.id, .kind = Scope::Normal {} });
+    if (std::holds_alternative<Path>(let.ty->kind)) {
+        lookup_namespace(Namespace {std::get<Path>(let.ty->kind).to_vec()});
+    }
     std::visit(overloaded {
       [this, &let](const Ident& ident) {
         insert_binding(ident.identifier, Res::Res(Res::Local { .id = let.id }));

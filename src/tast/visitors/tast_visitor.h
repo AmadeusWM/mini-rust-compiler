@@ -2,6 +2,7 @@
 
 #include "../tast_node.h"
 #include "nodes/core.h"
+#include "nodes/expr.h"
 #include <spdlog/spdlog.h>
 #include <variant>
 
@@ -11,6 +12,8 @@ template <class T> class Visitor {
   virtual T visit(const Crate& crate) = 0;
   virtual T visit(const Body& body) = 0;
   virtual T visit(const Block& block) = 0;
+  virtual T visit(const If& ifExpr) = 0;
+  virtual T visit(const Loop& loopExpr) = 0;
   virtual T visit(const Stmt& stmt) = 0;
   virtual T visit(const Let& let) = 0;
   virtual T visit(const Expr& expr) = 0;
@@ -27,6 +30,8 @@ template <class T> class MutVisitor {
   virtual T visit(Crate& crate) = 0;
   virtual T visit(Body& body) = 0;
   virtual T visit(Block& block) = 0;
+  virtual T visit(If& ifExpr) = 0;
+  virtual T visit(Loop& loopExpr) = 0;
   virtual T visit(Stmt& stmt) = 0;
   virtual T visit(Let& let) = 0;
   virtual T visit(Expr& expr) = 0;
@@ -68,23 +73,38 @@ class WalkVisitor : public Visitor<void> {
   void visit(const Expr& expr) override {
     std::visit(overloaded {
       [this](const P<Block>& block) { visit(*block); },
+      [this](const P<If>& ifExpr) { visit(*ifExpr); },
+      [this](const P<Loop>& loopExpr) { visit(*loopExpr); },
       [this](const P<Ret>& ret) { visit(*ret); },
       [this](const Lit& lit) { visit(lit); },
+      [this](const Break& breakExpr) { },
       [this](const AST::Ident& ident) { },
       [this](const P<Binary>& binary) { visit(*binary->lhs); visit(*binary->rhs); },
       [this](const P<Call>& call) { visit(*call); },
     }, expr.kind);
   }
 
+  void visit(const If& ifExpr) override {
+    visit(*ifExpr.cond);
+    visit(*ifExpr.then_block);
+    if (ifExpr.else_block.has_value()) {
+      visit(*ifExpr.else_block.value());
+    }
+  }
+
+  void visit(const Loop& loopExpr) override {
+    visit(*loopExpr.block);
+  }
+
   void visit(const Ret& ret) override {
     visit(*ret.expr);
   }
 
-  void visit(const Lit& lit) override {
+  void visit(const Call& call) override {
 
   }
 
-  void visit(const Call& call) override {
+  void visit(const Lit& lit) override {
 
   }
 };
@@ -120,12 +140,27 @@ class MutWalkVisitor : public MutVisitor<void> {
   void visit(Expr& expr) override {
     std::visit(overloaded {
       [this](P<Block>& block) { visit(*block); },
+      [this](Break& breakExpr) { },
+      [this](P<If>& ifExpr) { visit(*ifExpr); },
+      [this](P<Loop>& loopExpr) { visit(*loopExpr); },
       [this](P<Ret>& ret) { visit(*ret); },
       [this](Lit& lit) { visit(lit); },
       [this](AST::Ident& ident ) {},
       [this](P<Binary>& binary) { visit(*binary->lhs); visit(*binary->rhs); },
       [this](P<Call>& call) { visit(*call); },
     }, expr.kind);
+  }
+
+  void visit(If& ifExpr) override {
+    visit(*ifExpr.cond);
+    visit(*ifExpr.then_block);
+    if (ifExpr.else_block.has_value()) {
+      visit(*ifExpr.else_block.value());
+    }
+  }
+
+  void visit(Loop& loopExpr) override {
+    visit(*loopExpr.block);
   }
 
   void visit(Ret& ret) override {
