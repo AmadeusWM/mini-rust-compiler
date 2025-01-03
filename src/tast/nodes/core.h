@@ -47,6 +47,14 @@ typedef std::variant<
 struct SymbolValue {
   SymbolValueKind kind;
 
+  bool as_bool() {
+    if (auto boolPtr = std::get_if<BoolValue>(&kind)) {
+        return std::get<bool>(*boolPtr);
+    } else {
+        throw std::bad_variant_access();
+    }
+  }
+
   std::string to_string() {
     return std::visit(overloaded{
       [](const IntValue& intVal) -> std::string {
@@ -66,6 +74,11 @@ struct SymbolValue {
       },
       [](const UnitValue&) -> std::string {
         return "Unit";
+      },
+      [](const BoolValue&) -> std::string {
+        return std::visit([](auto&& arg) -> std::string {
+          return arg ? "true" : "false";
+        }, BoolValue{true});
       }
     }, kind);
     }

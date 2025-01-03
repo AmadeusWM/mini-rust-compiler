@@ -123,6 +123,9 @@ class MutWalkVisitor : public MutVisitor<void> {
     for (const auto& stmt : block.statements) {
       visit(*stmt);
     }
+    if (block.expr.has_value()) {
+      visit(*block.expr.value());
+    }
   }
 
   void visit(Stmt& stmt) override {

@@ -66,7 +66,6 @@
 %token <std::string> IDENTIFIER
 %token <std::string> STRING_LITERAL
 %token <int> INTEGER_LITERAL
-%token <boolean> BOOLEAN_LITERAL
 
 %type <int> crate
 %type <P<AST::Crate>> items
@@ -93,7 +92,13 @@
 %type <P<AST::Ty>> type
 %type <P<AST::Ty>> local_type
 %type <P<AST::Call>> call
+%type <P<AST::Loop>> loop_expr
+%type <P<AST::If>> if_expr
+%type <P<AST::Expr>> else_expr
+%type <P<AST::While>> while_expr
+%type <AST::Break> break
 %type <Vec<P<AST::Expr>>> exprs
+%type <bool> bool
 
 
 // custom
@@ -141,8 +146,8 @@ params:
     ;
 
 param:
-  pat COLON type { $$ = driver.rules->param(std::move($1), std::move($3)); }
-  ;
+    pat COLON type { $$ = driver.rules->param(std::move($1), std::move($3)); }
+    ;
 
 type:
     path { $$ = driver.rules->ty(std::move($1)); }
@@ -222,12 +227,18 @@ expr_with_block:
     ;
 ;
 
-break: KW_BREAK { $$ = driver.rules->breakExpr(); }
+break:
+    KW_BREAK { $$ = driver.rules->breakExpr(); }
+    ;
 
 if_expr:
-    IF expr block { $$ = driver.rules->ifExpr(std::move($2), std::move($3), std::nullopt); }
-    IF expr block ELSE block { $$ = driver.rules->ifExpr(std::move($2), std::move($3), std::move($5)); }
-    IF expr block ELSE if_expr { $$ = driver.rules->ifExpr(std::move($2), std::move($3), std::move($5)); }
+    KW_IF expr block { $$ = driver.rules->ifExpr(std::move($2), std::move($3), std::nullopt); }
+    | KW_IF expr block else_expr { $$ = driver.rules->ifExpr(std::move($2), std::move($3), std::optional<P<AST::Expr>>{std::move($4)}); }
+    ;
+
+else_expr:
+    KW_ELSE block { $$ = driver.rules->expr(std::move($2)); }
+    | KW_ELSE if_expr { $$ = driver.rules->expr(std::move($2)); }
     ;
 
 while_expr:
@@ -244,6 +255,7 @@ call:
 
 pat:
     ident { $$ = driver.rules->pat(std::move($1)); }
+    ;
 
 ident:
     IDENTIFIER { $$ = driver.rules->ident($1); }
@@ -255,7 +267,12 @@ path:
 
 literal:
     INTEGER_LITERAL { $$ = driver.rules->lit($1); }
-    BOOLEAN_LITERAL { $$ = driver.rules->lit($1); }
+    | bool { $$ = driver.rules->lit($1); }
+    ;
+
+bool:
+    KW_TRUE { $$ = true; }
+    | KW_FALSE { $$ = false; }
     ;
 
 %%

@@ -53,9 +53,7 @@ namespace TAST {
     Opt<SymbolValue> lookup(std::string iden) {
       for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
         auto scope = *it;
-        spdlog::debug("binding before");
         auto binding = scope.bindings.find(iden);
-        spdlog::debug("binding after");
         if (binding != scope.bindings.end()) {
           return SymbolValue(binding->second);
         }
@@ -84,13 +82,11 @@ namespace TAST {
     Scopes scopes;
     SymbolValue with_scope(NodeId id, std::function<SymbolValue()> body)
     {
-      spdlog::debug("entering scope: {}", id);
       Scope scope = {
         .id = id,
       };
       scopes.push(scope);
       SymbolValue result = body();
-      spdlog::debug("exiting scope: {}", id);
       scopes.pop(scope);
       return result;
     }
@@ -140,6 +136,7 @@ namespace TAST {
         [&](const P<Ret>& ret) { return visit(*ret); },
         [&](const Break& br) { return visit(br); },
         [&](const P<Loop>& loop) { return visit(*loop); },
+        [&](const P<If>& ifExpr) { return visit(*ifExpr); },
         [&](const Lit& lit) { return visit(lit); },
         [&](const AST::Ident& ident) { return visit(ident); },
         [&](const P<Binary>& binary) { return visit(*binary); },
@@ -153,7 +150,7 @@ namespace TAST {
       throw BreakException();
     }
 
-    SymbolValue visit(const Loop& loop) {
+    SymbolValue visit(const Loop& loop) override {
       while (true) {
         try {
           visit(*loop.block);
@@ -164,7 +161,16 @@ namespace TAST {
       return {UnitValue{}};
     }
 
-    SymbolValue visit(const If& ifExpr) {
+    SymbolValue visit(const If& ifExpr) override {
+      auto cond = visit(*ifExpr.cond);
+      if (cond.as_bool()) {
+        return visit(*ifExpr.then_block);
+      } else {
+        if (ifExpr.else_block.has_value()) {
+          return visit(*ifExpr.else_block.value());
+        }
+      }
+      return {UnitValue{}};
     }
 
     SymbolValue visit(const Ret& ret) override {

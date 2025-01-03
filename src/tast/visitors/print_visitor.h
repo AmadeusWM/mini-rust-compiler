@@ -81,6 +81,8 @@ public:
       std::visit(overloaded {
         [this](const P<Block>& block) { visit(*block); },
         [this](const P<Ret>& ret) { visit(*ret); },
+        [this](const P<Loop>& loop) { visit(*loop); },
+        [this](const P<If>& ifExpr) { visit(*ifExpr); },
         [this](const Lit& lit) { visit(lit); },
         [this](const Break& breakExpr) { visit(breakExpr); },
         [this](const AST::Ident& ident) { print(fmt::format("Ident: {}", ident.identifier)); },

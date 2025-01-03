@@ -3,7 +3,6 @@
 #include "nodes/type.h"
 #include <fmt/core.h>
 #include <map>
-#include <set>
 #include <spdlog/spdlog.h>
 
 
@@ -35,6 +34,32 @@ public:
     rankTypes[curr_rank] = ty;
   }
 
+  void eq(NodeId id, Ty ty) {
+    auto rank_it = nodesToRank.find(id);
+    if (rank_it == nodesToRank.end()) {
+      add(id, ty);
+      return;
+    }
+    auto rank = rank_it->second;
+    auto rank_ty = rankTypes.find(rank);
+    if (rank_ty == rankTypes.end()) {
+    }
+    auto prev_ty = rank_ty->second;
+    auto resolved = prev_ty.resolve(ty);
+    if (!resolved.has_value()) {
+      throw std::runtime_error(fmt::format("Type mismatch between {} and {}", prev_ty.to_string(), prev_ty.to_string()));
+    }
+    for (auto& [id, node_rank] : nodesToRank) {
+      if (node_rank == rank) {
+        nodesToRank[id] = rank;
+      }
+    }
+    rankTypes[rank] = resolved.value();
+  }
+
+  /**
+  * Set two nodes' types to be equal to each other
+  */
   void eq(NodeId id1, NodeId id2) {
     // find 2 sets, and merge them together
     // if they are already in the same set, do nothing

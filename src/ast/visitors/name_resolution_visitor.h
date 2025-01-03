@@ -268,8 +268,19 @@ class NameResolutionVisitor : public Visitor {
     std::visit(overloaded {
         [&](const Lit& lit) {
         },
+        [&](const Break& br) {
+        },
         [&](const P<Ret>& ret) {
           visit(*ret);
+        },
+        [&](const P<If>& ifExpr) {
+          Visitor::visit(*ifExpr);
+        },
+        [&](const P<While>& whileExpr) {
+          Visitor::visit(*whileExpr);
+        },
+        [&](const P<Loop>& loop) {
+          Visitor::visit(*loop);
         },
         [&](const P<Block>& block) {
           visit(*block);

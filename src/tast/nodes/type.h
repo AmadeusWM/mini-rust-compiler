@@ -55,6 +55,7 @@ namespace TAST {
         // if simply the same type, resolve if same subtype (e.g. i32 === i32)
         [&](const IntTy& lhs, const IntTy& rhs) { return lhs.index() == rhs.index() ? std::optional<Ty>(lhs) : std::nullopt; },
         [&](const FloatTy& lhs, const FloatTy& rhs) { return lhs.index() == rhs.index() ? std::optional<Ty>(lhs) : std::nullopt; },
+        [&](const BoolTy& lhs, const BoolTy& rhs) { return std::optional<Ty>(lhs); },
         [&](const InferTy& lhs, const InferTy& rhs) {
           return std::visit(overloaded {
             [&](const TyVar& var, const TyVar& r) { return std::optional<Ty>(lhs); },
@@ -113,7 +114,8 @@ namespace TAST {
             [](const IntVar&) { return "IntVar"; },
             [](const FloatVar&) { return "FloatVar"; }
           }, inferTy);
-        }
+        },
+        [](const BoolTy&) { return "BoolTy"; },
       }, kind);
     }
   };

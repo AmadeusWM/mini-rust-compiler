@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <spdlog/spdlog.h>
 
 #include <cmath>
 #include <string>

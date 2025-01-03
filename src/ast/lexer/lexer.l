@@ -30,7 +30,6 @@ crate    { return Token::make_KW_CRATE(yylloc); }
 else     { return Token::make_KW_ELSE(yylloc); }
 enum     { return Token::make_KW_ENUM(yylloc); }
 extern   { return Token::make_KW_EXTERN(yylloc); }
-{FALSE}  { return Token::make_KW_FALSE(yylloc); }
 fn       { return Token::make_KW_FN(yylloc); }
 for      { return Token::make_KW_FOR(yylloc); }
 if       { return Token::make_KW_IF(yylloc); }
@@ -52,6 +51,7 @@ struct   { return Token::make_KW_STRUCT(yylloc); }
 super    { return Token::make_KW_SUPER(yylloc); }
 trait    { return Token::make_KW_TRAIT(yylloc); }
 {TRUE}   { return Token::make_KW_TRUE(yylloc); }
+{FALSE}  { return Token::make_KW_FALSE(yylloc); }
 type     { return Token::make_KW_TYPE(yylloc); }
 unsafe   { return Token::make_KW_UNSAFE(yylloc); }
 use      { return Token::make_KW_USE(yylloc); }
@@ -132,8 +132,6 @@ try      { return Token::make_KW_TRY(yylloc); }
 
 {identifier}       { return Token::make_IDENTIFIER(yytext, yylloc); }
 {digit}*           { return Token::make_INTEGER_LITERAL(atoi(yytext), yylloc); }
-TRUE               { return Token::make_BOOLEAN_LITERAL(true, yylloc); }
-FALSE              { return Token::make_BOOLEAN_LITERAL(false, yylloc); }
 \"(\\.|[^"\\])*\"  { return Token::make_STRING_LITERAL(yytext, yylloc); }
 
 "println!"         { return Token::make_PRINT(yylloc); }

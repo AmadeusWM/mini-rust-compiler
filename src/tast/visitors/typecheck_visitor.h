@@ -196,9 +196,9 @@ class TypecheckVisitor : public MutWalkVisitor {
       },
       [&](P<If>& ifExpr){
         visit(*ifExpr);
-        infer_ctx.eq(ifExpr->id, ifExpr->then_block->id);
+        infer_ctx.eq(expr.id, ifExpr->then_block->id);
         if (ifExpr->else_block.has_value()) {
-          infer_ctx.eq(ifExpr->id, ifExpr->else_block.value()->id);
+          infer_ctx.eq(expr.id, ifExpr->else_block.value()->id);
         }
       },
       [&](Lit& lit) {
@@ -230,6 +230,7 @@ class TypecheckVisitor : public MutWalkVisitor {
 
   void visit(If& ifExpr) override {
     visit(*ifExpr.cond);
+    infer_ctx.eq(ifExpr.cond->id, {BoolTy{}});
     visit(*ifExpr.then_block);
     if (ifExpr.else_block.has_value()) {
       visit(*ifExpr.else_block.value());

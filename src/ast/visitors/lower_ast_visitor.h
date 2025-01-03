@@ -118,13 +118,13 @@ class LowerAstVisitor : public Visitor {
         [this](const Break& br) {
           return TAST::ExprKind{TAST::Break{br.id}};
         },
-        [this](const P<If> ifExpr) {
+        [this](const P<If>& ifExpr) {
           return TAST::ExprKind{resolve_if(*ifExpr)};
         },
-        [this](const P<Loop> loopExpr) {
+        [this](const P<Loop>& loopExpr) {
           return TAST::ExprKind{resolve_loop(*loopExpr)};
         },
-        [this](const P<While> whileExpr) {
+        [this](const P<While>& whileExpr) {
           return TAST::ExprKind{resolve_while(*whileExpr)};
         },
         [this](const P<Block>& block) {
@@ -174,6 +174,9 @@ class LowerAstVisitor : public Visitor {
   }
 
   P<TAST::Stmt> create_if_cond_break(P<TAST::Expr> cond) {
+    P<TAST::Stmt> s = create_break_stmt();
+    auto statements = std::vector<P<TAST::Stmt>>{};
+    statements.push_back(std::move(s));
     return std::make_unique<TAST::Stmt>(TAST::Stmt {
       .id = driver.create_node(),
       .kind = TAST::StmtKind {
@@ -185,7 +188,7 @@ class LowerAstVisitor : public Visitor {
               .cond = std::move(cond),
               .then_block = std::make_unique<TAST::Block>(TAST::Block {
                 .id = driver.create_node(),
-                .statements = std::vector<P<TAST::Stmt>>{std::move(create_break_stmt())},
+                .statements = std::move(statements),
                 .expr = std::nullopt
               }),
               .else_block = std::nullopt

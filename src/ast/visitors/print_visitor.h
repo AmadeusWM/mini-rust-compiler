@@ -106,8 +106,8 @@ class PrintVisitor : public AST::Visitor {
         [this](const Break& br) {
           print("Break", br.id);
         },
-        [this](const P<If> ifExpr) {
-          print("If");
+        [this](const P<If>& ifExpr) {
+          print("If", ifExpr->id);
           wrap([&]{
             print("Condition");
             visit(*ifExpr->cond);
@@ -119,8 +119,17 @@ class PrintVisitor : public AST::Visitor {
             }
           });
         },
-        [this](const P<While> whileExpr) {
-          print(std::string str)
+        [this](const P<Loop>& loop) {
+          print("Loop", loop->id);
+          wrap([&]{
+            visit(*loop->block);
+          });
+        },
+        [this](const P<While>& whileExpr) {
+          print("While", whileExpr->id);
+          wrap([&]{
+            Visitor::visit(*whileExpr);
+          });
         },
         [this](const Lit& lit) {
           std::visit(

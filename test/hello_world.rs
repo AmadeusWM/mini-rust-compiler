@@ -1,8 +1,7 @@
-fn x(y: i32) -> i32 {
-    let a: i32 = y + 3;
-    return a;
-}
-
 fn main() {
-    x(5);
+    let x = 3;
+    let y = true;
+    while y {
+        let z = 4 + x;
+    }
 }
