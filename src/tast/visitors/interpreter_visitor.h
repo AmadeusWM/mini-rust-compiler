@@ -126,7 +126,6 @@ namespace TAST {
       // find main
       Body* main_body = nullptr;
       for (const auto& [id, body] : crate.bodies) {
-        spdlog::debug("body: {}", body->ns.to_string());
         if (body->ns.path[0] == "main") {
           main_body = body.get();
           break;
@@ -167,7 +166,7 @@ namespace TAST {
         [&](const P<Unary>& unary) { return visit(*unary); },
         [&](const P<Call>& call) { return visit(*call); },
       }, expr.kind);
-      spdlog::debug("node {}: {}", expr.id, result.to_string());
+      // spdlog::debug("node {}: {}", expr.id, result.to_string());
       return result;
     }
 
