@@ -144,9 +144,7 @@ namespace TAST {
 
     SymbolValue visit(const Body& body) override{
       try {
-        return with_scope(body.id, [&]{
-          return visit(*body.expr);
-        });
+        return visit(*body.expr);
       } catch (const ReturnException& e) {
         return e.value;
       }
