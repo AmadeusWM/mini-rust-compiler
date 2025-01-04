@@ -80,7 +80,7 @@
 %token <int> INTEGER_LITERAL
 
 %type <int> crate
-%type <P<AST::Crate>> items
+%type <Vec<P<AST::Item>>> items
 %type <P<AST::Item>> item
 %type <P<AST::FnDef>> function_definition
 %type <P<AST::FnSig>> function_signature
@@ -99,6 +99,7 @@
 %type <AST::Lit> literal
 %type <AST::Ident> ident
 %type <AST::Path> path
+%type <AST::PathSegment> path_segment
 %type <P<AST::Binary>> binary
 %type <P<AST::Pat>> pat
 %type <P<AST::Ty>> type
@@ -114,8 +115,8 @@
 %type <P<AST::Assign>> assign
 %type <P<AST::Unary>> unary
 %type <P<AST::Print>> print
+%type <P<AST::Mod>> module
 %type <std::string> str
-
 
 // custom
 %token PRINT
@@ -124,12 +125,7 @@
 // productions
 crate:
     items END {
-        // todo: we now parsed the program and have an AST. We
-        // want to transition to the next state, so we want to
-        // transition into the ASTDriverState, which takes
-        // an AST as a parameter.
-        // e.g.: driver.transition(ASTDriverState(ProgramNode($1)));
-        driver.ast = Opt<P<AST::Crate>>(std::move($1));
+        driver.ast = Opt<P<AST::Crate>>(driver.rules->crate(std::move($1)));
         $$ = 1;
     }
     ;
@@ -142,6 +138,11 @@ items:
 
 item:
     function_definition { $$ = driver.rules->item(std::move($1)); }
+    | module { $$ = driver.rules->item(std::move($1)); }
+    ;
+
+module:
+    KW_MOD ident L_BRACE items R_BRACE { $$ = driver.rules->module(std::move($2), std::move($4)); }
     ;
 
 function_definition:
@@ -300,7 +301,13 @@ ident:
     ;
 
 path:
-    ident { $$ = driver.rules->path(std::move($1)); }
+    path_segment { $$ = driver.rules->initPath(std::move($1)); }
+    | path PATH_SEP path_segment { $$ = driver.rules->addPathSegment(std::move($1), std::move($3)); }
+    ;
+
+path_segment:
+    ident { $$ = driver.rules->pathSegment(std::move($1)); }
+    | KW_SUPER { $$ = driver.rules->pathSegment("super"); }
     ;
 
 literal:

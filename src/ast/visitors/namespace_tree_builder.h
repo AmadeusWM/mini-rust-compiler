@@ -28,7 +28,7 @@ class NamespaceTreeBuilder : public AST::Visitor {
     Visitor::visit(crate);
     add_primitives();
     // namespace_tree.resolve_types();
-    spdlog::debug("Namespace Tree: \n{}", this->namespace_tree.to_string());
+    spdlog::info("Namespace Tree: \n{}", this->namespace_tree.to_string());
   }
 
   void add_primitives(){
@@ -44,6 +44,12 @@ class NamespaceTreeBuilder : public AST::Visitor {
         wrap(fn->ident.identifier, [&]() {
           namespace_tree.set(this->ns, NamespaceValue(item.id));
           Visitor::visit(*fn);
+        });
+      },
+      [&](const P<Mod>& mod) {
+        wrap(mod->ident.identifier, [&]() {
+          namespace_tree.set(this->ns, NamespaceValue(item.id));
+          Visitor::visit(*mod);
         });
       }
     }, item.kind);

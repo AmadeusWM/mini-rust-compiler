@@ -6,6 +6,7 @@
 namespace AST {
   struct FnDef;
   struct Item;
+  struct Mod;
 
   struct Crate {
     NodeId id;
@@ -13,7 +14,8 @@ namespace AST {
   };
 
   typedef std::variant<
-      P<FnDef>
+      P<FnDef>,
+      P<Mod>
       // Modules
       // Type definitions
       // Use declarations
@@ -23,6 +25,12 @@ namespace AST {
   struct Item {
     NodeId id;
     ItemKind kind;
+  };
+
+  struct Mod {
+    NodeId id;
+    Ident ident;
+    std::vector<P<Item>> items;
   };
 
   struct Param {

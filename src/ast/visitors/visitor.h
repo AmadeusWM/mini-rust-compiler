@@ -14,8 +14,17 @@ namespace AST {
 
     virtual void visit(const Item& item)
     {
-      std::visit(
-          overloaded { [this](const P<FnDef>& fn) { visit(*fn); } }, item.kind);
+      std::visit(overloaded {
+        [this](const P<FnDef>& fn) { visit(*fn); } ,
+        [this](const P<Mod>& mod) { visit(*mod); }
+      }, item.kind);
+    }
+
+    virtual void visit(const Mod& mod)
+    {
+      for (const auto& child : mod.items) {
+        visit(*child);
+      }
     }
 
     virtual void visit(const FnDef& node) { visit(*node.body); }

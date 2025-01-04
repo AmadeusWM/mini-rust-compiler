@@ -19,13 +19,13 @@ namespace AST {
 class LowerAstVisitor : public Visitor {
   private:
   NamespaceNode namespace_tree;
-  Namespace mod_ns{.path = {}};
+  Namespace ns{.path = {}};
 
-  void with_module(std::string segment, std::function<void()> func)
+  void with_scope(std::string segment, std::function<void()> func)
   {
-    mod_ns.path.push_back(segment);
+    ns.path.push_back(segment);
     func();
-    mod_ns.path.pop_back();
+    ns.path.pop_back();
   }
 
   ASTDriver& driver; // we need the driver to create new nodes
@@ -45,19 +45,28 @@ class LowerAstVisitor : public Visitor {
     std::visit(
       overloaded {
         [&](const P<FnDef>& fn) {
-          this->crate->bodies.insert({
-            item.id,
-            std::make_unique<TAST::Body>( TAST::Body {
-              .id = item.id,
-              .params = resolve_params(fn->signature->inputs),
-              .expr = P<TAST::Expr>(new TAST::Expr {
-                .id = fn->id,
-                .kind = TAST::ExprKind {this->resolve_block(*fn->body)},
-                .ty = {TAST::InferTy{}}
-              }),
-              .ty = this->resolve_ty(*fn->signature->output),
-              .ns = this->namespace_tree.find_namespace(item.id).value()
-            })
+          with_scope(fn->ident.identifier, [&]{
+            this->crate->bodies.insert({
+              item.id,
+              std::make_unique<TAST::Body>( TAST::Body {
+                .id = item.id,
+                .params = resolve_params(fn->signature->inputs),
+                .expr = P<TAST::Expr>(new TAST::Expr {
+                  .id = fn->id,
+                  .kind = TAST::ExprKind {this->resolve_block(*fn->body)},
+                  .ty = {TAST::InferTy{}}
+                }),
+                .ty = this->resolve_ty(*fn->signature->output),
+                .ns = this->namespace_tree.find_namespace(item.id).value()
+              })
+            });
+          });
+        },
+        [&](const P<Mod>& mod) {
+          with_scope(mod->ident.identifier, [&]{
+            for (const auto& item : mod->items) {
+              visit(*item);
+            }
           });
         }
       }, item.kind);
@@ -358,7 +367,7 @@ class LowerAstVisitor : public Visitor {
 
   P<TAST::Call> resolve_call(const Call& call) {
     Namespace call_ns = Namespace{call.path.to_vec()};
-    auto callee = namespace_tree.get(mod_ns, call_ns);
+    auto callee = namespace_tree.get(ns, call_ns);
     return std::make_unique<TAST::Call>( TAST::Call {
       .id = call.id,
       .callee = std::get<NodeId>(callee.value()),

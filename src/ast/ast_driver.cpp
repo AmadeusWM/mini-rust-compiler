@@ -23,9 +23,11 @@ P<Driver> ASTDriver::execute()
   AST::NamespaceTreeBuilder ns_builder;
   ns_builder.visit(*this->ast.value());
 
+  print_step("Name Resolution");
   AST::NameResolutionVisitor visitor(ns_builder.namespace_tree);
   visitor.visit(*this->ast.value());
 
+  print_step("Lowering AST");
   AST::LowerAstVisitor lowerer(visitor.namespace_tree, *this);
   lowerer.visit(*this->ast.value());
 

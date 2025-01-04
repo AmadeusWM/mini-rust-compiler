@@ -49,14 +49,27 @@ class PrintVisitor : public AST::Visitor {
   {
     print("Item", item.id);
     wrap([&] {
-      std::visit(
-          overloaded { [this](const P<FnDef>& fn) {
-            print("FnDef: " + fn->ident.identifier, fn->id);
-            visit(*fn->signature);
+      std::visit(overloaded {
+        [this](const P<FnDef>& fn) {
+          print("FnDef: " + fn->ident.identifier, fn->id);
+          visit(*fn->signature);
 
-            wrap([this, &fn]() { visit(*(fn.get()->body)); });
-          }
+          wrap([this, &fn]() { visit(*(fn.get()->body)); });
+        },
+        [this](const P<Mod>& mod) {
+          visit(*mod);
+        }
       }, item.kind);
+    });
+  }
+
+  void visit(const Mod& mod) override
+  {
+    print("Mod: " + mod.ident.identifier, mod.id);
+    wrap([&] {
+      for (const auto& child : mod.items) {
+        visit(*child);
+      }
     });
   }
 

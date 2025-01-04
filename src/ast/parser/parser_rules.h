@@ -17,16 +17,16 @@ class ParserRules {
   public:
     ParserRules(ASTDriver& driver);
 
-    P<AST::Crate> initItems(P<AST::Item> $1);
-    P<AST::Crate> initItems();
-    P<AST::Crate> addItem(P<AST::Crate> $1, P<AST::Item> $2);
+    P<AST::Crate> crate(Vec<P<AST::Item>> $1);
+
+    Vec<P<AST::Item>> initItems();
+    Vec<P<AST::Item>> addItem(Vec<P<AST::Item>> $1, P<AST::Item> $2);
     P<AST::Item> item(AST::ItemKind $1);
 
     P<AST::FnDef> functionDefinition(AST::Ident $1, P<AST::FnSig> $2, P<AST::Block> $3);
 
     P<AST::FnSig> functionSignature(Vec<P<AST::Param>> $1, P<AST::Ty> $2);
 
-    P<AST::Block> initStatements(P<AST::Stmt> $1);
     P<AST::Block> initStatements();
     P<AST::Block> addStatement(P<AST::Block> $1, P<AST::Stmt> $2);
     P<AST::Stmt> statement(AST::StmtKind $1);
@@ -38,7 +38,10 @@ class ParserRules {
     P<AST::Ret> ret(P<AST::Expr> $1);
 
     AST::Ident ident(std::string $1);
-    AST::Path path(AST::Ident $1);
+    AST::Path initPath();
+    AST::Path initPath(AST::PathSegment $2);
+    AST::Path addPathSegment(AST::Path $1, AST::PathSegment $2);
+    AST::PathSegment pathSegment(AST::Ident ident);
 
     AST::Break breakExpr();
     P<AST::If> ifExpr(P<AST::Expr> $1, P<AST::Block> $2, Opt<P<AST::Expr>> $3);
@@ -72,4 +75,6 @@ class ParserRules {
     P<AST::Print> print(std::string $1);
 
     std::string str(std::string $1);
+
+    P<AST::Mod> module(AST::Ident $1, Vec<P<AST::Item>> $2);
 };

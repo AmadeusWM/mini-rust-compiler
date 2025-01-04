@@ -9,22 +9,21 @@
 ParserRules::ParserRules(ASTDriver& driver) : driver{driver} {
 }
 
-P<AST::Crate> ParserRules::initItems(P<AST::Item> $1) {
-    auto $$ = initItems();
-    $$->items.push_back(std::move($1));
+P<AST::Crate> ParserRules::crate(Vec<P<AST::Item>> $1) {
+  return P<AST::Crate>(new AST::Crate{
+    .id = driver.create_node(),
+    .items = std::move($1)
+  });
+}
+
+Vec<P<AST::Item>> ParserRules::initItems() {
+    auto $$ = Vec<P<AST::Item>>{};
     return $$;
 }
 
-P<AST::Crate> ParserRules::initItems() {
-    auto $$ = P<AST::Crate>(new AST::Crate{
-      .id = driver.create_node(),
-    });
-    return $$;
-}
-
-P<AST::Crate> ParserRules::addItem(P<AST::Crate> $1, P<AST::Item> $2) {
-  $1->items.push_back(std::move($2));
-  return $1;
+Vec<P<AST::Item>> ParserRules::addItem(Vec<P<AST::Item>> $1, P<AST::Item> $2) {
+  $1.push_back(std::move($2));
+  return std::move($1);
 }
 
 P<AST::Item> ParserRules::item(AST::ItemKind $1) {
@@ -49,12 +48,6 @@ P<AST::FnSig> ParserRules::functionSignature(Vec<P<AST::Param>> $1, P<AST::Ty> $
     .inputs = std::move($1),
     .output = std::move($2)
   });
-}
-
-P<AST::Block> ParserRules::initStatements(P<AST::Stmt> $1) {
-  auto $$ = initStatements();
-  $$->statements.push_back(std::move($1));
-  return std::move($$);
 }
 
 P<AST::Block> ParserRules::initStatements() {
@@ -113,14 +106,27 @@ AST::Ident ParserRules::ident(std::string $1) {
   };
 }
 
-AST::Path ParserRules::path(AST::Ident $1) {
+AST::Path ParserRules::initPath(AST::PathSegment segment) {
   return AST::Path {
-    .segments = std::vector<AST::PathSegment>{
-      AST::PathSegment {
-        .id = driver.create_node(),
-        .ident = $1
-      }
-    }
+    .segments = std::vector<AST::PathSegment>{segment}
+  };
+}
+
+AST::Path ParserRules::initPath() {
+  return AST::Path {
+    .segments = std::vector<AST::PathSegment>{}
+  };
+}
+
+AST::Path ParserRules::addPathSegment(AST::Path $1, AST::PathSegment $2) {
+  $1.segments.push_back($2);
+  return $1;
+}
+
+AST::PathSegment ParserRules::pathSegment(AST::Ident $1) {
+  return AST::PathSegment {
+    .id = driver.create_node(),
+    .ident = $1,
   };
 }
 
@@ -257,4 +263,12 @@ P<AST::Print> ParserRules::print(std::string $1) {
 
 std::string ParserRules::str(std::string $1) {
   return $1.substr(1, $1.size() - 2);
+}
+
+P<AST::Mod> ParserRules::module(AST::Ident $1, Vec<P<AST::Item>> $2) {
+  return P<AST::Mod>(new AST::Mod {
+    .id = driver.create_node(),
+    .ident = std::move($1),
+    .items = std::move($2)
+  });
 }

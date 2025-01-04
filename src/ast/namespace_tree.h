@@ -15,7 +15,7 @@ struct Namespace{
   std::vector<std::string> path;
 
   std::pair<Namespace, Namespace> split(size_t i) const {
-    if (i >= path.size()) {
+    if (i > path.size()) {
       throw std::runtime_error("Index out of bounds");
     }
     return {
@@ -51,6 +51,11 @@ struct Namespace{
   }
   std::string to_string() const {
     return fmt::format("{}", fmt::join(path, "::"));
+  }
+  Namespace clone() {
+    for (const auto segment : path) {
+      
+    }
   }
 };
 
@@ -111,7 +116,7 @@ public:
     spdlog::debug("Namespace: {}", ns.path.size());
     if (ns.path.size() == 0) {
       if (this->value.has_value()) {
-        throw std::runtime_error("Namespace already exists");
+        throw std::runtime_error("Namespace already exists");;
       }
       this->value = value;
       return;
@@ -142,20 +147,28 @@ public:
     const Namespace& ns,
     const Namespace& scope = {.path = {}})
   {
-    for (size_t i = ns.path.size() - 1; i >= 0; i--) {
-      auto [first, second] = ns.split(i);
-      if (second.equals(scope)) {
-        break;
-      }
+    spdlog::debug("Looking up:");
+    spdlog::debug("\tRoot: {}", root.to_string());
+    spdlog::debug("\tNs: {}", ns.to_string());
+    spdlog::debug("\tScope: {}", scope.to_string());
+
+    for (size_t i = root.path.size(); i >= 0; i--) {
+      auto [first, second] = root.split(i);
+      spdlog::debug("First: {}", first.to_string());
+      spdlog::debug("Second: {}", second.to_string());
       auto result = this->get(Namespace::concat(first, ns));
       if (result.has_value()) {
         return result.value();
       }
+      if (first.equals(scope)) {
+        break;
+      }
     }
-    return value.value();
+    throw std::runtime_error(fmt::format("Namespace '{}' not found within '{}' within scope '{}'", ns.to_string(), root.to_string(), scope.to_string()));
   }
 
   Opt<NamespaceValue> get(const Namespace& ns) const {
+    spdlog::debug("Looking up namespace {}", ns.to_string());
     if (ns.path.size() == 0) {
       if (!value.has_value()) {
         return std::nullopt;
@@ -166,7 +179,7 @@ public:
       auto [segment, remaining] = ns.split_first();
       auto it = children.find(segment);
       if (it == children.end()) {
-        throw std::runtime_error(fmt::format("Namespace {} not found", ns.to_string()));
+        return std::nullopt;
       }
       return it->second.get(remaining);
     }
@@ -194,17 +207,17 @@ public:
     std::string result = "";
     if (value.has_value()) {
       if (std::holds_alternative<Namespace>(value.value())) {
-        result += fmt::format("Namespace: {}", std::get<Namespace>(value.value()).to_string());
+        result += fmt::format("[Namespace: {}, ", std::get<Namespace>(value.value()).to_string());
       }
       else if (std::holds_alternative<PrimitiveType>(value.value())) {
-        result += std::string("PrimitiveType");
+        result += std::string("[PrimitiveType, ");
       }
       else {
-        result += fmt::format("NodeId: {}", std::get<AST::NodeId>(value.value()));
+        result += fmt::format("[NodeId: {}, ", std::get<AST::NodeId>(value.value()));
       }
     }
     for (const auto& [key, value] : this->children) {
-      result += fmt::format("->{}:{}", key, value.to_string());
+      result += fmt::format("{}:({})]", key, value.to_string());
     }
     return result;
   }

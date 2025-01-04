@@ -38,9 +38,6 @@ public:
     print("Crate");
     wrap([&] {
       for (const auto& [key, body] : crate.bodies) {
-        std::string key_str = body->ns.to_string();
-        print("NS: " + key_str);
-        print("ID: " + std::to_string(key));
         visit(*body);
       }
     });
@@ -48,6 +45,9 @@ public:
   void visit(const Body& body) {
     print("Body");
     wrap([&] {
+      std::string key_str = body.ns.to_string();
+      print("Ns: " + key_str);
+      print("Id: " + std::to_string(body.id));
       for (const auto& param : body.params) {
         visit(*param);
       }

@@ -3,6 +3,7 @@
 #include "../ast_node.h"
 #include "namespace_tree.h"
 #include "nodes/core.h"
+#include "nodes/item.h"
 #include "util.h"
 #include "visitors/visitor.h"
 #include <fmt/core.h>
@@ -103,7 +104,7 @@ namespace Scope {
         }
       }
       std::vector<std::string> path;
-      for (int j = 0; j < i; j++) {
+      for (int j = 0; j <= i; j++) {
         std::visit(overloaded {
           [&](const Module& mod) {
             path.push_back(mod.segment);
@@ -196,6 +197,10 @@ class NameResolutionVisitor : public Visitor {
   NamespaceValue lookup_namespace(Namespace ns) {
     const Namespace scope_barrier = scopes.get_scope_namespace(Scope::Module{});
     const Namespace root_path = scopes.get_namespace();
+
+    // resolve supers:
+    const auto ns_absolute = ns;
+    
     auto value = namespace_tree.get(root_path, ns, scope_barrier);
     if (value.has_value()) {
       std::string result = "";
@@ -239,6 +244,17 @@ class NameResolutionVisitor : public Visitor {
       [&]() {
         visit(*fn.signature);
         visit(*fn.body);
+      }
+    );
+  }
+
+  void visit(const Mod& mod) override {
+    with_scope(Scope::Module { .segment = mod.ident.identifier }, mod.id,
+      [&]() {
+        spdlog::debug("ADDING MOD SCOPE!! {}", mod.ident.identifier);
+        for (const auto& item : mod.items) {
+          Visitor::visit(*item);
+        }
       }
     );
   }
