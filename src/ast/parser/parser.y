@@ -55,8 +55,18 @@
 // punctiations: https://doc.rust-lang.org/reference/tokens.html#punctuation
 %token PLUS MIN STAR SLASH PERCENT CARET NOT AND OR AND_AND OR_OR SHL SHR PLUS_EQ MINUS_EQ STAR_EQ SLASH_EQ PERCENT_EQ CARET_EQ AND_EQ OR_EQ SHL_EQ SHR_EQ EQ EQ_EQ NE GT LT GE LE AT UNDERSCORE DOT DOT_DOT DOT_DOT_DOT DOT_DOT_EQ COMMA SEMI COLON PATH_SEP R_ARROW FAT_ARROW L_ARROW POUND DOLLAR QUESTION TILDE
 
+%precedence EQ
+// custom precedence for rules: https://www.gnu.org/software/bison/manual/html_node/Contextual-Precedence.html
+%left OR_OR
+%left AND_AND
+%left OR
+%left AND
+%left EQ_EQ NE
+%left LT LE GT GE
+%left SHL SHR
 %left PLUS MIN
 %left STAR SLASH PERCENT
+%precedence U_MIN U_PLUS U_NOT
 
 // brackets
 %token L_PAREN R_PAREN L_BRACE R_BRACE L_BRACKET R_BRACKET
@@ -88,7 +98,6 @@
 %type <AST::Ident> ident
 %type <AST::Path> path
 %type <P<AST::Binary>> binary
-%type <AST::BinOp> bin_op
 %type <P<AST::Pat>> pat
 %type <P<AST::Ty>> type
 %type <P<AST::Ty>> local_type
@@ -101,7 +110,6 @@
 %type <Vec<P<AST::Expr>>> exprs
 %type <bool> bool
 %type <P<AST::Assign>> assign
-%type <AST::UnOp> un_op
 %type <P<AST::Unary>> unary
 
 
@@ -183,7 +191,19 @@ ret:
     ;
 
 binary:
-    expr bin_op expr { $$ = driver.rules->binary(std::move($1), $2, std::move($3)); }
+    expr PLUS expr { $$ = driver.rules->binary(std::move($1), AST::Bin::Add{}, std::move($3)); }
+    | expr MIN expr { $$ = driver.rules->binary(std::move($1), AST::Bin::Sub{}, std::move($3)); }
+    | expr STAR expr { $$ = driver.rules->binary(std::move($1), AST::Bin::Mul{}, std::move($3)); }
+    | expr SLASH expr { $$ = driver.rules->binary(std::move($1), AST::Bin::Div{}, std::move($3)); }
+    | expr PERCENT expr { $$ = driver.rules->binary(std::move($1), AST::Bin::Mod{}, std::move($3)); }
+    | expr AND expr { $$ = driver.rules->binary(std::move($1), AST::Bin::And{}, std::move($3)); }
+    | expr OR expr { $$ = driver.rules->binary(std::move($1), AST::Bin::Or{}, std::move($3)); }
+    | expr EQ_EQ expr { $$ = driver.rules->binary(std::move($1), AST::Bin::Eq{}, std::move($3)); }
+    | expr NE expr { $$ = driver.rules->binary(std::move($1), AST::Bin::Ne{}, std::move($3)); }
+    | expr LT expr { $$ = driver.rules->binary(std::move($1), AST::Bin::Lt{}, std::move($3)); }
+    | expr LE expr { $$ = driver.rules->binary(std::move($1), AST::Bin::Le{}, std::move($3)); }
+    | expr GT expr { $$ = driver.rules->binary(std::move($1), AST::Bin::Gt{}, std::move($3)); }
+    | expr GE expr { $$ = driver.rules->binary(std::move($1), AST::Bin::Ge{}, std::move($3)); }
     ;
 
 bin_op:
@@ -203,13 +223,9 @@ bin_op:
     ;
 
 unary:
-    un_op expr { $$ = driver.rules->unary($1, std::move($2)); }
-    ;
-
-un_op:
-    MIN { $$ = AST::Un::Neg{}; }
-    | PLUS { $$ = AST::Un::Pos{}; }
-    | NOT { $$ = AST::Un::Not{}; }
+    MIN expr %prec U_MIN { $$ = driver.rules->unary(AST::Un::Neg{}, std::move($2)); }
+    | PLUS expr %prec U_PLUS { $$ = driver.rules->unary(AST::Un::Pos{}, std::move($2)); }
+    | NOT expr %prec U_NOT { $$ = driver.rules->unary(AST::Un::Not{}, std::move($2)); }
     ;
 
 let:
