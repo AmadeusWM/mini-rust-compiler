@@ -6,6 +6,7 @@
 
 namespace TAST {
   struct Binary;
+  struct Unary;
   struct Call;
   struct Ret;
   struct Break;
@@ -32,6 +33,7 @@ namespace TAST {
     P<Ret>,
     P<Block>,
     P<Binary>,
+    P<Unary>,
     P<Assign>,
     P<Call>
   > ExprKind;
@@ -74,6 +76,13 @@ namespace TAST {
     AST::BinOp op;
     P<Expr> lhs;
     P<Expr> rhs;
+    Ty ty;
+  };
+
+  struct Unary {
+    NodeId id;
+    AST::UnOp op;
+    P<Expr> expr;
     Ty ty;
   };
 

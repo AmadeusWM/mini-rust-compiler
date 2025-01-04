@@ -298,6 +298,9 @@ class NameResolutionVisitor : public Visitor {
           visit(*binary->lhs);
           visit(*binary->rhs);
         },
+        [&](const P<Unary>& unary) {
+          visit(*unary->expr);
+        },
         [&](const P<Call>& call) {
           visit(*call);
         }

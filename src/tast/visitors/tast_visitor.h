@@ -18,6 +18,8 @@ template <class T> class Visitor {
   virtual T visit(const Stmt& stmt) = 0;
   virtual T visit(const Let& let) = 0;
   virtual T visit(const Expr& expr) = 0;
+  virtual T visit(const Binary& binary) = 0;
+  virtual T visit(const Unary& unary) = 0;
   virtual T visit(const Lit& lit) = 0;
   virtual T visit(const Call& call) = 0;
   virtual T visit(const Ret& ret) = 0;
@@ -37,6 +39,8 @@ template <class T> class MutVisitor {
   virtual T visit(Stmt& stmt) = 0;
   virtual T visit(Let& let) = 0;
   virtual T visit(Expr& expr) = 0;
+  virtual T visit(Binary& binary) = 0;
+  virtual T visit(Unary& unary) = 0;
   virtual T visit(Lit& lit) = 0;
   virtual T visit(Call& call) = 0;
   virtual T visit(Ret& ret) = 0;
@@ -82,9 +86,19 @@ class WalkVisitor : public Visitor<void> {
       [this](const Lit& lit) { visit(lit); },
       [this](const Break& breakExpr) { },
       [this](const AST::Ident& ident) { },
-      [this](const P<Binary>& binary) { visit(*binary->lhs); visit(*binary->rhs); },
+      [this](const P<Binary>& binary) { visit(*binary); },
+      [this](const P<Unary>& unary) { visit(*unary); },
       [this](const P<Call>& call) { visit(*call); },
     }, expr.kind);
+  }
+
+  void visit(const Binary& binary) override {
+    visit(*binary.lhs);
+    visit(*binary.rhs);
+  }
+
+  void visit(const Unary& unary) override {
+    visit(*unary.expr);
   }
 
   void visit(const Assign& assign) override {
@@ -157,9 +171,19 @@ class MutWalkVisitor : public MutVisitor<void> {
       [this](P<Ret>& ret) { visit(*ret); },
       [this](Lit& lit) { visit(lit); },
       [this](AST::Ident& ident ) {},
-      [this](P<Binary>& binary) { visit(*binary->lhs); visit(*binary->rhs); },
+      [this](P<Binary>& binary) { visit(*binary); },
+      [this](P<Unary>& unary) { visit(*unary); },
       [this](P<Call>& call) { visit(*call); },
     }, expr.kind);
+  }
+
+  void visit(Binary& binary) override {
+    visit(*binary.lhs);
+    visit(*binary.rhs);
+  }
+
+  void visit(Unary& unary) override {
+    visit(*unary.expr);
   }
 
   void visit(Assign& assign) override {

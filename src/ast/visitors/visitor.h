@@ -81,12 +81,19 @@ namespace AST {
           [this](const P<Block>& block) { visit(*block); },
           [this](const P<Assign>& assign) { visit(*assign); },
           [this](const Path& path) { },
-          [this](const P<Binary>& binary) {
-            visit(*binary->lhs);
-            visit(*binary->rhs);
-          },
+          [this](const P<Binary>& binary) { visit(*binary); },
+          [this](const P<Unary>& unary) {visit(*unary);},
           [this](const P<Call>& call) { visit(*call); }
       }, expr.kind);
+    }
+
+    virtual void visit(const Unary& unary) {
+      visit(*unary.expr);
+    }
+
+    virtual void visit(const Binary& binary) {
+      visit(*binary.lhs);
+      visit(*binary.rhs);
     }
 
     virtual void visit(const Assign& assign) {

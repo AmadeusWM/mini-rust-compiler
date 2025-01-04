@@ -28,7 +28,8 @@ class ApplyInferenceVisitor: public MutWalkVisitor {
       [this](Lit& lit) { visit(lit); },
       [this](Break& br) {},
       [this](AST::Ident& ident ) {},
-      [this](P<Binary>& binary) { visit(*binary->lhs); visit(*binary->rhs); },
+      [this](P<Binary>& binary) { MutWalkVisitor::visit(*binary); },
+      [this](P<Unary>& unary) { MutWalkVisitor::visit(*unary); },
       [this](P<Call>& call) { visit(*call); },
     }, expr.kind);
   }

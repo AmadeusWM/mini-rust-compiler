@@ -77,6 +77,13 @@ class LowerAstVisitor : public Visitor {
 
   P<TAST::Block> resolve_block(const Block& block) {
     std::vector<P<TAST::Stmt>> statements{};
+    if (block.statements.empty()) {
+      return std::make_unique<TAST::Block>(TAST::Block {
+        .id = block.id,
+        .statements = {},
+        .expr = std::nullopt
+      });
+    }
     std::for_each(block.statements.begin(), block.statements.end() - 1, [&](const auto& stmt) {
       auto tast_statement = this->resolve_statement(*stmt);
       if (tast_statement.has_value()) {
@@ -139,10 +146,22 @@ class LowerAstVisitor : public Visitor {
         [this](const P<Binary>& binary) {
           return TAST::ExprKind{resolve_binary(*binary)};
         },
+        [this](const P<Unary>& unary) {
+          return TAST::ExprKind{resolve_unary(*unary)};
+        },
         [this](const P<Call>& call) {
           return TAST::ExprKind{resolve_call(*call)};
         }
       }, expr.kind),
+      .ty = TAST::Ty {TAST::InferTy{ TAST::TyVar{} }}
+    });
+  }
+
+  P<TAST::Unary> resolve_unary(const Unary& unary) {
+    return std::make_unique<TAST::Unary>(TAST::Unary {
+      .id = unary.id,
+      .op = unary.op,
+      .expr = resolve_expr(*unary.expr),
       .ty = TAST::Ty {TAST::InferTy{ TAST::TyVar{} }}
     });
   }
@@ -195,7 +214,7 @@ class LowerAstVisitor : public Visitor {
           .kind = TAST::ExprKind {
             std::make_unique<TAST::If>(TAST::If {
               .id = driver.create_node(),
-              .cond = std::move(cond),
+              .cond = create_not(std::move(cond)),
               .then_block = std::make_unique<TAST::Block>(TAST::Block {
                 .id = driver.create_node(),
                 .statements = std::move(statements),
@@ -207,6 +226,21 @@ class LowerAstVisitor : public Visitor {
           .ty = TAST::Ty {TAST::InferTy{ TAST::TyVar{} }}
         })
       }
+    });
+  }
+
+  P<TAST::Expr> create_not(P<TAST::Expr> cond) {
+    return std::make_unique<TAST::Expr>(TAST::Expr {
+      .id = driver.create_node(),
+      .kind = TAST::ExprKind {
+        std::make_unique<TAST::Unary>(TAST::Unary {
+          .id = driver.create_node(),
+          .op = Un::Not{},
+          .expr = std::move(cond),
+          .ty = TAST::Ty {TAST::InferTy{ TAST::TyVar{} }}
+        })
+      },
+      .ty = TAST::Ty {TAST::InferTy{ TAST::TyVar{} }}
     });
   }
 

@@ -164,6 +164,7 @@ namespace TAST {
         [&](const Lit& lit) { return visit(lit); },
         [&](const AST::Ident& ident) { return visit(ident); },
         [&](const P<Binary>& binary) { return visit(*binary); },
+        [&](const P<Unary>& unary) { return visit(*unary); },
         [&](const P<Call>& call) { return visit(*call); },
       }, expr.kind);
       spdlog::debug("node {}: {}", expr.id, result.to_string());
@@ -247,7 +248,7 @@ namespace TAST {
       return scopes.lookup_or_throw(ident.identifier);
     }
 
-    SymbolValue visit(const Binary& binary) {
+    SymbolValue visit(const Binary& binary) override {
       auto lhs = visit(*binary.lhs);
       auto rhs = visit(*binary.rhs);
       return std::visit(overloaded {
@@ -268,7 +269,12 @@ namespace TAST {
                   return SymbolValue(NumberValue(l_value / r_value));
                 },
                 [&](const AST::Bin::Mod& mod) {
-                  return SymbolValue(NumberValue(l_value));
+                  if constexpr (std::is_integral_v<decltype(l_value)> && std::is_integral_v<decltype(r_value)>) {
+                    return SymbolValue(NumberValue(l_value % r_value));
+                  } else {
+                    throw InterpeterException("Modulo operation is not supported for non-integer types");
+                    return SymbolValue(UnitValue{});
+                  }
                 },
                 [&](const AST::Bin::And& and_op) {
                   return SymbolValue(BoolValue(l_value && r_value));
@@ -327,6 +333,48 @@ namespace TAST {
           return SymbolValue{UnitValue{}};
         }
       }, lhs.kind, rhs.kind);
+    }
+
+    SymbolValue visit(const Unary& unary) override {
+      auto expr = visit(*unary.expr);
+      return std::visit(overloaded {
+        [&](const NumberValue& n) {
+          return std::visit(overloaded {
+            [&](const auto& n_value) {
+              return std::visit(overloaded {
+                [&](const AST::Un::Neg& neg) {
+                  return SymbolValue(NumberValue(-n_value));
+                },
+                [&](const AST::Un::Pos& pos) {
+                  return SymbolValue(NumberValue(n_value));
+                },
+                [&](const AST::Un::Not& not_op) {
+                  return SymbolValue(BoolValue(!n_value));
+                }
+              }, unary.op);
+            }
+          }, n);
+        },
+        [&](const BoolValue& b) {
+          return std::visit(overloaded {
+            [&](const auto& b_value) {
+              return std::visit(overloaded {
+                [&](const AST::Un::Not& not_op) {
+                  return SymbolValue(BoolValue(!b_value));
+                },
+                [&](const auto& op) {
+                  throw InterpeterException("Operator is not implemented for bool");
+                  return SymbolValue{UnitValue{}};
+                }
+              }, unary.op);
+            }
+          }, b);
+        },
+        [&](const auto& n) {
+          throw InterpeterException("Type mismatch");
+          return SymbolValue{UnitValue{}};
+        }
+      }, expr.kind);
     }
 
     SymbolValue visit(const Block& block) override {

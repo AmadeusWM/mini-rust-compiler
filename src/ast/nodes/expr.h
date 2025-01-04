@@ -13,6 +13,7 @@ namespace AST {
   struct Loop;
   struct While;
   struct Assign;
+  struct Unary;
 
   typedef std::variant<
     Lit,
@@ -23,6 +24,7 @@ namespace AST {
     P<Loop>,
     P<Block>,
     P<Binary>,
+    P<Unary>,
     P<Ret>,
     P<Assign>,
     P<Call>
@@ -81,6 +83,24 @@ namespace AST {
     BinOp op;
     P<Expr> lhs;
     P<Expr> rhs;
+  };
+
+  namespace Un{
+    struct Neg{};
+    struct Pos{};
+    struct Not{};
+  }
+
+  typedef std::variant<
+    Un::Neg,
+    Un::Pos,
+    Un::Not
+  > UnOp;
+
+  struct Unary {
+    NodeId id;
+    UnOp op;
+    P<Expr> expr;
   };
 
   struct Block {

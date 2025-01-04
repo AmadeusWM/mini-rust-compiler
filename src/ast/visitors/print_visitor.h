@@ -172,6 +172,14 @@ class PrintVisitor : public AST::Visitor {
           );
           visit(*binary->rhs);
         },
+        [this](const P<Unary>& unary) {
+          print(std::visit(overloaded {
+            [&](const Un::Neg) { return "Neg"; },
+            [&](const Un::Not) { return "Not"; },
+            [&](const Un::Pos) { return "Pos"; }
+          }, unary->op), unary->id);
+          visit(*unary->expr);
+        },
         [this](const P<Call>& call) {
           print("Call", call->id);
           wrap([this, &call]() {

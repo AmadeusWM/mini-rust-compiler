@@ -76,6 +76,7 @@
 %type <P<AST::Param>> param
 %type <P<AST::Block>> block
 %type <P<AST::Block>> statements
+%type <P<AST::Block>> statements_without_expr
 %type <P<AST::Stmt>> statement
 %type <P<AST::Ret>> ret
 %type <P<AST::Let>> let
@@ -100,6 +101,8 @@
 %type <Vec<P<AST::Expr>>> exprs
 %type <bool> bool
 %type <P<AST::Assign>> assign
+%type <AST::UnOp> un_op
+%type <P<AST::Unary>> unary
 
 
 // custom
@@ -159,10 +162,13 @@ block:
     ;
 
 statements:
-    statements expr_without_block { $$ = driver.rules->addStatement(std::move($1), driver.rules->statement(std::move($2))); }
-    | statements statement { $$ = driver.rules->addStatement(std::move($1), std::move($2)); }
-    | statement { $$ = driver.rules->initStatements(std::move($1)); }
-    | { $$ = driver.rules->initStatements(); }
+    statements_without_expr { $$ = std::move($1); }
+    | statements_without_expr expr_without_block { $$ = driver.rules->addStatement(std::move($1), driver.rules->statement(std::move($2))); }
+    ;
+
+statements_without_expr:
+    { $$ = driver.rules->initStatements(); }
+    | statements_without_expr statement { $$ = driver.rules->addStatement(std::move($1), std::move($2)); }
     ;
 
 statement:
@@ -197,6 +203,15 @@ bin_op:
     | GE { $$ = AST::Bin::Ge{}; }
     ;
 
+unary:
+    un_op expr { $$ = driver.rules->unary($1, std::move($2)); }
+    ;
+
+un_op:
+    MIN { $$ = AST::Un::Neg{}; }
+    | PLUS { $$ = AST::Un::Pos{}; }
+    | NOT { $$ = AST::Un::Not{}; }
+    ;
 
 let:
     KW_LET pat local_type local_kind SEMI { $$ = driver.rules->let(std::move($2), std::move($3), std::move($4)); }
@@ -224,6 +239,7 @@ expr:
 
 expr_without_block:
     binary { $$ = driver.rules->expr(std::move($1)); }
+    | unary { $$ = driver.rules->expr(std::move($1)); }
     | literal { $$ = driver.rules->expr(std::move($1)); }
     | path { $$ = driver.rules->expr(std::move($1)); }
     | call { $$ = driver.rules->expr(std::move($1)); }

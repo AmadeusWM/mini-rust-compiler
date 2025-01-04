@@ -215,8 +215,12 @@ class TypecheckVisitor : public MutWalkVisitor {
         infer_ctx.eq(expr.id, binding.id);
       },
       [&](P<Binary>& binary) {
-        resolve_binary(*binary);
+        visit(*binary);
         infer_ctx.eq(expr.id, binary->id);
+      },
+      [&](P<Unary>& unary) {
+        visit(*unary);
+        infer_ctx.eq(expr.id, unary->id);
       },
       [&](P<Call>& call) {
         visit(*call);
@@ -257,7 +261,7 @@ class TypecheckVisitor : public MutWalkVisitor {
     infer_ctx.add(lit.id, resolve_lit(lit));
   }
 
-  void resolve_binary(Binary& bin) {
+  void visit(Binary& bin) override {
     visit(*bin.lhs);
     visit(*bin.rhs);
     // infer types
@@ -381,6 +385,41 @@ class TypecheckVisitor : public MutWalkVisitor {
         }
       }
     }, bin.op);
+  }
+
+  void visit(Unary& unary) override {
+    visit(*unary.expr);
+    std::visit(overloaded {
+      [&](const AST::Un::Neg& neg) {
+        infer_ctx.add(unary.id, infer_ctx.getType(unary.expr->id));
+      },
+      [&](const AST::Un::Pos& pos) {
+        infer_ctx.add(unary.id, infer_ctx.getType(unary.expr->id));
+      },
+      [&](const AST::Un::Not& not_op) {
+        infer_ctx.add(unary.id, Ty{BoolTy{}});
+      },
+    }, unary.op);
+
+    Ty ty = infer_ctx.getType(unary.expr->id);
+
+    std::visit(overloaded {
+      [&](const AST::Un::Neg& neg) {
+        if (!(ty.isInt() || ty.isFloat())) {
+          throw TypecheckException("Invalid type for operator -");
+        }
+      },
+      [&](const AST::Un::Pos& pos) {
+        if (!(ty.isInt() || ty.isFloat())) {
+          throw TypecheckException("Invalid type for operator +");
+        }
+      },
+      [&](const AST::Un::Not& not_op) {
+        if (!ty.isBool()) {
+          throw TypecheckException("Invalid type for operator !");
+        }
+      }
+    }, unary.op);
   }
 
   Ty resolve_lit(Lit& lit) {

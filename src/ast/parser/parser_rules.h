@@ -55,6 +55,7 @@ class ParserRules {
     AST::Lit lit(AST::LitKind $1);
 
     P<AST::Binary> binary(P<AST::Expr> $1, AST::BinOp $2, P<AST::Expr> $3);
+    P<AST::Unary> unary(AST::UnOp $1, P<AST::Expr> $2);
 
     P<AST::Ty> ty(AST::TyKind $1);
 

@@ -7,10 +7,9 @@ fn fib(n: i32) -> i32 {
 }
 
 fn main() {
-    let mut x = 0;
+    let x = 0;
     while x <= 25 {
         let result = fib(x);
-        println!("{result}");
-        x += 1;
+        x = x + 1;
     }
 }

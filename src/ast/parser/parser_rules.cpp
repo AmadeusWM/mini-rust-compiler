@@ -52,12 +52,14 @@ P<AST::FnSig> ParserRules::functionSignature(Vec<P<AST::Param>> $1, P<AST::Ty> $
 }
 
 P<AST::Block> ParserRules::initStatements(P<AST::Stmt> $1) {
+  spdlog::info("initStatements bad!");
   auto $$ = initStatements();
   $$->statements.push_back(std::move($1));
   return std::move($$);
 }
 
 P<AST::Block> ParserRules::initStatements() {
+  spdlog::info("initStatements!");
   auto $$ = P<AST::Block>(new AST::Block {
     .id = driver.create_node(),
     .statements{}
@@ -189,6 +191,13 @@ P<AST::Binary> ParserRules::binary(P<AST::Expr> $1, AST::BinOp $2, P<AST::Expr> 
     .op = $2,
     .lhs = std::move($1),
     .rhs = std::move($3)
+  });
+}
+P<AST::Unary> ParserRules::unary(AST::UnOp $1, P<AST::Expr> $2) {
+  return P<AST::Unary>(new AST::Unary {
+    .id = driver.create_node(),
+    .op = $1,
+    .expr = std::move($2)
   });
 }
 

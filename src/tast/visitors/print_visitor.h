@@ -114,6 +114,14 @@ public:
           );
           visit(*binary->rhs);
         },
+        [this](const P<Unary>& unary) {
+          print(std::visit(overloaded {
+            [&](const AST::Un::Neg) { return "Neg"; },
+            [&](const AST::Un::Not) { return "Not"; },
+            [&](const AST::Un::Pos) { return "Pos"; }
+          }, unary->op), unary->id);
+          visit(*unary->expr);
+        },
         [this](const P<Call>& call) { visit(*call); }
       }, expr.kind);
     });
