@@ -12,21 +12,14 @@ ASTDriver::ASTDriver(Scanner* scanner)
     , parser(*this, *scanner)
 {}
 
-void ASTDriver::parse()
-{
-  spdlog::info("Parsing...");
-  this->parser.parse();
-  AST::PrintVisitor visitor;
-  visitor.Visitor::visit(*this->ast.value());
-}
-
-void ASTDriver::nameResolution() {
-  spdlog::info("Name resolution...");
-}
-
 P<Driver> ASTDriver::execute()
 {
-  parse();
+  print_step("Parsing");
+  this->parser.parse();
+  AST::PrintVisitor print_visitor;
+  print_visitor.Visitor::visit(*this->ast.value());
+
+  print_step("Building Namespact Tree");
   AST::NamespaceTreeBuilder ns_builder;
   ns_builder.visit(*this->ast.value());
 
@@ -35,8 +28,6 @@ P<Driver> ASTDriver::execute()
 
   AST::LowerAstVisitor lowerer(visitor.namespace_tree, *this);
   lowerer.visit(*this->ast.value());
-
-  spdlog::debug("Done lowering");
 
   return P<TASTDriver>(new TASTDriver(std::move(lowerer.crate)));
 }

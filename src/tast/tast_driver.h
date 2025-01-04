@@ -16,6 +16,7 @@ public:
 
   void print();
   void typecheck();
+  void interpret();
 
   P<Driver> execute() override;
   std::string name() override { return "TAST Driver"; }

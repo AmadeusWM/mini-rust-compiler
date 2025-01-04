@@ -16,10 +16,10 @@ private:
       ind += "  ";
     }
     if (id.has_value()) {
-      spdlog::debug("{}|-{} ({})", ind, str, id.value());
+      spdlog::info("{}|-{} ({})", ind, str, id.value());
     }
     else {
-      spdlog::debug("{}|-{}", ind, str);
+      spdlog::info("{}|-{}", ind, str);
     }
   }
 

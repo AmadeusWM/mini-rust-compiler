@@ -17,9 +17,9 @@ int main(int argc, char *argv[]) {
 
   try {
     while (driver != nullptr) {
-      spdlog::info("*************************************");
+      spdlog::info("****************************************");
       spdlog::info("Executing {}", driver->name());
-      spdlog::info("*************************************");
+      spdlog::info("****************************************");
       driver = driver->execute();
     }
   } catch (const std::exception &e) {
