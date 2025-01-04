@@ -83,6 +83,7 @@ class WalkVisitor : public Visitor<void> {
       [this](const P<Assign>& assign) { visit(*assign); },
       [this](const P<Loop>& loopExpr) { visit(*loopExpr); },
       [this](const P<Ret>& ret) { visit(*ret); },
+      [this](const P<Print>& printExpr) { },
       [this](const Lit& lit) { visit(lit); },
       [this](const Break& breakExpr) { },
       [this](const AST::Ident& ident) { },
@@ -164,6 +165,7 @@ class MutWalkVisitor : public MutVisitor<void> {
   void visit(Expr& expr) override {
     std::visit(overloaded {
       [this](P<Block>& block) { visit(*block); },
+      [this](P<Print>& block) { },
       [this](Break& breakExpr) { },
       [this](P<If>& ifExpr) { visit(*ifExpr); },
       [this](P<Assign>& assign) { visit(*assign); },

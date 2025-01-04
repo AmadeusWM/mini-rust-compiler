@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <exception>
 #include <functional>
+#include <iostream>
 #include <variant>
 namespace TAST {
   class ReturnException : public std::exception {
@@ -153,6 +154,7 @@ namespace TAST {
     SymbolValue visit(const Expr& expr) override {
       auto result = std::visit(overloaded {
         [&](const P<Block>& block) { return visit(*block); },
+        [&](const P<Print>& printExpr) { return visit(*printExpr); },
         [&](const P<Ret>& ret) { return visit(*ret); },
         [&](const P<Assign>& assign) { return visit(*assign); },
         [&](const Break& br) { return visit(br); },
@@ -166,6 +168,19 @@ namespace TAST {
       }, expr.kind);
       // spdlog::debug("node {}: {}", expr.id, result.to_string());
       return result;
+    }
+
+    SymbolValue visit(const Print& printExpr) {
+      std::visit(overloaded {
+        [&](const std::string& s) {
+          std::cout << s << std::endl;
+        },
+        [&](const AST::Ident& ident) {
+          auto v = visit(ident);
+          std::cout << v.to_string() << std::endl;
+        }
+      }, printExpr.kind);
+      return {UnitValue{}};
     }
 
     SymbolValue visit(const Assign& assign) override {

@@ -129,12 +129,11 @@ try      { return Token::make_KW_TRY(yylloc); }
 "["        { return Token::make_L_BRACKET(yylloc); }
 "]"        { return Token::make_R_BRACKET(yylloc); }
 
+"println!"         { return Token::make_PRINT(yylloc); }
 
 {identifier}       { return Token::make_IDENTIFIER(yytext, yylloc); }
 {digit}*           { return Token::make_INTEGER_LITERAL(atoi(yytext), yylloc); }
 \"(\\.|[^"\\])*\"  { return Token::make_STRING_LITERAL(yytext, yylloc); }
-
-"println!"         { return Token::make_PRINT(yylloc); }
 
 
 <<EOF>>   { return Token::make_END(yylloc); }

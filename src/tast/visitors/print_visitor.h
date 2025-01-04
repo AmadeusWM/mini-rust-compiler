@@ -86,6 +86,7 @@ public:
     wrap([&] {
       std::visit(overloaded {
         [this](const P<Block>& block) { visit(*block); },
+        [this](const P<Print>& printExpr) { visit(*printExpr); },
         [this](const P<Ret>& ret) { visit(*ret); },
         [this](const P<Loop>& loop) { visit(*loop); },
         [this](const P<If>& ifExpr) { visit(*ifExpr); },
@@ -124,6 +125,16 @@ public:
         },
         [this](const P<Call>& call) { visit(*call); }
       }, expr.kind);
+    });
+  }
+
+  void visit(const Print& printExpr) {
+    print("Print", printExpr.id);
+    wrap([&] {
+      std::visit(overloaded {
+        [&](const std::string& s) { print("String" + s); },
+        [&](const AST::Ident& ident) { print("Ident"); }
+      }, printExpr.kind);
     });
   }
 

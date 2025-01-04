@@ -273,6 +273,9 @@ class NameResolutionVisitor : public Visitor {
         [&](const P<Ret>& ret) {
           visit(*ret);
         },
+        [&](const P<Print>& printExpr) {
+          visit(*printExpr);
+        },
         [&](const P<Assign>& assign) {
           visit(*assign);
         },
@@ -305,6 +308,16 @@ class NameResolutionVisitor : public Visitor {
           visit(*call);
         }
     }, expr.kind);
+  }
+
+  void visit(const Print& printExpr)
+  {
+    std::visit(overloaded {
+      [&](const std::string& s) { },
+      [&](const AST::Ident& ident) {
+        lookup_ident(ident.identifier);
+      }
+    }, printExpr.kind);
   }
 
   void visit(const Assign& assign) override

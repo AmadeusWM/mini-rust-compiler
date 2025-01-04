@@ -52,14 +52,12 @@ P<AST::FnSig> ParserRules::functionSignature(Vec<P<AST::Param>> $1, P<AST::Ty> $
 }
 
 P<AST::Block> ParserRules::initStatements(P<AST::Stmt> $1) {
-  spdlog::info("initStatements bad!");
   auto $$ = initStatements();
   $$->statements.push_back(std::move($1));
   return std::move($$);
 }
 
 P<AST::Block> ParserRules::initStatements() {
-  spdlog::info("initStatements!");
   auto $$ = P<AST::Block>(new AST::Block {
     .id = driver.create_node(),
     .statements{}
@@ -240,4 +238,21 @@ P<AST::Call> ParserRules::call(AST::Path $1, Vec<P<AST::Expr>> $2){
     .path = std::move($1),
     .params = std::move($2)
   });
+}
+
+P<AST::Print> ParserRules::print(std::string $1) {
+  AST::PrintKind kind;
+  if ($1.size() > 2 && $1.front() == '{' && $1.back() == '}') {
+    kind = {this->ident($1.substr(1, $1.size() - 2))};
+  } else {
+    kind = {$1};
+  }
+  return P<AST::Print>(new AST::Print {
+    .id = driver.create_node(),
+    .kind = std::move(kind)
+  });
+}
+
+std::string ParserRules::str(std::string $1) {
+  return $1.substr(1, $1.size() - 2);
 }

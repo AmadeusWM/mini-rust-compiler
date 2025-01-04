@@ -64,7 +64,7 @@ struct SymbolValue {
         }, strVal);
       },
       [](const UnitValue&) -> std::string {
-        return "Unit";
+        return "()";
       },
       [](const BoolValue&) -> std::string {
         return std::visit([](auto&& arg) -> std::string {

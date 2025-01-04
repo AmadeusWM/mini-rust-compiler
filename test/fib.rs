@@ -10,6 +10,7 @@ fn main() {
     let x = 0;
     while x <= 25 {
         let result = fib(x);
+        println!("{result}");
         x = x + 1;
     }
 }

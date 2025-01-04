@@ -178,6 +178,9 @@ class TypecheckVisitor : public MutWalkVisitor {
   void visit(Expr& expr) override {
     spdlog::debug("visiting: {}", expr.id);
     std::visit(overloaded {
+      [&](P<Print>& printExpr) {
+        infer_ctx.add(expr.id, Ty { Unit{} });
+      },
       [&](P<Block>& block) {
         visit(*block);
         infer_ctx.eq(expr.id, block->id);

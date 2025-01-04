@@ -14,11 +14,13 @@ namespace AST {
   struct While;
   struct Assign;
   struct Unary;
+  struct Print;
 
   typedef std::variant<
     Lit,
     Path,
     Break,
+    P<Print>,
     P<If>,
     P<While>,
     P<Loop>,
@@ -29,6 +31,16 @@ namespace AST {
     P<Assign>,
     P<Call>
   > ExprKind;
+
+  typedef std::variant<
+    std::string,
+    Ident
+  > PrintKind;
+
+  struct Print {
+    NodeId id;
+    PrintKind kind;
+  };
 
   struct Assign {
     NodeId id;

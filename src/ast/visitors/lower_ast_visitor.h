@@ -122,6 +122,9 @@ class LowerAstVisitor : public Visitor {
         [this](const P<Assign>& assign) {
           return TAST::ExprKind{resolve_assign(*assign)};
         },
+        [this](const P<Print>& printExpr) {
+          return TAST::ExprKind{resolve_print(*printExpr)};
+        },
         [this](const P<Ret>& ret) {
           return TAST::ExprKind{resolve_ret(*ret)};
         },
@@ -154,6 +157,13 @@ class LowerAstVisitor : public Visitor {
         }
       }, expr.kind),
       .ty = TAST::Ty {TAST::InferTy{ TAST::TyVar{} }}
+    });
+  }
+
+  P<TAST::Print> resolve_print(const Print& printExpr) {
+    return std::make_unique<TAST::Print>(TAST::Print {
+      .id = printExpr.id,
+      .kind = printExpr.kind,
     });
   }
 

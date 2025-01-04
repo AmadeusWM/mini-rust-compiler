@@ -68,4 +68,8 @@ class ParserRules {
     P<AST::Pat> pat(AST::PatKind pat);
 
     P<AST::Call> call(AST::Path $1, Vec<P<AST::Expr>> $2);
+
+    P<AST::Print> print(std::string $1);
+
+    std::string str(std::string $1);
 };

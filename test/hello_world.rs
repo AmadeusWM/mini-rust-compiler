@@ -8,4 +8,5 @@ fn rec(y: i32) -> i32 {
 
 fn main() {
     let x = rec(5);
+    println!("{x}");
 }

@@ -13,6 +13,7 @@ namespace TAST {
   struct If;
   struct Loop;
   struct Assign;
+  struct Print;
 
   struct Lit {
     NodeId id;
@@ -28,6 +29,7 @@ namespace TAST {
     Break,
     Lit,
     AST::Ident,
+    P<Print>,
     P<Loop>,
     P<If>,
     P<Ret>,
@@ -37,6 +39,12 @@ namespace TAST {
     P<Assign>,
     P<Call>
   > ExprKind;
+
+
+  struct Print {
+    NodeId id;
+    AST::PrintKind kind;
+  };
 
   struct Ret {
     NodeId id;

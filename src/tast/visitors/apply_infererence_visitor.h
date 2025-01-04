@@ -21,6 +21,7 @@ class ApplyInferenceVisitor: public MutWalkVisitor {
     expr.ty = ctx.getType(expr.id);
     std::visit(overloaded {
       [this](P<Block>& block) { MutWalkVisitor::visit(*block); },
+      [this](P<Print>& printExpr) { },
       [this](P<Ret>& ret) { MutWalkVisitor::visit(*ret); },
       [this](P<Assign>& assign) { MutWalkVisitor::visit(*assign); },
       [this](P<Loop>& loop) { MutWalkVisitor::visit(*loop); },

@@ -55,6 +55,8 @@
 // punctiations: https://doc.rust-lang.org/reference/tokens.html#punctuation
 %token PLUS MIN STAR SLASH PERCENT CARET NOT AND OR AND_AND OR_OR SHL SHR PLUS_EQ MINUS_EQ STAR_EQ SLASH_EQ PERCENT_EQ CARET_EQ AND_EQ OR_EQ SHL_EQ SHR_EQ EQ EQ_EQ NE GT LT GE LE AT UNDERSCORE DOT DOT_DOT DOT_DOT_DOT DOT_DOT_EQ COMMA SEMI COLON PATH_SEP R_ARROW FAT_ARROW L_ARROW POUND DOLLAR QUESTION TILDE
 
+%precedence STATEMENT_OVER_EXPR
+%precedence EXPR_BELOW_STATEMENT
 %precedence EQ
 // custom precedence for rules: https://www.gnu.org/software/bison/manual/html_node/Contextual-Precedence.html
 %left OR_OR
@@ -111,6 +113,8 @@
 %type <bool> bool
 %type <P<AST::Assign>> assign
 %type <P<AST::Unary>> unary
+%type <P<AST::Print>> print
+%type <std::string> str
 
 
 // custom
@@ -206,22 +210,6 @@ binary:
     | expr GE expr { $$ = driver.rules->binary(std::move($1), AST::Bin::Ge{}, std::move($3)); }
     ;
 
-bin_op:
-    PLUS { $$ = AST::Bin::Add{}; }
-    | MIN { $$ = AST::Bin::Sub{}; }
-    | STAR { $$ = AST::Bin::Mul{}; }
-    | SLASH { $$ = AST::Bin::Div{}; }
-    | PERCENT { $$ = AST::Bin::Mod{}; }
-    | AND { $$ = AST::Bin::And{}; }
-    | OR { $$ = AST::Bin::Or{}; }
-    | EQ_EQ { $$ = AST::Bin::Eq{}; }
-    | NE { $$ = AST::Bin::Ne{}; }
-    | LT { $$ = AST::Bin::Lt{}; }
-    | LE { $$ = AST::Bin::Le{}; }
-    | GT { $$ = AST::Bin::Gt{}; }
-    | GE { $$ = AST::Bin::Ge{}; }
-    ;
-
 unary:
     MIN expr %prec U_MIN { $$ = driver.rules->unary(AST::Un::Neg{}, std::move($2)); }
     | PLUS expr %prec U_PLUS { $$ = driver.rules->unary(AST::Un::Pos{}, std::move($2)); }
@@ -261,6 +249,7 @@ expr_without_block:
     | ret { $$ = driver.rules->expr(std::move($1)); }
     | break { $$ = driver.rules->expr(std::move($1)); }
     | assign { $$ = driver.rules->expr(std::move($1)); }
+    | print { $$ = driver.rules->expr(std::move($1)); }
     ;
 
 expr_with_block:
@@ -321,6 +310,13 @@ bool:
     KW_TRUE { $$ = true; }
     | KW_FALSE { $$ = false; }
     ;
+
+str:
+    STRING_LITERAL { $$ = driver.rules->str($1); }
+    ;
+
+print:
+    PRINT L_PAREN str R_PAREN { $$ = driver.rules->print(std::move($3)); }
 
 %%
 
