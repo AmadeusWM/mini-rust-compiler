@@ -70,7 +70,11 @@ class PrintVisitor : public AST::Visitor {
   }
 
   void visit(const Param& param) override {
-    print("Param", param.id);
+    if (param.mut) {
+      print("Param mut", param.id);
+    } else {
+      print("Param", param.id);
+    }
     wrap([&] {
       visit(*param.pat);
     });
@@ -212,7 +216,11 @@ class PrintVisitor : public AST::Visitor {
 
   void visit(const Let& let) override
   {
-    print("Let", let.id);
+    if (let.mut) {
+      print("Let mut", let.id);
+    } else {
+      print("Let", let.id);
+    }
     wrap([this, &let]() {
       visit(*let.pat);
       std::visit(

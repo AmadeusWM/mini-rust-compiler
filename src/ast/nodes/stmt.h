@@ -42,5 +42,6 @@ namespace AST {
     P<Pat> pat;
     P<Ty> ty;
     LocalKind kind;
+    bool mut;
   };
 }

@@ -126,7 +126,7 @@ class TypecheckVisitor : public MutWalkVisitor {
   void visit(Param& param){
     std::visit(overloaded {
       [&](const AST::Ident& ident) {
-        scopes.insert_binding(ident.identifier, { .id = param.id, .mut = false });
+        scopes.insert_binding(ident.identifier, { .id = param.id, .mut = param.mut });
         infer_ctx.add(param.id, param.ty);
       }
     }, param.pat->kind);
@@ -158,7 +158,7 @@ class TypecheckVisitor : public MutWalkVisitor {
       visit(*let.initializer.value());
       std::visit(overloaded {
         [this, &let](const AST::Ident& ident) {
-          scopes.insert_binding(ident.identifier, {.id = let.id, .mut = true } ); // todo: set mutability
+          scopes.insert_binding(ident.identifier, {.id = let.id, .mut = let.mut } );
 
           infer_ctx.add(let.id, let.ty);
           infer_ctx.eq(let.id, let.initializer.value()->id);
@@ -168,7 +168,7 @@ class TypecheckVisitor : public MutWalkVisitor {
     else {
       std::visit(overloaded {
         [this, &let](const AST::Ident& ident) {
-          scopes.insert_binding(ident.identifier, { .id = let.id, .mut = true });
+          scopes.insert_binding(ident.identifier, { .id = let.id, .mut = let.mut });
           infer_ctx.add(let.id, let.ty);
         }
       }, let.pat->kind);
@@ -235,6 +235,9 @@ class TypecheckVisitor : public MutWalkVisitor {
   void visit(Assign& assign) override {
     visit(*assign.rhs);
     Binding binding = scopes.lookup_or_throw(assign.lhs.identifier);
+    if (!binding.mut) {
+      throw std::runtime_error("Cannot assign to immutable variable");
+    }
     infer_ctx.eq(binding.id, assign.rhs->id);
   }
 

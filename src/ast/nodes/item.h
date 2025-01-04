@@ -29,6 +29,7 @@ namespace AST {
     NodeId id;
     P<Pat> pat;
     P<Ty> ty;
+    bool mut;
   };
 
   struct FnSig {

@@ -97,12 +97,13 @@ P<AST::Assign> ParserRules::assign(AST::Ident $1, P<AST::Expr> $2) {
   });
 }
 
-P<AST::Let> ParserRules::let(P<AST::Pat> $1, P<AST::Ty> $2, AST::LocalKind $3) {
+P<AST::Let> ParserRules::let(P<AST::Pat> $1, P<AST::Ty> $2, AST::LocalKind $3, bool mut) {
   return P<AST::Let>(new AST::Let {
       .id = driver.create_node(),
       .pat = std::move($1),
       .ty = std::move($2),
-      .kind = std::move($3)
+      .kind = std::move($3),
+      .mut = mut
   });
 }
 
@@ -218,11 +219,12 @@ Vec<P<AST::Param>> ParserRules::addParam(Vec<P<AST::Param>> $1, P<AST::Param> $2
   $1.push_back(std::move($2));
   return $1;
 }
-P<AST::Param> ParserRules::param(P<AST::Pat> $1, P<AST::Ty> $2){
+P<AST::Param> ParserRules::param(P<AST::Pat> $1, P<AST::Ty> $2, bool mut){
   return P<AST::Param>(new AST::Param {
     .id = driver.create_node(),
     .pat = std::move($1),
-    .ty = std::move($2)
+    .ty = std::move($2),
+    .mut = mut
   });
 }
 

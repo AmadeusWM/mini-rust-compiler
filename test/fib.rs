@@ -7,7 +7,7 @@ fn fib(n: i32) -> i32 {
 }
 
 fn main() {
-    let x = 0;
+    let mut x = 0;
     while x <= 25 {
         let result = fib(x);
         println!("{result}");

@@ -32,5 +32,6 @@ namespace TAST {
     Ty ty;
     // let x: i32 = <INIT>;
     Opt<P<Expr>> initializer;
+    bool mut;
   };
 }

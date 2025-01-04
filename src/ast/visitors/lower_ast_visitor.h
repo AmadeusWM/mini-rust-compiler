@@ -69,7 +69,8 @@ class LowerAstVisitor : public Visitor {
       return std::make_unique<TAST::Param>(TAST::Param {
         .id = param->id,
         .pat = resolve_pat(*param->pat),
-        .ty = this->resolve_ty(*param->ty)
+        .ty = this->resolve_ty(*param->ty),
+        .mut = param->mut
       });
     });
     return tast_params;
@@ -303,7 +304,8 @@ class LowerAstVisitor : public Visitor {
         overloaded {
           [this](const Decl& decl) { return Opt<P<TAST::Expr>>{}; },
           [this](const P<Expr>& expr) { return Opt<P<TAST::Expr>> { resolve_expr(*expr) }; }
-        }, let.kind)
+        }, let.kind),
+      .mut = let.mut
     });
   }
 

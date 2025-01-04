@@ -56,7 +56,11 @@ public:
   }
 
   void visit(const Param& param) {
-    print(fmt::format("Param: {}", param.ty.to_string()), param.id);
+    if (param.mut) {
+      print(fmt::format("Param mut: {}", param.ty.to_string()), param.id);
+    } else {
+      print(fmt::format("Param: {}", param.ty.to_string()), param.id);
+    }
     wrap([&] {
       visit(*param.pat);
     });
@@ -75,7 +79,11 @@ public:
     });
   }
   void visit(const Let& let) {
-    print(fmt::format("Let: {}", let.ty.to_string()), let.id);
+    if (let.mut) {
+      print(fmt::format("Let mut: {}", let.ty.to_string()), let.id);
+    } else {
+      print(fmt::format("Let: {}", let.ty.to_string()), let.id);
+    }
     wrap([&] {
       visit(*let.pat);
       WalkVisitor::visit(let);

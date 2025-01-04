@@ -11,6 +11,7 @@ namespace TAST {
     NodeId id;
     P<Pat> pat;
     Ty ty;
+    bool mut;
   };
 
   struct Body {

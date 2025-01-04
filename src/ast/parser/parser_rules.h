@@ -33,7 +33,7 @@ class ParserRules {
 
     P<AST::Semi> semi(P<AST::Expr> $1);
 
-    P<AST::Let> let(P<AST::Pat> $1, P<AST::Ty> $2, AST::LocalKind $3);
+    P<AST::Let> let(P<AST::Pat> $1, P<AST::Ty> $2, AST::LocalKind $3, bool mut = false);
 
     P<AST::Ret> ret(P<AST::Expr> $1);
 
@@ -63,7 +63,7 @@ class ParserRules {
     Vec<P<AST::Param>> initParams();
     Vec<P<AST::Param>> addParam(Vec<P<AST::Param>> $1, P<AST::Param> $2);
 
-    P<AST::Param> param(P<AST::Pat> $1, P<AST::Ty> $2);
+    P<AST::Param> param(P<AST::Pat> $1, P<AST::Ty> $2, bool mut = false);
 
     P<AST::Pat> pat(AST::PatKind pat);
 

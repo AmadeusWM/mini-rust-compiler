@@ -161,7 +161,8 @@ params:
     ;
 
 param:
-    pat COLON type { $$ = driver.rules->param(std::move($1), std::move($3)); }
+    pat COLON type { $$ = driver.rules->param(std::move($1), std::move($3), false); }
+    | KW_MUT pat COLON type { $$ = driver.rules->param(std::move($2), std::move($4), true); }
     ;
 
 type:
@@ -217,7 +218,8 @@ unary:
     ;
 
 let:
-    KW_LET pat local_type local_kind SEMI { $$ = driver.rules->let(std::move($2), std::move($3), std::move($4)); }
+    KW_LET pat local_type local_kind SEMI { $$ = driver.rules->let(std::move($2), std::move($3), std::move($4), false); }
+    | KW_LET KW_MUT pat local_type local_kind SEMI { $$ = driver.rules->let(std::move($3), std::move($4), std::move($5), true); }
     ;
 
 local_kind:
@@ -258,10 +260,10 @@ expr_with_block:
     | while_expr { $$ = driver.rules->expr(std::move($1)); }
     | loop_expr { $$ = driver.rules->expr(std::move($1)); }
     ;
-;
 
 assign:
     ident EQ expr { $$ = driver.rules->assign(std::move($1), std::move($3)); }
+    ;
 
 break:
     KW_BREAK { $$ = driver.rules->breakExpr(); }
