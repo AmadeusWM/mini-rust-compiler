@@ -124,7 +124,6 @@ crate:
 
 items:
     items item { $$ = driver.rules->addItem(std::move($1), std::move($2)); }
-    | item { $$ = driver.rules->initItems(std::move($1)); }
     | { $$ = driver.rules->initItems(); }
     ;
 
