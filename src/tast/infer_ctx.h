@@ -47,7 +47,7 @@ public:
     auto prev_ty = rank_ty->second;
     auto resolved = prev_ty.resolve(ty);
     if (!resolved.has_value()) {
-      throw std::runtime_error(fmt::format("Type mismatch between {} and {}", prev_ty.to_string(), prev_ty.to_string()));
+      throw std::runtime_error(fmt::format("Type mismatch between {} ({}) and {}", id, prev_ty.to_string(), ty.to_string()));
     }
     for (auto& [id, node_rank] : nodesToRank) {
       if (node_rank == rank) {
@@ -101,7 +101,7 @@ public:
 
     auto resolved = type1.resolve(type2);
     if (!resolved.has_value()) {
-      throw std::runtime_error(fmt::format("Type mismatch between {} and {}", type1.to_string(), type2.to_string()));
+      throw std::runtime_error(fmt::format("Type mismatch between nodes {} ({}) and {} ({})", id1, type1.to_string(), id2, type2.to_string()));
     }
     for (auto& [id, rank] : nodesToRank) {
       if (rank == rank2) {
@@ -119,7 +119,7 @@ public:
     }
     auto ty = rankTypes.find(rank->second);
     if (ty == rankTypes.end()) {
-      throw std::runtime_error(fmt::format("Rank {} is not in the context", rank->second));
+      throw std::runtime_error(fmt::format("Rank {} is not in the context for node {}", rank->second, id));
     }
     return ty->second;
   }

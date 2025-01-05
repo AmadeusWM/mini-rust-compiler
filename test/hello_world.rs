@@ -1,28 +1,13 @@
 fn main() {
-    A::B::hello();
-}
-
-fn hello4() {
-    println!("Hello world 4");
-}
-
-mod A {
-    mod B {
-        fn hello() {
-            hello2(2);
-            println!("Hello, world!");
-            fn hello2(two: i32) {
-                println!("Hello world 2?");
-                println!("{two}");
-            }
-            hello2(2);
-            super::C::hello5();
-        }
+    let x = 5.0;
+    let y = 11.0;
+    let z = x + y;
+    println!("{z}");
+    let my_name: &str = "Wolf";
+    if (my_name == "Wolf") {
+        println!("Name matches");
     }
-    mod C {
-        fn hello5() {
-            println!("Hello world 5");
-            super::B::hello::hello2(3);
-        }
-    }
+    println!("Hello");
+    println!("{x}");
+    println!("!");
 }

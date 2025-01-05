@@ -372,7 +372,7 @@ class LowerAstVisitor : public Visitor {
     auto callee = namespace_tree.get(ns, call_ns_absolute);
     return std::make_unique<TAST::Call>( TAST::Call {
       .id = call.id,
-      .callee = std::get<NodeId>(callee.value()),
+      .callee = std::get<FunctionNode>(callee.value()).id,
       .params = [&] {
         Vec<P<TAST::Expr>> transformed_params;
         std::transform(call.params.begin(), call.params.end(), std::back_inserter(transformed_params), [&](const auto& param) {

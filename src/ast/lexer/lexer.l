@@ -9,6 +9,7 @@
 
 digit      [0-9]
 identifier ([a-z]|[A-Z]|\_)([a-z]|[A-Z]|[0-9]|\_)*
+float      {digit}+"."{digit}+
 FALSE      false
 TRUE       true
 
@@ -137,6 +138,7 @@ str      { return Token::make_STR(yylloc); }
 
 {identifier}       { return Token::make_IDENTIFIER(yytext, yylloc); }
 {digit}*           { return Token::make_INTEGER_LITERAL(atoi(yytext), yylloc); }
+{float}           { return Token::make_FLOAT_LITERAL(atof(yytext), yylloc); }
 \"(\\.|[^"\\])*\"  { return Token::make_STRING_LITERAL(yytext, yylloc); }
 
 

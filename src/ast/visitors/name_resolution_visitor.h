@@ -204,21 +204,8 @@ class NameResolutionVisitor : public Visitor {
     const Namespace scope_barrier = scopes.get_scope_namespace(Scope::Module{}, height);
     const Namespace root_path = scopes.get_namespace();
 
-    // resolve supers:
-
     auto value = namespace_tree.get(root_path, ns_absolute, scope_barrier);
     if (value.has_value()) {
-      std::string result = "";
-      if (std::holds_alternative<Namespace>(value.value())) {
-        result += std::string("Namespace");
-      }
-      else if (std::holds_alternative<PrimitiveType>(value.value())) {
-        result += std::string("PrimitiveType");
-      }
-      else {
-        result += std::string("NodeId: ") + std::to_string(std::get<NodeId>(value.value()));
-      }
-      spdlog::debug("found: {}", result);
       return value.value();
     }
     else {

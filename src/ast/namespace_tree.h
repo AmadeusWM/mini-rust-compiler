@@ -115,13 +115,22 @@ struct PrimitiveType {
   }
 };
 
+struct FunctionNode {
+  AST::NodeId id;
+};
+
+struct ModNode {
+  AST::NodeId id;
+};
+
 using NamespaceValue = std::variant<
   // Namespace: used for e.g. `type x = X::A`
   Namespace,
   // PrimitiveTypes are i32, etc.
   PrimitiveType,
-  // Used to describe a node in the AST
-  AST::NodeId
+  // Used to describe nodes in the AST
+  FunctionNode,
+  ModNode
 >;
 
 class NamespaceNode {
@@ -129,7 +138,10 @@ private:
   Opt<NamespaceValue> value = std::nullopt;
   std::map<std::string, NamespaceNode> children;
 public:
-  NamespaceNode() {
+  NamespaceNode(
+    Opt<NamespaceValue> value = std::nullopt
+  ) : value(value)
+  {
   }
 
   void set(const Namespace& ns, NamespaceValue value) {
@@ -174,20 +186,40 @@ public:
 
     for (size_t i = root.path.size(); i >= 0; i--) {
       auto [first, second] = root.split(i);
-      spdlog::debug("First: {}", first.to_string());
-      spdlog::debug("Second: {}", second.to_string());
-      auto result = this->get(Namespace::concat(first, ns));
-      if (result.has_value()) {
-        return result.value();
-      }
-      if (first.equals(scope)) {
-        break;
+      auto root_node = this->get_root(first);
+      if (root_node.has_value()) {
+        auto result = root_node.value()->get_unsafe(ns);
+        if (result.has_value()) {
+          return result.value();
+        }
+        if (first.equals(scope)) {
+          break;
+        }
       }
     }
     throw std::runtime_error(fmt::format("Namespace '{}' not found within '{}' within scope '{}'", ns.to_string(), root.to_string(), scope.to_string()));
   }
 
-  Opt<NamespaceValue> get(const Namespace& ns) const {
+  Opt<NamespaceNode*> get_root(const Namespace& ns) {
+    spdlog::debug("Looking up namespace {}", ns.to_string());
+    if (ns.path.size() == 0) {
+      return std::optional<NamespaceNode*>(this);
+    }
+    else {
+      auto [segment, remaining] = ns.split_first();
+      auto it = children.find(segment);
+      if (it == children.end()) {
+        return std::nullopt;
+      }
+      auto child = it->second;
+      return it->second.get_root(remaining);
+    }
+  }
+
+  /**
+  * Same as get, but is able to look into function nodes once
+  */
+  Opt<NamespaceValue> get_unsafe(const Namespace& ns) const {
     spdlog::debug("Looking up namespace {}", ns.to_string());
     if (ns.path.size() == 0) {
       if (!value.has_value()) {
@@ -201,6 +233,30 @@ public:
       if (it == children.end()) {
         return std::nullopt;
       }
+      auto child = it->second;
+      return it->second.get(remaining);
+    }
+  }
+
+  Opt<NamespaceValue> get(const Namespace& ns) const {
+    spdlog::debug("Looking up namespace {}", ns.to_string());
+    if (ns.path.size() == 0) {
+      if (!value.has_value()) {
+        return std::nullopt;
+      }
+      return value.value();
+    }
+    else if (!std::holds_alternative<ModNode>(value.value())) {
+      auto fn = std::get<FunctionNode>(value.value());
+      throw std::runtime_error(fmt::format("Cannot look deeper, node {} is not a module.", fn.id));
+    }
+    else {
+      auto [segment, remaining] = ns.split_first();
+      auto it = children.find(segment);
+      if (it == children.end()) {
+        return std::nullopt;
+      }
+      auto child = it->second;
       return it->second.get(remaining);
     }
   }
@@ -209,8 +265,13 @@ public:
     spdlog::debug("children: {}", children.size());
     for (const auto& [key, child] : children) {
       spdlog::debug("find_namespace: {}", key);
-      if (child.value.has_value() && std::holds_alternative<AST::NodeId>(child.value.value())) {
-        if (std::get<AST::NodeId>(child.value.value()) == id) {
+      if (child.value.has_value() && std::holds_alternative<FunctionNode>(child.value.value())) {
+        if (std::get<FunctionNode>(child.value.value()).id == id) {
+          return Namespace{ .path = {key} };
+        }
+      }
+      else if (child.value.has_value() && std::holds_alternative<ModNode>(child.value.value())) {
+        if (std::get<ModNode>(child.value.value()).id == id) {
           return Namespace{ .path = {key} };
         }
       }
@@ -227,17 +288,20 @@ public:
     std::string result = "";
     if (value.has_value()) {
       if (std::holds_alternative<Namespace>(value.value())) {
-        result += fmt::format("[Namespace: {}, ", std::get<Namespace>(value.value()).to_string());
+        result += fmt::format("(Namespace: {}, ", std::get<Namespace>(value.value()).to_string());
       }
       else if (std::holds_alternative<PrimitiveType>(value.value())) {
-        result += std::string("[PrimitiveType, ");
+        result += std::string("(PrimitiveType, ");
       }
-      else {
-        result += fmt::format("[NodeId: {}, ", std::get<AST::NodeId>(value.value()));
+      else if (std::holds_alternative<FunctionNode>(value.value())) {
+        result += fmt::format("(FunctionNode: {}, ", std::get<FunctionNode>(value.value()).id);
+      }
+      else if (std::holds_alternative<ModNode>(value.value())) {
+        result += fmt::format("(ModNode: {}, ", std::get<ModNode>(value.value()).id);
       }
     }
     for (const auto& [key, value] : this->children) {
-      result += fmt::format("{}:({})]", key, value.to_string());
+      result += fmt::format("{}:[{}])", key, value.to_string());
     }
     return result;
   }

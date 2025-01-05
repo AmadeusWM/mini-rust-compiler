@@ -252,7 +252,8 @@ namespace TAST {
           }
           return SymbolValue(NumberValue(i));
         },
-        [&](const bool& b) { return SymbolValue(BoolValue(b)); }
+        [&](const bool& b) { return SymbolValue(BoolValue(b)); },
+        [&](const float& f) { return SymbolValue(NumberValue(f)); }
       }, lit.kind);
     }
 

@@ -78,6 +78,7 @@
 %token <std::string> IDENTIFIER
 %token <std::string> STRING_LITERAL
 %token <int> INTEGER_LITERAL
+%token <float> FLOAT_LITERAL
 
 %type <int> crate
 %type <Vec<P<AST::Item>>> items
@@ -331,6 +332,7 @@ path_segment:
 
 literal:
     INTEGER_LITERAL { $$ = driver.rules->lit($1); }
+    | FLOAT_LITERAL { $$ = driver.rules->lit($1); }
     | str { $$ = driver.rules->lit($1); }
     | bool { $$ = driver.rules->lit($1); }
     ;

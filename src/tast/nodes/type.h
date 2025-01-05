@@ -56,6 +56,7 @@ namespace TAST {
         [&](const IntTy& lhs, const IntTy& rhs) { return lhs.index() == rhs.index() ? std::optional<Ty>(lhs) : std::nullopt; },
         [&](const FloatTy& lhs, const FloatTy& rhs) { return lhs.index() == rhs.index() ? std::optional<Ty>(lhs) : std::nullopt; },
         [&](const BoolTy& lhs, const BoolTy& rhs) { return std::optional<Ty>(lhs); },
+        [&](const StrTy& lhs, const StrTy& rhs) { return std::optional<Ty>(lhs); },
         [&](const InferTy& lhs, const InferTy& rhs) {
           return std::visit(overloaded {
             [&](const TyVar& var, const TyVar& r) { return std::optional<Ty>(lhs); },
@@ -69,9 +70,9 @@ namespace TAST {
         [&](const IntTy& lhs, const InferTy& rhs) { return std::holds_alternative<IntVar>(rhs) || std::holds_alternative<TyVar>(rhs) ? std::optional<Ty>(lhs) : std::nullopt; },
         [&](const InferTy& lhs, const FloatTy& rhs) { return std::holds_alternative<FloatVar>(lhs) ? std::optional<Ty>(rhs) : std::nullopt; },
         [&](const FloatTy& lhs, const InferTy& rhs) { return std::holds_alternative<FloatVar>(rhs) ? std::optional<Ty>(lhs) : std::nullopt; },
-        // TyVar cases: simply resolve to the other type
-        [&](const auto& lhs, const InferTy& rhs) { return std::optional<Ty>(lhs); },
-        [&](const InferTy& lhs, const auto& rhs) { return std::optional<Ty>(rhs); },
+        // // TyVar cases: simply resolve to the other type
+        [&](const auto& lhs, const InferTy& rhs) { return std::holds_alternative<TyVar>(rhs) ? std::optional<Ty>(lhs) : std::nullopt; },
+        [&](const InferTy& lhs, const auto& rhs) { return std::holds_alternative<TyVar>(lhs) ? std::optional<Ty>(rhs) : std::nullopt; },
         // when all nothing else matches, we check if it is the same type
         [&](const auto& lhs, const auto& rhs) { return kind.index() == other.kind.index() ? std::optional<Ty>(lhs) : std::nullopt; }
       }, kind, other.kind);
