@@ -55,10 +55,9 @@
 // punctiations: https://doc.rust-lang.org/reference/tokens.html#punctuation
 %token PLUS MIN STAR SLASH PERCENT CARET NOT AND OR AND_AND OR_OR SHL SHR PLUS_EQ MINUS_EQ STAR_EQ SLASH_EQ PERCENT_EQ CARET_EQ AND_EQ OR_EQ SHL_EQ SHR_EQ EQ EQ_EQ NE GT LT GE LE AT UNDERSCORE DOT DOT_DOT DOT_DOT_DOT DOT_DOT_EQ COMMA SEMI COLON PATH_SEP R_ARROW FAT_ARROW L_ARROW POUND DOLLAR QUESTION TILDE
 
-%precedence STATEMENT_OVER_EXPR
-%precedence EXPR_BELOW_STATEMENT
-%precedence EQ
 // custom precedence for rules: https://www.gnu.org/software/bison/manual/html_node/Contextual-Precedence.html
+%precedence EQ PLUS_EQ MINUS_EQ STAR_EQ SLASH_EQ PERCENT_EQ
+%precedence U_MIN U_PLUS U_NOT
 %left OR_OR
 %left AND_AND
 %left OR
@@ -68,7 +67,6 @@
 %left SHL SHR
 %left PLUS MIN
 %left STAR SLASH PERCENT
-%precedence U_MIN U_PLUS U_NOT
 
 // brackets
 %token L_PAREN R_PAREN L_BRACE R_BRACE L_BRACKET R_BRACKET
@@ -115,6 +113,7 @@
 %type <Vec<P<AST::Expr>>> exprs
 %type <bool> bool
 %type <P<AST::Assign>> assign
+%type <P<AST::Assign>> op_assign
 %type <P<AST::Unary>> unary
 %type <P<AST::Print>> print
 %type <P<AST::Mod>> module
@@ -217,8 +216,8 @@ binary:
     | expr STAR expr { $$ = driver.rules->binary(std::move($1), AST::Bin::Mul{}, std::move($3)); }
     | expr SLASH expr { $$ = driver.rules->binary(std::move($1), AST::Bin::Div{}, std::move($3)); }
     | expr PERCENT expr { $$ = driver.rules->binary(std::move($1), AST::Bin::Mod{}, std::move($3)); }
-    | expr AND expr { $$ = driver.rules->binary(std::move($1), AST::Bin::And{}, std::move($3)); }
-    | expr OR expr { $$ = driver.rules->binary(std::move($1), AST::Bin::Or{}, std::move($3)); }
+    | expr AND_AND expr { $$ = driver.rules->binary(std::move($1), AST::Bin::And{}, std::move($3)); }
+    | expr OR_OR expr { $$ = driver.rules->binary(std::move($1), AST::Bin::Or{}, std::move($3)); }
     | expr EQ_EQ expr { $$ = driver.rules->binary(std::move($1), AST::Bin::Eq{}, std::move($3)); }
     | expr NE expr { $$ = driver.rules->binary(std::move($1), AST::Bin::Ne{}, std::move($3)); }
     | expr LT expr { $$ = driver.rules->binary(std::move($1), AST::Bin::Lt{}, std::move($3)); }
@@ -264,7 +263,8 @@ expr_without_block:
     | L_PAREN expr_with_block R_PAREN { $$ = std::move($2); }
 
 expr_without_block_raw:
-    binary { $$ = driver.rules->expr(std::move($1)); }
+    op_assign { $$ = driver.rules->expr(std::move($1)); }
+    | binary { $$ = driver.rules->expr(std::move($1)); }
     | unary { $$ = driver.rules->expr(std::move($1)); }
     | literal { $$ = driver.rules->expr(std::move($1)); }
     | path { $$ = driver.rules->expr(std::move($1)); }
@@ -281,6 +281,15 @@ expr_with_block:
     | while_expr { $$ = driver.rules->expr(std::move($1)); }
     | loop_expr { $$ = driver.rules->expr(std::move($1)); }
     ;
+
+op_assign:
+    ident PLUS_EQ expr { $$ = driver.rules->opAssign(std::move($1), AST::Bin::Add{}, std::move($3)); }
+    | ident MINUS_EQ expr { $$ = driver.rules->opAssign(std::move($1), AST::Bin::Sub{}, std::move($3)); }
+    | ident STAR_EQ expr { $$ = driver.rules->opAssign(std::move($1), AST::Bin::Mul{}, std::move($3)); }
+    | ident SLASH_EQ expr { $$ = driver.rules->opAssign(std::move($1), AST::Bin::Div{}, std::move($3)); }
+    | ident PERCENT_EQ expr { $$ = driver.rules->opAssign(std::move($1), AST::Bin::Mod{}, std::move($3)); }
+    ;
+
 
 assign:
     ident EQ expr { $$ = driver.rules->assign(std::move($1), std::move($3)); }

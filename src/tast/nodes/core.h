@@ -67,10 +67,9 @@ struct SymbolValue {
       [](const UnitValue&) -> std::string {
         return "()";
       },
-      [](const BoolValue&) -> std::string {
-        return std::visit([](auto&& arg) -> std::string {
-          return arg ? "true" : "false";
-        }, BoolValue{true});
+      [](const BoolValue& b) -> std::string {
+        auto b_value = std::get<bool>(b);
+        return b_value ? "true" : "false";
       }
     }, kind);
     }

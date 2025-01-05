@@ -55,9 +55,9 @@ namespace TAST {
     Opt<SymbolValue> lookup(std::string ident) {
       for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
         auto scope = *it;
-        auto binding = scope.bindings.find(ident);
-        if (binding != scope.bindings.end()) {
-          return SymbolValue(binding->second);
+        auto binding_it = scope.bindings.find(ident);
+        if (binding_it != scope.bindings.end()) {
+          return SymbolValue(binding_it->second);
         }
       }
       return Opt<SymbolValue>{};
@@ -86,11 +86,11 @@ namespace TAST {
     }
 
     SymbolValue lookup_or_throw(std::string ident) {
-      auto id = lookup(ident);
-      if (!id.has_value()) {
+      auto value = lookup(ident);
+      if (!value.has_value()) {
         throw InterpeterException(fmt::format("cannot find identifier \"{}\"", ident));
       }
-      return id.value();
+      return value.value();
     }
 
     void insert_binding(std::string name, SymbolValue value) {
@@ -465,6 +465,12 @@ namespace TAST {
             scopes.insert_binding(ident.identifier, result);
           }
         }, let.pat->kind);
+      } else {
+        std::visit(overloaded {
+          [&](const AST::Ident& ident) {
+            scopes.insert_binding(ident.identifier, SymbolValue(UnitValue{}));
+          }
+        }, let.pat->kind); 
       }
       return {UnitValue{}};
     }

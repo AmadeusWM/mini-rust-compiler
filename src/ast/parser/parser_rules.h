@@ -54,6 +54,7 @@ class ParserRules {
     P<AST::Expr> expr(AST::ExprKind $1);
 
     P<AST::Assign> assign(AST::Ident $1, P<AST::Expr> $2);
+    P<AST::Assign> opAssign(AST::Ident $1, AST::BinOp $2, P<AST::Expr> $3);
 
     AST::Lit lit(AST::LitKind $1);
 

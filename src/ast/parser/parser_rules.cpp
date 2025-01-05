@@ -90,6 +90,18 @@ P<AST::Assign> ParserRules::assign(AST::Ident $1, P<AST::Expr> $2) {
   });
 }
 
+
+P<AST::Assign> ParserRules::opAssign(AST::Ident $1, AST::BinOp $2, P<AST::Expr> $3) {
+  return P<AST::Assign>(new AST::Assign {
+    .id = driver.create_node(),
+    .lhs = $1,
+    .rhs = this->expr(this->binary(
+      this->expr(this->initPath(this->pathSegment($1))),
+      $2,
+      std::move($3)))
+  });
+}
+
 P<AST::Let> ParserRules::let(P<AST::Pat> $1, P<AST::Ty> $2, AST::LocalKind $3, bool mut) {
   return P<AST::Let>(new AST::Let {
       .id = driver.create_node(),
