@@ -21,9 +21,10 @@
   - With or without implicit return
 - Functions
   - Functions can be initialized
-  - With or without parameters
+  - Declared and called with or without parameters
   - With or without a return type (default Unit)
-  - Can be called -> functions can only call functions within the same Function scope, or in a higher function scope, not from other function scopes
+  - Can be called -> functions can only call functions within the same Function scope, or from a parent's function scope, not from other (sibling) function scopes
+  - Recursive calls
 - Grouped expressions using parentheses
 - Operator expressions
   - Assignment: =, +=, -=, /=, *=, %=

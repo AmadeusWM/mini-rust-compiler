@@ -123,5 +123,13 @@ public:
     }
     return ty->second;
   }
+
+  InferCtx clone() const {
+    InferCtx ctx;
+    ctx.nodesToRank = nodesToRank;
+    ctx.rankTypes = rankTypes;
+    ctx.curr_rank = curr_rank;
+    return ctx;
+  }
 };
 }

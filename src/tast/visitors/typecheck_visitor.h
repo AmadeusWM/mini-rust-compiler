@@ -19,6 +19,7 @@ typedef uint64_t ScopeId;
 struct Binding {
   NodeId id;
   bool mut;
+  bool initialized;
 };
 
 struct TypeScope {
@@ -29,6 +30,20 @@ struct TypeScope {
 struct TypeScopes {
   std::vector<TypeScope> scopes;
   TypeScopes(): scopes{} {}
+
+  TypeScopes clone() {
+    TypeScopes new_scopes;
+    for (const auto& scope : scopes) {
+      TypeScope new_scope;
+      new_scope.id = scope.id;
+      for (const auto& [key, binding] : scope.bindings) {
+        new_scope.bindings[key] = binding;
+      }
+      new_scopes.scopes.push_back(new_scope);
+    }
+    return new_scopes;
+  }
+
   void push(TypeScope scope) {
     scopes.push_back(scope);
   }
@@ -43,23 +58,23 @@ struct TypeScopes {
     scopes.pop_back();
   }
 
-  Opt<Binding> lookup(std::string iden) {
+  Opt<Binding*> lookup(std::string iden) {
     for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
-      auto scope = *it;
+      auto& scope = *it;
       auto binding = scope.bindings.find(iden);
       if (binding != scope.bindings.end()) {
-        return Opt<Binding>(binding->second);
+        return Opt<Binding*>(&binding->second);
       }
     }
-    return Opt<Binding>{};
+    return Opt<Binding*>{};
   }
 
-  Binding lookup_or_throw(std::string iden) {
-    auto id = lookup(iden);
-    if (!id.has_value()) {
+  Binding* lookup_or_throw(std::string iden) {
+    auto binding = lookup(iden);
+    if (!binding.has_value()) {
       throw TypecheckException(fmt::format("cannot find identifier \"{}\"", iden));
     }
-    return id.value();
+    return binding.value();
   }
 
   void insert_binding(std::string name, Binding binding) {
@@ -94,7 +109,7 @@ class TypecheckVisitor : public MutWalkVisitor {
     if (!binding.has_value()) {
       throw TypecheckException(fmt::format("cannot find identifier \"{}\"", name));
     }
-    return infer_ctx.getType(binding.value().id);
+    return infer_ctx.getType(binding.value()->id);
   }
 
   public:
@@ -126,7 +141,7 @@ class TypecheckVisitor : public MutWalkVisitor {
   void visit(Param& param){
     std::visit(overloaded {
       [&](const AST::Ident& ident) {
-        scopes.insert_binding(ident.identifier, { .id = param.id, .mut = param.mut });
+        scopes.insert_binding(ident.identifier, { .id = param.id, .mut = param.mut, .initialized = true });
         infer_ctx.add(param.id, param.ty);
       }
     }, param.pat->kind);
@@ -158,7 +173,7 @@ class TypecheckVisitor : public MutWalkVisitor {
       visit(*let.initializer.value());
       std::visit(overloaded {
         [this, &let](const AST::Ident& ident) {
-          scopes.insert_binding(ident.identifier, {.id = let.id, .mut = let.mut } );
+          scopes.insert_binding(ident.identifier, {.id = let.id, .mut = let.mut, .initialized = true } );
 
           infer_ctx.add(let.id, let.ty);
           infer_ctx.eq(let.id, let.initializer.value()->id);
@@ -168,7 +183,7 @@ class TypecheckVisitor : public MutWalkVisitor {
     else {
       std::visit(overloaded {
         [this, &let](const AST::Ident& ident) {
-          scopes.insert_binding(ident.identifier, { .id = let.id, .mut = let.mut });
+          scopes.insert_binding(ident.identifier, { .id = let.id, .mut = let.mut, .initialized = false });
           infer_ctx.add(let.id, let.ty);
         }
       }, let.pat->kind);
@@ -215,7 +230,7 @@ class TypecheckVisitor : public MutWalkVisitor {
       },
       [&](AST::Ident& ident) {
         auto binding = scopes.lookup_or_throw(ident.identifier);
-        infer_ctx.eq(expr.id, binding.id);
+        infer_ctx.eq(expr.id, binding->id);
       },
       [&](P<Binary>& binary) {
         visit(*binary);
@@ -234,11 +249,15 @@ class TypecheckVisitor : public MutWalkVisitor {
 
   void visit(Assign& assign) override {
     visit(*assign.rhs);
-    Binding binding = scopes.lookup_or_throw(assign.lhs.identifier);
-    if (!binding.mut) {
-      throw std::runtime_error("Cannot assign to immutable variable");
+    Binding* binding = scopes.lookup_or_throw(assign.lhs.identifier);
+    if (!binding->mut) {
+      throw std::runtime_error(fmt::format("Cannot assign to immutable variable {}", assign.lhs.identifier));
     }
-    infer_ctx.eq(binding.id, assign.rhs->id);
+    infer_ctx.eq(binding->id, assign.rhs->id);
+    spdlog::debug("Settings {} to initialized!", assign.lhs.identifier);
+    binding->initialized = true;
+    Binding* binding_test = scopes.lookup_or_throw(assign.lhs.identifier);
+    spdlog::debug("Initialized? {}", binding_test->initialized);
   }
 
   void visit(Loop& loop) override {
@@ -249,12 +268,32 @@ class TypecheckVisitor : public MutWalkVisitor {
   }
 
   void visit(If& ifExpr) override {
+    auto else_scopes = scopes.clone(); // save scopes before visiting then block (for else)
     visit(*ifExpr.cond);
     infer_ctx.eq(ifExpr.cond->id, {BoolTy{}});
+
     visit(*ifExpr.then_block);
+    auto if_scopes = scopes.clone(); // save scopes after visiting then block
     if (ifExpr.else_block.has_value()) {
+      this->scopes = else_scopes;
       visit(*ifExpr.else_block.value());
       infer_ctx.eq(ifExpr.then_block->id, ifExpr.else_block.value()->id);
+
+      // check if variables are eith initialized or not initialized in both branches
+      for (const auto& scope : if_scopes.scopes) {
+        for (auto& [ident, binding] : scope.bindings) {
+          const auto if_initialized = binding.initialized;
+          const auto else_binding = this->scopes.lookup_or_throw(ident);
+          spdlog::debug("looked up: {}", ident);
+          spdlog::debug("\t if initialized: {}", binding.initialized);
+          spdlog::debug("\t else initialized: {}", else_binding->initialized);
+          const auto else_initialized = else_binding->initialized;
+          if (if_initialized != else_initialized) {
+            throw std::runtime_error(
+              fmt::format("Variable {} must be initialized in both branches", ident));
+          }
+        }
+      }
     }
   }
 

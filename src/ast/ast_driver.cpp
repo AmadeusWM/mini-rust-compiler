@@ -19,7 +19,7 @@ P<Driver> ASTDriver::execute()
   AST::PrintVisitor print_visitor;
   print_visitor.Visitor::visit(*this->ast.value());
 
-  print_step("Building Namespact Tree");
+  print_step("Building Namespace Tree");
   AST::NamespaceTreeBuilder ns_builder;
   ns_builder.visit(*this->ast.value());
 
