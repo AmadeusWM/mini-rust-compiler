@@ -1,4 +1,58 @@
 # mini-rust-compiler
+## Supported Features
+- Types:
+  - Integer types: i8, i16, i32, i64
+  - Float types: f32, f64
+  - Boolean types: bool
+  - String types: &str
+  - Unit type: ()
+- Literals:
+  - Float
+  - Integer
+  - String
+  - Boolean: true and false
+  - Unit
+- Variables and variable declarations
+  - Let with or without a type
+  - Let mut with or without a type
+  - An expression to initialize the variable
+  - Variables can be used as expressions
+- Blocks:
+  - With or without implicit return
+- Functions
+  - Functions can be initialized
+  - With or without parameters
+  - With or without a return type (default Unit)
+  - Can be called -> functions can only call functions within the same Function scope, or in a higher function scope, not from other function scopes
+- Grouped expressions using parentheses
+- Operator expressions
+  - Assignment: =, +=, -=, /=, *=, %=
+  - Binary: +, -, /, *, %, ||, &&, ==, !=, <, <=, >, >=
+  - Unary: +, -, !
+- If, else if, else, while loops, loop
+- Expression statements:
+  - Block expressions do not require a ; at the end
+  - Other expressions do, excep they are the last expression statement within a block, in which case they are implicitly returned
+- Break, return
+- Line comments
+- Intermediate:
+  - block comments
+  - Strings
+  - break
+  - return
+- Advanced:
+  - Type inferencing:
+    - Let statements without a type declaration are initially Variable to any other type
+    - Variable Integer, or Float types can be inferred to Concrete Integer or Float types such as i8, i16, i32, i64 or f32, f64.
+    - Literals' types are variable at first
+    - Once a type has been inferred, the variable or expression cannot be converted to another type
+  - Modules and nested functions:
+    - Functions can be wrapped in modules, and functions can contain other functions
+    - Functions can call functions from the same module, or call functions from other modules by excaping their module using `super::xyz()`
+
+
+
+
 ## TODO !!!
 1. Make a nested map datastructure (NSTree) for Body tree and Types tree, it will have a template type T (for body, or type)
   - Tree structure:
