@@ -340,6 +340,24 @@ namespace TAST {
             }
           }, l, r);
         },
+        [&](const StrValue& l, const StrValue& r) {
+          return std::visit(overloaded {
+            [&](const auto& l_value, const auto& r_value) {
+              return std::visit(overloaded {
+                [&](const AST::Bin::Eq& eq) {
+                  return SymbolValue(BoolValue(l_value == r_value));
+                },
+                [&](const AST::Bin::Ne& ne) {
+                  return SymbolValue(BoolValue(l_value != r_value));
+                },
+                [&](const auto& op) {
+                  throw InterpeterException("Operator is not implemented for bool");
+                  return SymbolValue{UnitValue{}};
+                }
+              }, binary.op);
+            }
+          }, l, r);
+        },
         [&](const auto& l, const auto& r) {
           throw InterpeterException("Type mismatch");
           return SymbolValue{UnitValue{}};

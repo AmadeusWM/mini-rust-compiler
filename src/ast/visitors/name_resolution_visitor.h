@@ -96,11 +96,15 @@ namespace Scope {
       scopes.pop_back();
     }
 
-    Namespace get_scope_namespace(ScopeKind kind) {
+    Namespace get_scope_namespace(ScopeKind kind, int height) {
       int i = scopes.size() - 1;
       for (; i >= 0; i--) {
         if (scopes[i].kind.index() == kind.index()) {
-          break;
+          if (height == 0) {
+            break;
+          } else {
+            height--;
+          }
         }
       }
       std::vector<std::string> path;
@@ -195,13 +199,14 @@ class NameResolutionVisitor : public Visitor {
   }
 
   NamespaceValue lookup_namespace(Namespace ns) {
-    const Namespace scope_barrier = scopes.get_scope_namespace(Scope::Module{});
+    const auto [ns_absolute, height] = ns.resolve_supers();
+
+    const Namespace scope_barrier = scopes.get_scope_namespace(Scope::Module{}, height);
     const Namespace root_path = scopes.get_namespace();
 
     // resolve supers:
-    const auto ns_absolute = ns;
-    
-    auto value = namespace_tree.get(root_path, ns, scope_barrier);
+
+    auto value = namespace_tree.get(root_path, ns_absolute, scope_barrier);
     if (value.has_value()) {
       std::string result = "";
       if (std::holds_alternative<Namespace>(value.value())) {

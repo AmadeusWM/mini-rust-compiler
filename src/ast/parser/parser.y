@@ -96,6 +96,7 @@
 %type <P<AST::Expr>> expr
 %type <P<AST::Expr>> expr_with_block
 %type <P<AST::Expr>> expr_without_block
+%type <P<AST::Expr>> expr_without_block_raw
 %type <AST::Lit> literal
 %type <AST::Ident> ident
 %type <AST::Path> path
@@ -117,9 +118,12 @@
 %type <P<AST::Print>> print
 %type <P<AST::Mod>> module
 %type <std::string> str
+%type <AST::Unit> unit
+%type <AST::Str> str_ty
 
 // custom
 %token PRINT
+%token STR
 
 %%
 // productions
@@ -168,6 +172,16 @@ param:
 
 type:
     path { $$ = driver.rules->ty(std::move($1)); }
+    | unit { $$ = driver.rules->ty(std::move($1)); }
+    | str_ty { $$ = driver.rules->ty(std::move($1)); }
+    ;
+
+unit:
+    L_PAREN R_PAREN { $$ = AST::Unit {}; }
+    ;
+
+str_ty:
+    AND STR { $$ = AST::Str {}; }
     ;
 
 block:
@@ -244,6 +258,11 @@ expr:
     ;
 
 expr_without_block:
+    expr_without_block_raw { $$ = std::move($1); }
+    | L_PAREN expr_without_block_raw R_PAREN { $$ = std::move($2); }
+    | L_PAREN expr_with_block R_PAREN { $$ = std::move($2); }
+
+expr_without_block_raw:
     binary { $$ = driver.rules->expr(std::move($1)); }
     | unary { $$ = driver.rules->expr(std::move($1)); }
     | literal { $$ = driver.rules->expr(std::move($1)); }
@@ -307,11 +326,12 @@ path:
 
 path_segment:
     ident { $$ = driver.rules->pathSegment(std::move($1)); }
-    | KW_SUPER { $$ = driver.rules->pathSegment("super"); }
+    | KW_SUPER { $$ = driver.rules->pathSegment(driver.rules->ident("super")); }
     ;
 
 literal:
     INTEGER_LITERAL { $$ = driver.rules->lit($1); }
+    | str { $$ = driver.rules->lit($1); }
     | bool { $$ = driver.rules->lit($1); }
     ;
 

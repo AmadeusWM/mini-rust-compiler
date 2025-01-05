@@ -1,21 +1,28 @@
-
 fn main() {
     A::B::hello();
+}
+
+fn hello4() {
+    println!("Hello world 4");
 }
 
 mod A {
     mod B {
         fn hello() {
-            println!("Hello, world!");
             hello2(2);
+            println!("Hello, world!");
             fn hello2(two: i32) {
                 println!("Hello world 2?");
                 println!("{two}");
             }
-            hello3();
+            hello2(2);
+            super::C::hello5();
         }
     }
-    fn hello3() {
-        println!("Hello world 3");
+    mod C {
+        fn hello5() {
+            println!("Hello world 5");
+            super::B::hello::hello2(3);
+        }
     }
 }

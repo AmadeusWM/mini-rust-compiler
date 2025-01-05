@@ -343,7 +343,8 @@ class LowerAstVisitor : public Visitor {
         }
       },
       [&](const Infer& infer) { return TAST::Ty{TAST::InferTy{}}; },
-      [&](const Unit& unit) { return TAST::Ty{TAST::Unit{}}; }
+      [&](const Unit& unit) { return TAST::Ty{TAST::Unit{}}; },
+      [&](const Str& str) { return TAST::Ty{TAST::StrTy{}}; }
     }, ty.kind);
   }
 
@@ -367,7 +368,8 @@ class LowerAstVisitor : public Visitor {
 
   P<TAST::Call> resolve_call(const Call& call) {
     Namespace call_ns = Namespace{call.path.to_vec()};
-    auto callee = namespace_tree.get(ns, call_ns);
+    auto [call_ns_absolute, height] = call_ns.resolve_supers();
+    auto callee = namespace_tree.get(ns, call_ns_absolute);
     return std::make_unique<TAST::Call>( TAST::Call {
       .id = call.id,
       .callee = std::get<NodeId>(callee.value()),

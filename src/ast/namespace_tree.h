@@ -23,6 +23,31 @@ struct Namespace{
       Namespace{ .path = std::vector<std::string>(path.begin() + i, path.end()) },
     };
   }
+
+  /**
+  * Removes all supers from the namespace and retuns
+  * 1. Namespace: The new resolved namespace
+  * 2. Height: The amount of namespace segments we went up
+  *    E.g.: super::super::A -> we went up 2 segment
+  *          super::A -> we went up 1 segment
+  */
+  std::pair<Namespace, int> resolve_supers() const {
+    Namespace resolved{};
+    int height = 0;
+    for (const auto segment : path) {
+      if (segment == "super") {
+        if (resolved.path.size() == 0) {
+          height++;
+        }else {
+          resolved.path.pop_back();
+        }
+      } else {
+        resolved.path.push_back(segment);
+      }
+    }
+    return {resolved, height};
+  }
+
   std::pair<std::string, Namespace> split_first() const {
     if (path.size() == 0) {
       throw std::runtime_error("Cannot split empty namespace");
@@ -51,11 +76,6 @@ struct Namespace{
   }
   std::string to_string() const {
     return fmt::format("{}", fmt::join(path, "::"));
-  }
-  Namespace clone() {
-    for (const auto segment : path) {
-      
-    }
   }
 };
 

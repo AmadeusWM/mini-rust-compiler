@@ -73,6 +73,7 @@ unsized  { return Token::make_KW_UNSIZED(yylloc); }
 virtual  { return Token::make_KW_VIRTUAL(yylloc); }
 yield    { return Token::make_KW_YIELD(yylloc); }
 try      { return Token::make_KW_TRY(yylloc); }
+str      { return Token::make_STR(yylloc); }
 
 "+"        { return Token::make_PLUS(yylloc); }
 "-"        { return Token::make_MIN(yylloc); }
@@ -130,6 +131,9 @@ try      { return Token::make_KW_TRY(yylloc); }
 "]"        { return Token::make_R_BRACKET(yylloc); }
 
 "println!"         { return Token::make_PRINT(yylloc); }
+
+"//".*                                    { /* LINE COMMENT: DO NOTHING */ }
+[/][*][^*]*[*]+([^*/][^*]*[*]+)*[/]       { /* BLOCK COMMENT: DO NOTHING */ }
 
 {identifier}       { return Token::make_IDENTIFIER(yytext, yylloc); }
 {digit}*           { return Token::make_INTEGER_LITERAL(atoi(yytext), yylloc); }
