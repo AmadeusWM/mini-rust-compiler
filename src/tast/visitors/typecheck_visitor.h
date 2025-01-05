@@ -430,10 +430,10 @@ class TypecheckVisitor : public MutWalkVisitor {
 
   Ty resolve_lit(Lit& lit) {
     return std::visit(overloaded {
-      [&](int i) { return Ty(InferTy(IntVar{})); },
+      [&](int64_t i) { return Ty(InferTy(IntVar{})); },
       [&](std::string s) { return Ty(StrTy{}); },
       [&](bool b) { return Ty(BoolTy{}); },
-      [&](float f) { return Ty(InferTy{FloatVar{}}); }
+      [&](double f) { return Ty(InferTy{FloatVar{}}); }
     }, lit.kind);
   }
 

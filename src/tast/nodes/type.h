@@ -5,19 +5,29 @@
 namespace TAST {
   struct  I8 {
   };
+  struct  I16 {
+  };
   struct  I32 {
+  };
+  struct  I64 {
   };
 
   typedef std::variant<
     I8,
-    I32
+    I16,
+    I32,
+    I64
   > IntTy;
 
   struct F32 {
   };
 
+  struct F64 {
+  };
+
   typedef std::variant<
-    F32
+    F32,
+    F64
   > FloatTy;
 
   struct StrTy{};
@@ -68,8 +78,8 @@ namespace TAST {
         // if one is a variable, resolve to the accurate type
         [&](const InferTy& lhs, const IntTy& rhs) { return std::holds_alternative<IntVar>(lhs) || std::holds_alternative<TyVar>(lhs) ? std::optional<Ty>(rhs) : std::nullopt; },
         [&](const IntTy& lhs, const InferTy& rhs) { return std::holds_alternative<IntVar>(rhs) || std::holds_alternative<TyVar>(rhs) ? std::optional<Ty>(lhs) : std::nullopt; },
-        [&](const InferTy& lhs, const FloatTy& rhs) { return std::holds_alternative<FloatVar>(lhs) ? std::optional<Ty>(rhs) : std::nullopt; },
-        [&](const FloatTy& lhs, const InferTy& rhs) { return std::holds_alternative<FloatVar>(rhs) ? std::optional<Ty>(lhs) : std::nullopt; },
+        [&](const InferTy& lhs, const FloatTy& rhs) { return std::holds_alternative<FloatVar>(lhs) || std::holds_alternative<TyVar>(lhs) ? std::optional<Ty>(rhs) : std::nullopt; },
+        [&](const FloatTy& lhs, const InferTy& rhs) { return std::holds_alternative<FloatVar>(rhs) || std::holds_alternative<TyVar>(rhs) ? std::optional<Ty>(lhs) : std::nullopt; },
         // // TyVar cases: simply resolve to the other type
         [&](const auto& lhs, const InferTy& rhs) { return std::holds_alternative<TyVar>(rhs) ? std::optional<Ty>(lhs) : std::nullopt; },
         [&](const InferTy& lhs, const auto& rhs) { return std::holds_alternative<TyVar>(lhs) ? std::optional<Ty>(rhs) : std::nullopt; },
@@ -104,12 +114,15 @@ namespace TAST {
         [](const IntTy& intTy) {
           return std::visit(overloaded {
             [](const I8&) { return "I8"; },
-            [](const I32&) { return "I32"; }
+            [](const I16&) { return "I16"; },
+            [](const I32&) { return "I32"; },
+            [](const I64&) { return "I64"; }
           }, intTy);
         },
         [](const FloatTy& floatTy) {
           return std::visit(overloaded {
-            [](const F32&) { return "F32"; }
+            [](const F32&) { return "F32"; },
+            [](const F64&) { return "F64"; }
           }, floatTy);
         },
         [](const StrTy&) { return "StrTy"; },

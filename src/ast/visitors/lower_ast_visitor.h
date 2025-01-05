@@ -332,8 +332,11 @@ class LowerAstVisitor : public Visitor {
           auto primitive = std::get<PrimitiveType>(value.value());
           return std::visit(overloaded {
             [&](const Primitive::I8& i8){ return TAST::Ty{ TAST::IntTy{TAST::I8{}}}; },
+            [&](const Primitive::I16& i16){ return TAST::Ty{ TAST::IntTy{TAST::I16{}}}; },
             [&](const Primitive::I32& i32){ return TAST::Ty{ TAST::IntTy{TAST::I32{}}}; },
+            [&](const Primitive::I64& i64){ return TAST::Ty{ TAST::IntTy{TAST::I64{}}}; },
             [&](const Primitive::F32& f32){ return TAST::Ty{ TAST::FloatTy{TAST::F32{}}}; },
+            [&](const Primitive::F64& f64){ return TAST::Ty{ TAST::FloatTy{TAST::F64{}}}; },
             [&](const Primitive::Str& str){ return TAST::Ty{ TAST::StrTy{}}; },
             [&](const Primitive::Bool& b) { return TAST::Ty{ TAST::BoolTy{}}; },
           }, primitive.kind);

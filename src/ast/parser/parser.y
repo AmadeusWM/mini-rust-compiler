@@ -77,8 +77,8 @@
 // literals: https://doc.rust-lang.org/reference/tokens.html#literals
 %token <std::string> IDENTIFIER
 %token <std::string> STRING_LITERAL
-%token <int> INTEGER_LITERAL
-%token <float> FLOAT_LITERAL
+%token <int64_t> INTEGER_LITERAL
+%token <double> FLOAT_LITERAL
 
 %type <int> crate
 %type <Vec<P<AST::Item>>> items

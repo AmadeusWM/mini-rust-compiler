@@ -81,16 +81,22 @@ struct Namespace{
 
 namespace Primitive{
   struct I8{};
+  struct I16{};
   struct I32{};
+  struct I64{};
   struct F32{};
+  struct F64{};
   struct Str{};
   struct Bool{};
 }
 
 typedef std::variant<
   Primitive::I8,
+  Primitive::I16,
   Primitive::I32,
+  Primitive::I64,
   Primitive::F32,
+  Primitive::F64,
   Primitive::Str,
   Primitive::Bool
 > PrimitiveKind;
@@ -100,10 +106,16 @@ struct PrimitiveType {
   static Opt<PrimitiveType> from(std::string identifier) {
     if (identifier == "i8") {
       return PrimitiveType{ .kind = Primitive::I8{} };
+    } else if (identifier == "i16") {
+      return PrimitiveType{ .kind = Primitive::I16{} };
     } else if (identifier == "i32") {
       return PrimitiveType{ .kind = Primitive::I32{} };
+    } else if (identifier == "i64") {
+      return PrimitiveType{ .kind = Primitive::I64{} };
     } else if (identifier == "f32") {
       return PrimitiveType{ .kind = Primitive::F32{} };
+    } else if (identifier == "f64") {
+      return PrimitiveType{ .kind = Primitive::F64{} };
     } else if (identifier == "str") {
       return PrimitiveType{ .kind = Primitive::Str{} };
     } else if (identifier == "bool") {

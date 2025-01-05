@@ -226,7 +226,7 @@ namespace TAST {
         [&](const std::string& s) {
           return SymbolValue(StrValue(s));
         },
-        [&](const int& i) {
+        [&](const int64_t& i) {
           if (std::holds_alternative<InferTy>(lit.ty.kind)) {
             const auto& infer = std::get<InferTy>(lit.ty.kind);
             if (std::holds_alternative<IntVar>(infer)) {
@@ -241,8 +241,14 @@ namespace TAST {
               [&](const I8) {
                 return SymbolValue(NumberValue(static_cast<int8_t>(i)));
               },
+              [&](const I16) {
+                return SymbolValue(NumberValue(static_cast<int16_t>(i)));
+              },
               [&](const I32) {
                 return SymbolValue(NumberValue(static_cast<int32_t>(i)));
+              },
+              [&](const I64) {
+                return SymbolValue(NumberValue(static_cast<int64_t>(i)));
               },
             }, int_ty);
             return SymbolValue(NumberValue(i));
@@ -253,7 +259,28 @@ namespace TAST {
           return SymbolValue(NumberValue(i));
         },
         [&](const bool& b) { return SymbolValue(BoolValue(b)); },
-        [&](const float& f) { return SymbolValue(NumberValue(f)); }
+        [&](const double& f) { 
+          if (std::holds_alternative<InferTy>(lit.ty.kind)) {
+            const auto& infer = std::get<InferTy>(lit.ty.kind);
+            if (std::holds_alternative<FloatVar>(infer)) {
+              return SymbolValue(static_cast<float>(f));
+            } else {
+              throw InterpeterException(fmt::format("Node {} is not an inferrable float", lit.id));
+            }
+          }
+          else if (std::holds_alternative<FloatTy>(lit.ty.kind)) {
+            const auto& float_ty = std::get<FloatTy>(lit.ty.kind);
+            std::visit(overloaded {
+              [&](const F32) {
+                return SymbolValue(NumberValue(static_cast<float>(f)));
+              },
+              [&](const F64) {
+                return SymbolValue(NumberValue(static_cast<double>(f)));
+              },
+            }, float_ty);
+            return SymbolValue(NumberValue(f));
+          }
+        }
       }, lit.kind);
     }
 
