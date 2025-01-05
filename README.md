@@ -42,6 +42,8 @@
   - break
   - return
 - Advanced:
+  - All branches of if/else if/else statements need to initialize the same values, if one branch doesn't initialize a value that another branch does initialize an error will be thrown
+  - If a variable is not yet initialized, it cannot be used (no matter whether it is typed or not)
   - Type inferencing:
     - Let statements without a type declaration are initially Variable to any other type
     - Variable Integer, or Float types can be inferred to Concrete Integer or Float types such as i8, i16, i32, i64 or f32, f64.

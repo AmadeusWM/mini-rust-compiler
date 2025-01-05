@@ -194,6 +194,15 @@ class TypecheckVisitor : public MutWalkVisitor {
     spdlog::debug("visiting: {}", expr.id);
     std::visit(overloaded {
       [&](P<Print>& printExpr) {
+        std::visit(overloaded {
+          [&](const AST::Ident& ident) {
+            auto binding = scopes.lookup_or_throw(ident.identifier);
+            if (!binding->initialized) {
+              throw TypecheckException(fmt::format("Cannot print variable {}, it is not yet initialized", ident.identifier));
+           }
+          },
+          [&](const auto& other) {}
+        }, printExpr->kind);
         infer_ctx.add(expr.id, Ty { Unit{} });
       },
       [&](P<Block>& block) {
@@ -230,6 +239,9 @@ class TypecheckVisitor : public MutWalkVisitor {
       },
       [&](AST::Ident& ident) {
         auto binding = scopes.lookup_or_throw(ident.identifier);
+        if (!binding->initialized) {
+          throw TypecheckException(fmt::format("Variable {} is used, but not yet initialized", ident.identifier));
+        }
         infer_ctx.eq(expr.id, binding->id);
       },
       [&](P<Binary>& binary) {
