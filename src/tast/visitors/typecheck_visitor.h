@@ -90,6 +90,7 @@ struct TypeScopes {
 */
 class TypecheckVisitor : public MutWalkVisitor {
   private:
+  NodeId active_body_id;
   Crate& crate;
   InferCtx infer_ctx;
   TypeScopes scopes;
@@ -130,6 +131,8 @@ class TypecheckVisitor : public MutWalkVisitor {
   }
 
   void visit(Body& body) override {
+    infer_ctx.add(body.id, body.ty);
+    active_body_id = body.id;
     with_scope(body.id, [&]{
       for (const auto& param : body.params) {
         visit(*param);
@@ -211,7 +214,7 @@ class TypecheckVisitor : public MutWalkVisitor {
       },
       [&](P<Ret>& ret) {
         visit(*ret);
-        // TODO: also equal to function body's type?
+        infer_ctx.eq(ret->id, active_body_id);
         infer_ctx.eq(expr.id, ret->id);
       },
       [&](P<Assign>& assign) {
@@ -268,8 +271,6 @@ class TypecheckVisitor : public MutWalkVisitor {
     infer_ctx.eq(binding->id, assign.rhs->id);
     spdlog::debug("Settings {} to initialized!", assign.lhs.identifier);
     binding->initialized = true;
-    Binding* binding_test = scopes.lookup_or_throw(assign.lhs.identifier);
-    spdlog::debug("Initialized? {}", binding_test->initialized);
   }
 
   void visit(Loop& loop) override {
@@ -484,7 +485,8 @@ class TypecheckVisitor : public MutWalkVisitor {
       [&](int64_t i) { return Ty(InferTy(IntVar{})); },
       [&](std::string s) { return Ty(StrTy{}); },
       [&](bool b) { return Ty(BoolTy{}); },
-      [&](double f) { return Ty(InferTy{FloatVar{}}); }
+      [&](double f) { return Ty(InferTy{FloatVar{}}); },
+      [&](std::monostate m) { return Ty(Unit{}); }
     }, lit.kind);
   }
 

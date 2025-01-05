@@ -9,7 +9,8 @@
 namespace AST {
 typedef uint64_t NodeId;
 
-typedef std::variant<int64_t, std::string, bool, double> LitKind;
+typedef std::variant<std::monostate, int64_t, std::string, bool, double> LitKind;
+
 
 struct Lit {
   NodeId id;

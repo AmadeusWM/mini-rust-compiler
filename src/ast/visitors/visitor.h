@@ -121,11 +121,6 @@ namespace AST {
     }
 
     virtual void visit(const Lit& lit) {
-      std::visit(
-        overloaded {
-            [this](const int i) {},
-            [this](const std::string& s) {}
-        }, lit.kind);
     }
 
     virtual void visit(const If& ifExpr) {

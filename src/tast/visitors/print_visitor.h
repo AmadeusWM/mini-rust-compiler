@@ -185,6 +185,9 @@ public:
 
   void visit(const Lit& lit) {
     std::visit(overloaded {
+      [&](const std::monostate& m) {
+        print(fmt::format("Lit: () ({})", lit.ty.to_string()), lit.id);
+      },
       [&](const auto& v) {
         print(fmt::format("Lit: {} ({})", v, lit.ty.to_string()), lit.id);
       }

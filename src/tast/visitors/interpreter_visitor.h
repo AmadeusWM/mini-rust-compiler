@@ -280,6 +280,10 @@ namespace TAST {
             }, float_ty);
             return SymbolValue(NumberValue(f));
           }
+          return SymbolValue(NumberValue(f));
+        },
+        [&](const std::monostate& m) {
+          return SymbolValue(UnitValue{});
         }
       }, lit.kind);
     }

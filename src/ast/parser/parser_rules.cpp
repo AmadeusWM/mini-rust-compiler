@@ -70,10 +70,17 @@ P<AST::Stmt> ParserRules::statement(AST::StmtKind $1) {
   });
 }
 
-P<AST::Ret> ParserRules::ret(P<AST::Expr> $1) {
-  return P<AST::Ret>(new AST::Ret{
-    .expr = std::move($1)
-  });
+P<AST::Ret> ParserRules::ret(Opt<P<AST::Expr>> $1) {
+  if ($1.has_value()) {
+    return P<AST::Ret>(new AST::Ret{
+      .expr = std::move($1.value())
+    }); 
+  }
+  else {
+    return P<AST::Ret>(new AST::Ret{
+      .expr = this->expr(this->lit(std::monostate{}))
+    }); 
+  }
 }
 
 P<AST::Semi> ParserRules::semi(P<AST::Expr> $1) {

@@ -169,7 +169,8 @@ class PrintVisitor : public AST::Visitor {
                 [&](const int64_t i) { print("Lit Int: " + std::to_string(i), lit.id); },
                 [&](const std::string& s) { print("Lit String: " + s, lit.id); },
                 [&](const bool& b) { print("Lit Bool: " + std::to_string(b), lit.id); },
-                [&](const double& b) { print("Lit Float: " + std::to_string(b), lit.id); }
+                [&](const double& d) { print("Lit Float: " + std::to_string(d), lit.id); },
+                [&](const std::monostate& m) { print("Lit Unit: ()", lit.id); }
             }, lit.kind);
         },
         [this](const P<Block>& block) {

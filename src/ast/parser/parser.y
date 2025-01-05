@@ -56,6 +56,7 @@
 %token PLUS MIN STAR SLASH PERCENT CARET NOT AND OR AND_AND OR_OR SHL SHR PLUS_EQ MINUS_EQ STAR_EQ SLASH_EQ PERCENT_EQ CARET_EQ AND_EQ OR_EQ SHL_EQ SHR_EQ EQ EQ_EQ NE GT LT GE LE AT UNDERSCORE DOT DOT_DOT DOT_DOT_DOT DOT_DOT_EQ COMMA SEMI COLON PATH_SEP R_ARROW FAT_ARROW L_ARROW POUND DOLLAR QUESTION TILDE
 
 // custom precedence for rules: https://www.gnu.org/software/bison/manual/html_node/Contextual-Precedence.html
+%precedence KW_RETURN
 %precedence EQ PLUS_EQ MINUS_EQ STAR_EQ SLASH_EQ PERCENT_EQ
 %precedence U_MIN U_PLUS U_NOT
 %left OR_OR
@@ -203,11 +204,12 @@ statement:
     | item { $$ = driver.rules->statement(std::move($1)); }
     | expr_without_block SEMI { $$ = driver.rules->statement(driver.rules->semi(std::move($1))); }
     | expr_with_block SEMI { $$ = driver.rules->statement(driver.rules->semi(std::move($1))); }
-    | expr_with_block { $$ = driver.rules->statement(std::move($1)); }
+    | expr_with_block  { $$ = driver.rules->statement(std::move($1)); }
     ;
 
 ret:
-    KW_RETURN expr SEMI { $$ = driver.rules->ret(std::move($2)); }
+    KW_RETURN expr { $$ = driver.rules->ret(std::move($2)); }
+    | KW_RETURN { $$ = driver.rules->ret(); }
     ;
 
 binary:
@@ -344,6 +346,7 @@ literal:
     | FLOAT_LITERAL { $$ = driver.rules->lit($1); }
     | str { $$ = driver.rules->lit($1); }
     | bool { $$ = driver.rules->lit($1); }
+    | L_PAREN R_PAREN { $$ = driver.rules->lit(std::monostate{}); }
     ;
 
 bool:
