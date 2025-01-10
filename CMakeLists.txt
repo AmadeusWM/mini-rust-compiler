@@ -22,7 +22,7 @@ find_package(BISON)
 BISON_TARGET(MyParser ${CMAKE_SOURCE_DIR}/src/ast/parser/parser.y
              ${CMAKE_SOURCE_DIR}/src/ast/parser/parser.cpp
              DEFINES_FILE ${CMAKE_SOURCE_DIR}/src/ast/parser/parser.h
-            # COMPILE_FLAGS -Wcounterexamples
+            COMPILE_FLAGS -Wcounterexamples
 )
 
 find_package(FLEX)

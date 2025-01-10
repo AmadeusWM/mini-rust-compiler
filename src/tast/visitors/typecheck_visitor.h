@@ -219,7 +219,6 @@ class TypecheckVisitor : public MutWalkVisitor {
       },
       [&](P<Assign>& assign) {
         visit(*assign);
-        // TODO: also equal to function body's type?
         infer_ctx.add(expr.id, {InferTy{TyVar{}}});
       },
       [&](Break& ret) {
@@ -265,8 +264,8 @@ class TypecheckVisitor : public MutWalkVisitor {
   void visit(Assign& assign) override {
     visit(*assign.rhs);
     Binding* binding = scopes.lookup_or_throw(assign.lhs.identifier);
-    if (!binding->mut) {
-      throw std::runtime_error(fmt::format("Cannot assign to immutable variable {}", assign.lhs.identifier));
+    if (!binding->mut && binding->initialized) { // you can assign to something that has not been initialized yet
+      throw TypecheckException(fmt::format("Cannot assign to immutable variable {} that is already initialized", assign.lhs.identifier));
     }
     infer_ctx.eq(binding->id, assign.rhs->id);
     spdlog::debug("Settings {} to initialized!", assign.lhs.identifier);

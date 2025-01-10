@@ -204,7 +204,7 @@ statement:
     | item { $$ = driver.rules->statement(std::move($1)); }
     | expr_without_block SEMI { $$ = driver.rules->statement(driver.rules->semi(std::move($1))); }
     | expr_with_block SEMI { $$ = driver.rules->statement(driver.rules->semi(std::move($1))); }
-    | expr_with_block  { $$ = driver.rules->statement(std::move($1)); }
+    // | expr_with_block  { $$ = driver.rules->statement(std::move($1)); }
     ;
 
 ret:
@@ -263,6 +263,7 @@ expr_without_block:
     expr_without_block_raw { $$ = std::move($1); }
     | L_PAREN expr_without_block_raw R_PAREN { $$ = std::move($2); }
     | L_PAREN expr_with_block R_PAREN { $$ = std::move($2); }
+    ;
 
 expr_without_block_raw:
     op_assign { $$ = driver.rules->expr(std::move($1)); }
