@@ -16,10 +16,16 @@ public:
 
 typedef uint64_t ScopeId;
 
+enum Init {
+  UNINITIALIZED,
+  POSSIBLY_INITIALIZED,
+  INITIALIZED,
+};
+
 struct Binding {
   NodeId id;
   bool mut;
-  bool initialized;
+  Init initialized;
 };
 
 struct TypeScope {
@@ -113,6 +119,37 @@ class TypecheckVisitor : public MutWalkVisitor {
     return infer_ctx.getType(binding.value()->id);
   }
 
+  Binding* lookup_initialized(const AST::Ident& ident) {
+    auto binding = scopes.lookup_or_throw(ident.identifier);
+    auto init = binding->initialized;
+    if (init == Init::POSSIBLY_INITIALIZED) {
+      throw TypecheckException(fmt::format("Cannot use variable {}, it is possibly uninitialized", ident.identifier));
+    } else if (init == Init::UNINITIALIZED) {
+      throw TypecheckException(fmt::format("Cannot use variable {}, it is not yet initialized", ident.identifier));
+    }
+    return binding;
+  }
+
+  /**
+  * check if variables are either initialized or not initialized in both branches, otherwise set them to possible_initialized
+  */
+  void resolve_scopes(const TypeScopes& scopes) {
+    for (const auto& scope : scopes.scopes) {
+      for (auto& [ident, binding] : scope.bindings) {
+        const Init initilized = binding.initialized;
+        Binding* other_binding = this->scopes.lookup_or_throw(ident);
+        const Init other_initialized = other_binding->initialized;
+        spdlog::debug("looked up: {}", ident);
+        spdlog::debug("\t initialized: {}", initilized == Init::INITIALIZED);
+        spdlog::debug("\t other initialized: {}", other_initialized == Init::INITIALIZED);
+        if (initilized != other_initialized) {
+          other_binding->initialized = Init::POSSIBLY_INITIALIZED;
+          Binding* else_binding = this->scopes.lookup_or_throw(ident);
+        }
+      }
+    }
+  }
+
   public:
   TypecheckVisitor(Crate& crate) : crate{crate}{}
 
@@ -144,7 +181,7 @@ class TypecheckVisitor : public MutWalkVisitor {
   void visit(Param& param){
     std::visit(overloaded {
       [&](const AST::Ident& ident) {
-        scopes.insert_binding(ident.identifier, { .id = param.id, .mut = param.mut, .initialized = true });
+        scopes.insert_binding(ident.identifier, { .id = param.id, .mut = param.mut, .initialized = Init::INITIALIZED });
         infer_ctx.add(param.id, param.ty);
       }
     }, param.pat->kind);
@@ -176,7 +213,7 @@ class TypecheckVisitor : public MutWalkVisitor {
       visit(*let.initializer.value());
       std::visit(overloaded {
         [this, &let](const AST::Ident& ident) {
-          scopes.insert_binding(ident.identifier, {.id = let.id, .mut = let.mut, .initialized = true } );
+          scopes.insert_binding(ident.identifier, {.id = let.id, .mut = let.mut, .initialized = Init::INITIALIZED } );
 
           infer_ctx.add(let.id, let.ty);
           infer_ctx.eq(let.id, let.initializer.value()->id);
@@ -186,7 +223,7 @@ class TypecheckVisitor : public MutWalkVisitor {
     else {
       std::visit(overloaded {
         [this, &let](const AST::Ident& ident) {
-          scopes.insert_binding(ident.identifier, { .id = let.id, .mut = let.mut, .initialized = false });
+          scopes.insert_binding(ident.identifier, { .id = let.id, .mut = let.mut, .initialized = Init::UNINITIALIZED });
           infer_ctx.add(let.id, let.ty);
         }
       }, let.pat->kind);
@@ -199,10 +236,7 @@ class TypecheckVisitor : public MutWalkVisitor {
       [&](P<Print>& printExpr) {
         std::visit(overloaded {
           [&](const AST::Ident& ident) {
-            auto binding = scopes.lookup_or_throw(ident.identifier);
-            if (!binding->initialized) {
-              throw TypecheckException(fmt::format("Cannot print variable {}, it is not yet initialized", ident.identifier));
-           }
+            lookup_initialized(ident);
           },
           [&](const auto& other) {}
         }, printExpr->kind);
@@ -240,10 +274,7 @@ class TypecheckVisitor : public MutWalkVisitor {
         infer_ctx.eq(expr.id, lit.id);
       },
       [&](AST::Ident& ident) {
-        auto binding = scopes.lookup_or_throw(ident.identifier);
-        if (!binding->initialized) {
-          throw TypecheckException(fmt::format("Variable {} is used, but not yet initialized", ident.identifier));
-        }
+        auto binding = lookup_initialized(ident);
         infer_ctx.eq(expr.id, binding->id);
       },
       [&](P<Binary>& binary) {
@@ -264,17 +295,19 @@ class TypecheckVisitor : public MutWalkVisitor {
   void visit(Assign& assign) override {
     visit(*assign.rhs);
     Binding* binding = scopes.lookup_or_throw(assign.lhs.identifier);
-    if (!binding->mut && binding->initialized) { // you can assign to something that has not been initialized yet
+    if (!binding->mut && binding->initialized == Init::INITIALIZED) { // you can assign to something that has not been initialized yet
       throw TypecheckException(fmt::format("Cannot assign to immutable variable {} that is already initialized", assign.lhs.identifier));
     }
     infer_ctx.eq(binding->id, assign.rhs->id);
     spdlog::debug("Settings {} to initialized!", assign.lhs.identifier);
-    binding->initialized = true;
+    binding->initialized = Init::INITIALIZED;
   }
 
   void visit(Loop& loop) override {
     with_scope(loop.id, [&]{
+      auto scopes_before = this->scopes.clone();
       visit(*loop.block);
+      resolve_scopes(scopes_before);
       infer_ctx.eq(loop.id, loop.block->id);
     });
   }
@@ -291,21 +324,7 @@ class TypecheckVisitor : public MutWalkVisitor {
       visit(*ifExpr.else_block.value());
       infer_ctx.eq(ifExpr.then_block->id, ifExpr.else_block.value()->id);
 
-      // check if variables are eith initialized or not initialized in both branches
-      for (const auto& scope : if_scopes.scopes) {
-        for (auto& [ident, binding] : scope.bindings) {
-          const auto if_initialized = binding.initialized;
-          const auto else_binding = this->scopes.lookup_or_throw(ident);
-          spdlog::debug("looked up: {}", ident);
-          spdlog::debug("\t if initialized: {}", binding.initialized);
-          spdlog::debug("\t else initialized: {}", else_binding->initialized);
-          const auto else_initialized = else_binding->initialized;
-          if (if_initialized != else_initialized) {
-            throw std::runtime_error(
-              fmt::format("Variable {} must be initialized in both branches", ident));
-          }
-        }
-      }
+      resolve_scopes(if_scopes);
     }
   }
 

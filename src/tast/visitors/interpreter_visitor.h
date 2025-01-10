@@ -5,6 +5,7 @@
 #include "nodes/expr.h"
 #include "nodes/type.h"
 #include "visitors/tast_visitor.h"
+#include <cmath>
 #include <cstdint>
 #include <exception>
 #include <functional>
@@ -22,9 +23,9 @@ namespace TAST {
       BreakException() {}
   };
 
-  class InterpeterException : public std::runtime_error {
+  class InterpreterException : public std::runtime_error {
   public:
-      InterpeterException(const std::string& message)
+      InterpreterException(const std::string& message)
           : std::runtime_error("(Interpreter Error) " + message) {}
   };
 
@@ -78,7 +79,7 @@ namespace TAST {
     SymbolValue* lookup_ref_or_throw(std::string ident) {
       auto result = lookup_ref(ident);
       if (!result.has_value()) {
-        throw InterpeterException(fmt::format("cannot find identifier \"{}\"", ident));
+        throw InterpreterException(fmt::format("cannot find identifier \"{}\"", ident));
       }
       else {
         return result.value();
@@ -88,14 +89,14 @@ namespace TAST {
     SymbolValue lookup_or_throw(std::string ident) {
       auto value = lookup(ident);
       if (!value.has_value()) {
-        throw InterpeterException(fmt::format("cannot find identifier \"{}\"", ident));
+        throw InterpreterException(fmt::format("cannot find identifier \"{}\"", ident));
       }
       return value.value();
     }
 
     void insert_binding(std::string name, SymbolValue value) {
       if (scopes.size() == 0) {
-        throw InterpeterException(fmt::format("no scope to insert identifier \"{}\"", name));
+        throw InterpreterException(fmt::format("no scope to insert identifier \"{}\"", name));
       }
       scopes.back().bindings.insert({ name, value });
     }
@@ -133,7 +134,7 @@ namespace TAST {
         }
       }
       if (main_body == nullptr) {
-        throw InterpeterException("No main function found");
+        throw InterpreterException("No main function found");
       }
 
       // create the global scope
@@ -232,7 +233,7 @@ namespace TAST {
             if (std::holds_alternative<IntVar>(infer)) {
               return SymbolValue(static_cast<int32_t>(i));
             } else {
-              throw InterpeterException(fmt::format("Node {} is not an inferrable integer", lit.id));
+              throw InterpreterException(fmt::format("Node {} is not an inferrable integer", lit.id));
             }
           }
           else if (std::holds_alternative<IntTy>(lit.ty.kind)) {
@@ -254,7 +255,7 @@ namespace TAST {
             return SymbolValue(NumberValue(i));
           }
           else {
-            throw InterpeterException("Type is not an integer");
+            throw InterpreterException("Type is not an integer");
           }
           return SymbolValue(NumberValue(i));
         },
@@ -265,7 +266,7 @@ namespace TAST {
             if (std::holds_alternative<FloatVar>(infer)) {
               return SymbolValue(static_cast<float>(f));
             } else {
-              throw InterpeterException(fmt::format("Node {} is not an inferrable float", lit.id));
+              throw InterpreterException(fmt::format("Node {} is not an inferrable float", lit.id));
             }
           }
           else if (std::holds_alternative<FloatTy>(lit.ty.kind)) {
@@ -310,15 +311,24 @@ namespace TAST {
                   return SymbolValue(NumberValue(l_value * r_value));
                 },
                 [&](const AST::Bin::Div& div) {
+                  if (r_value == 0) {
+                    throw InterpreterException("Cannot divide by zero.");
+                  }
                   return SymbolValue(NumberValue(l_value / r_value));
                 },
                 [&](const AST::Bin::Mod& mod) {
-                  if constexpr (std::is_integral_v<decltype(l_value)> && std::is_integral_v<decltype(r_value)>) {
-                    return SymbolValue(NumberValue(l_value % r_value));
-                  } else {
-                    throw InterpeterException("Modulo operation is not supported for non-integer types");
-                    return SymbolValue(UnitValue{});
+                  if (r_value == 0) {
+                    throw InterpreterException("Cannot divide by zero.");
                   }
+                  return std::visit(overloaded {
+                    [&](const float& l_f, const float& r_f) { return SymbolValue(NumberValue(std::fmod(l_f, r_f))); },
+                    [&](const double& l_f, const double& r_f) { return SymbolValue(NumberValue(std::fmod(l_f, r_f))); },
+                    [&](const int8_t& l_i, const int8_t& r_i) { return SymbolValue(NumberValue(l_i%r_i)); },
+                    [&](const int16_t& l_i, const int16_t& r_i) { return SymbolValue(NumberValue(l_i%r_i)); },
+                    [&](const int32_t& l_i, const int32_t& r_i) { return SymbolValue(NumberValue(l_i%r_i)); },
+                    [&](const int64_t& l_i, const int64_t& r_i) { return SymbolValue(NumberValue(l_i%r_i)); },
+                    [&](const auto& l_n, const auto& r_n) { return SymbolValue(UnitValue{}); }
+                  }, l, r);
                 },
                 [&](const AST::Bin::And& and_op) {
                   return SymbolValue(BoolValue(l_value && r_value));
@@ -365,7 +375,7 @@ namespace TAST {
                   return SymbolValue(BoolValue(l_value != r_value));
                 },
                 [&](const auto& op) {
-                  throw InterpeterException("Operator is not implemented for bool");
+                  throw InterpreterException("Operator is not implemented for bool");
                   return SymbolValue{UnitValue{}};
                 }
               }, binary.op);
@@ -383,7 +393,7 @@ namespace TAST {
                   return SymbolValue(BoolValue(l_value != r_value));
                 },
                 [&](const auto& op) {
-                  throw InterpeterException("Operator is not implemented for bool");
+                  throw InterpreterException("Operator is not implemented for bool");
                   return SymbolValue{UnitValue{}};
                 }
               }, binary.op);
@@ -391,7 +401,7 @@ namespace TAST {
           }, l, r);
         },
         [&](const auto& l, const auto& r) {
-          throw InterpeterException("Type mismatch");
+          throw InterpreterException("Type mismatch");
           return SymbolValue{UnitValue{}};
         }
       }, lhs.kind, rhs.kind);
@@ -425,7 +435,7 @@ namespace TAST {
                   return SymbolValue(BoolValue(!b_value));
                 },
                 [&](const auto& op) {
-                  throw InterpeterException("Operator is not implemented for bool");
+                  throw InterpreterException("Operator is not implemented for bool");
                   return SymbolValue{UnitValue{}};
                 }
               }, unary.op);
@@ -433,7 +443,7 @@ namespace TAST {
           }, b);
         },
         [&](const auto& n) {
-          throw InterpeterException("Type mismatch");
+          throw InterpreterException("Type mismatch");
           return SymbolValue{UnitValue{}};
         }
       }, expr.kind);
@@ -482,7 +492,7 @@ namespace TAST {
     SymbolValue visit(const Call& call) override {
       auto body_it = crate.bodies.find(call.callee);
       if (body_it == crate.bodies.end()) {
-        throw InterpeterException(fmt::format("No function with id {}", call.callee));
+        throw InterpreterException(fmt::format("No function with id {}", call.callee));
       }
       const auto& body = *body_it->second;
       return with_scope(call.id, [&]{

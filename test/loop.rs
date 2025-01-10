@@ -8,14 +8,6 @@ fn a() {
 }
 
 fn main() {
-    let mut x = 0;
-    let y = a();
-    println!("{y}");
-    loop { 
-        if x >= 10 {
-            break
-        }
-        println!("{x}");
-        x += 1;
-    }
+    let x = 8%0;
+    println!("{x}");
 }

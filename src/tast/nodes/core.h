@@ -9,6 +9,7 @@
 namespace TAST {
 typedef uint64_t NodeId;
 
+ 
 typedef std::variant<
     AST::Ident>
     PatKind;
