@@ -128,7 +128,7 @@ namespace TAST {
       // find main
       Body* main_body = nullptr;
       for (const auto& [id, body] : crate.bodies) {
-        if (body->ns.path[0] == "main") {
+        if (body->ns.path.size() == 1 && body->ns.path[0] == "main") {
           main_body = body.get();
           break;
         }

@@ -363,23 +363,23 @@ class TypecheckVisitor : public MutWalkVisitor {
     std::visit(overloaded {
       [&](const AST::Bin::Add& add) {
         infer_ctx.eq(bin.lhs->id, bin.rhs->id);
-        infer_ctx.add(bin.id, infer_ctx.getType(bin.lhs->id));
+        infer_ctx.eq(bin.id, bin.lhs->id);
       },
       [&](const AST::Bin::Sub& sub) {
         infer_ctx.eq(bin.lhs->id, bin.rhs->id);
-        infer_ctx.add(bin.id, infer_ctx.getType(bin.lhs->id));
+        infer_ctx.eq(bin.id, bin.lhs->id);
       },
       [&](const AST::Bin::Mul& mul) {
         infer_ctx.eq(bin.lhs->id, bin.rhs->id);
-        infer_ctx.add(bin.id, infer_ctx.getType(bin.lhs->id));
+        infer_ctx.eq(bin.id, bin.lhs->id);
       },
       [&](const AST::Bin::Div& div) {
         infer_ctx.eq(bin.lhs->id, bin.rhs->id);
-        infer_ctx.add(bin.id, infer_ctx.getType(bin.lhs->id));
+        infer_ctx.eq(bin.id, bin.lhs->id);
       },
       [&](const AST::Bin::Mod& mod) {
         infer_ctx.eq(bin.lhs->id, bin.rhs->id);
-        infer_ctx.add(bin.id, infer_ctx.getType(bin.lhs->id));
+        infer_ctx.eq(bin.id, bin.lhs->id);
       },
       [&](const AST::Bin::And& and_op) {
         infer_ctx.eq(bin.lhs->id, bin.rhs->id);
