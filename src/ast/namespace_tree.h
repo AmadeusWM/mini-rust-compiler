@@ -11,6 +11,8 @@
 #include <variant>
 #include <vector>
 
+#define SUPER "super"
+
 struct Namespace{
   std::vector<std::string> path;
 
@@ -35,7 +37,7 @@ struct Namespace{
     Namespace resolved{};
     int height = 0;
     for (const auto segment : path) {
-      if (segment == "super") {
+      if (segment == SUPER) {
         if (resolved.path.size() == 0) {
           height++;
         }else {

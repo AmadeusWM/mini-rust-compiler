@@ -107,6 +107,11 @@ namespace Scope {
           }
         }
       }
+
+      if (height > 0) {
+        throw NameResolutionException("There are too many leading `super` keywords");
+      }
+      
       std::vector<std::string> path;
       for (int j = 0; j <= i; j++) {
         std::visit(overloaded {

@@ -12,7 +12,7 @@ mod B {
         }
         super::A::a();
         super::B::xyz();
-        super::super::A::a();
+        super::A::a();
     }
 
     fn xyz(){
