@@ -1,4 +1,4 @@
-// - Only functions within the same scope casn be called
+// - Only functions within the same scope can be called
 //   or from a parent scope
 
 fn main() {
@@ -8,7 +8,7 @@ fn main() {
     fn a(){
         println!("A");
     }
-    // c(); // this function cannot be called, not reachable
+    c(); // ERROR: this function cannot be called, not reachable
 }
 
 fn b() {

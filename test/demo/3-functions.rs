@@ -1,4 +1,4 @@
-fn parameters(a: i32, x: i32) -> 32 {
+fn parameters(a: i32, x: i32) -> i32 {
     a * x + 3
 }
 

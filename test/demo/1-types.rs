@@ -3,12 +3,16 @@
 // - Literals of every type
 // - Shadowing
 
+/* line comments */
 fn main() {
     let x = 1;
     let y = 2;
     let z: i64 = x + y; // infer x, and y to i64
     let q: i32 = x; // ERROR: i32 not inferrable to i64
     println!("{z}");
+    // other integer types
+    let i: i8 = 1;
+    let i: i16 = 2;
 
     // floats, shadowing
     let x: f32 = 5.0;
