@@ -158,9 +158,17 @@ class TypecheckVisitor : public MutWalkVisitor {
   }
 
   void visit(Crate& crate) override {
+    auto all_bodies_infer_ctx = InferCtx();
+    for (const auto& [key, body] : crate.bodies) {
+      all_bodies_infer_ctx.add(body->id, body->ty);
+      for (const auto& param :body->params) {
+        infer_ctx.add(param->id, param->ty);
+      }
+    }
+    
     for (const auto& [key, body] : crate.bodies) {
       // reset the inference context for each body
-      infer_ctx = InferCtx();
+      infer_ctx = all_bodies_infer_ctx.clone();
       visit(*body);
       // resolve all the types
       ApplyInferenceVisitor(infer_ctx).visit(*body);
@@ -175,6 +183,17 @@ class TypecheckVisitor : public MutWalkVisitor {
         visit(*param);
       }
       visit(*body.expr);
+      // only eq the expression's id to the body's id if the block has implicit return
+      std::visit(overloaded {
+        [&](P<Block>& block) {
+          if (block->expr.has_value()) {
+            infer_ctx.eq(body.id, body.expr->id);
+          }
+        },
+        [&](auto& a) {
+        
+        }
+      }, body.expr->kind);
     });
   }
 
@@ -255,7 +274,7 @@ class TypecheckVisitor : public MutWalkVisitor {
         visit(*assign);
         infer_ctx.add(expr.id, {InferTy{TyVar{}}});
       },
-      [&](Break& ret) {
+      [&](Break& brk) {
         infer_ctx.add(expr.id, {InferTy{TyVar{}}});
       },
       [&](P<Loop>& loop){
@@ -517,10 +536,8 @@ class TypecheckVisitor : public MutWalkVisitor {
       const auto& call_param = call.params[i];
       const auto& callee_param = body->params[i];
       visit(*call_param);
-      infer_ctx.add(callee_param->id, callee_param->ty);
       infer_ctx.eq(callee_param->id, call_param->id);
     }
-    infer_ctx.add(body->id, body->ty);
     infer_ctx.eq(body->id, call.id);
   }
 };

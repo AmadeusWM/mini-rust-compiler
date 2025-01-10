@@ -401,7 +401,7 @@ namespace TAST {
           }, l, r);
         },
         [&](const auto& l, const auto& r) {
-          throw InterpreterException("Type mismatch");
+          throw InterpreterException(fmt::format("Binary type mismatch between {} and {}", lhs.to_string(), rhs.to_string()));
           return SymbolValue{UnitValue{}};
         }
       }, lhs.kind, rhs.kind);
@@ -443,7 +443,7 @@ namespace TAST {
           }, b);
         },
         [&](const auto& n) {
-          throw InterpreterException("Type mismatch");
+          throw InterpreterException(fmt::format("Unary type mismatch at {}", expr.to_string()));
           return SymbolValue{UnitValue{}};
         }
       }, expr.kind);

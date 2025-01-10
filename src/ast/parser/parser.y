@@ -191,7 +191,7 @@ block:
 
 statements:
     statements_without_expr { $$ = std::move($1); }
-    | statements_without_expr expr_without_block { $$ = driver.rules->addStatement(std::move($1), driver.rules->statement(std::move($2))); }
+    | statements_without_expr expr { $$ = driver.rules->addStatement(std::move($1), driver.rules->statement(std::move($2))); }
     ;
 
 statements_without_expr:
